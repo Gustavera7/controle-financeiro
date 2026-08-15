@@ -1,7 +1,7 @@
 {
-  "name": "Controle Financeiro — Temporada EUA",
-  "short_name": "Finanças EUA",
-  "description": "Controle financeiro quinzenal com separação de gastos por tipo de viagem",
+  "name": "Meu Dinheiro — Clareza mensal",
+  "short_name": "Meu Dinheiro",
+  "description": "Quanto entra, quanto guardo, quanto está livre — clareza financeira mensal",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0d0d0d",

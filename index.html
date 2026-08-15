@@ -3,43 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Financeiro — Temporada EUA</title>
+<title>Meu Dinheiro — Clareza mensal</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0d0d">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root {
     color-scheme: light;
-    --surface: #fcfcfb;
-    --page: #f9f9f7;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --grid: #e1e0d9;
-    --baseline: #c3c2b7;
-    --border: rgba(11,11,11,0.10);
-    --good-text: #006300;
-    --critical: #d03b3b;
-    --warning: #fab219;
-    --status-good: #0ca30c;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --good-text: #006300; --critical: #d03b3b; --warning: #fab219; --status-good: #0ca30c;
     --s1: #2a78d6; --s2: #008300; --s3: #e87ba4; --s4: #eda100;
-    --s5: #1baf7a; --s6: #eb6834; --s7: #4a3aa7; --s8: #e34948;
+    --s5: #1baf7a; --s6: #eb6834; --s7: #4a3aa7;
     --seq-track: #cde2fb;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
-      --surface: #1a1a19;
-      --page: #0d0d0d;
-      --ink: #ffffff;
-      --ink-2: #c3c2b7;
-      --muted: #898781;
-      --grid: #2c2c2a;
-      --baseline: #383835;
-      --border: rgba(255,255,255,0.10);
-      --good-text: #0ca30c;
+      --surface: #1a1a19; --page: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --baseline: #383835;
+      --border: rgba(255,255,255,0.10); --good-text: #0ca30c;
       --s1: #3987e5; --s2: #008300; --s3: #d55181; --s4: #c98500;
-      --s5: #199e70; --s6: #d95926; --s7: #9085e9; --s8: #e66767;
+      --s5: #199e70; --s6: #d95926; --s7: #9085e9;
       --seq-track: #184f95;
     }
   }
@@ -49,317 +35,241 @@
     --muted: #898781; --grid: #2c2c2a; --baseline: #383835;
     --border: rgba(255,255,255,0.10); --good-text: #0ca30c;
     --s1: #3987e5; --s2: #008300; --s3: #d55181; --s4: #c98500;
-    --s5: #199e70; --s6: #d95926; --s7: #9085e9; --s8: #e66767;
+    --s5: #199e70; --s6: #d95926; --s7: #9085e9;
     --seq-track: #184f95;
   }
 
   * { box-sizing: border-box; margin: 0; }
-  body {
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: var(--page); color: var(--ink);
-    font-size: 15px; line-height: 1.45;
-  }
-  header {
-    padding: 16px 20px 0;
-    max-width: 1080px; margin: 0 auto;
-  }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--ink); font-size: 15px; line-height: 1.45; }
+  header { padding: 16px 20px 0; max-width: 860px; margin: 0 auto; }
   header h1 { font-size: 20px; font-weight: 650; }
-  header p.sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
-  nav {
-    display: flex; gap: 4px; margin-top: 14px; flex-wrap: wrap;
-    border-bottom: 1px solid var(--grid);
-  }
-  nav button {
-    background: none; border: none; font: inherit; color: var(--ink-2);
-    padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent;
-    font-size: 14px;
-  }
+  nav { display: flex; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--grid); }
+  nav button { background: none; border: none; font: inherit; color: var(--ink-2); padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; }
   nav button.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--s1); }
-  main { max-width: 1080px; margin: 0 auto; padding: 20px; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px; }
   section.tab { display: none; }
   section.tab.active { display: block; }
 
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 16px 18px; margin-bottom: 16px;
-  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
   .card h2 { font-size: 15px; font-weight: 650; margin-bottom: 10px; }
-  .card h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 14px 0 8px; }
   .grid { display: grid; gap: 16px; }
-  @media (min-width: 760px) {
-    .grid.cols-2 { grid-template-columns: 1fr 1fr; }
-    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-  }
+  @media (min-width: 700px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; } }
 
-  /* Stat tiles */
   .tile .label { font-size: 12.5px; color: var(--ink-2); }
-  .tile .value { font-size: 24px; font-weight: 600; margin-top: 2px; }
+  .tile .value { font-size: 22px; font-weight: 600; margin-top: 2px; }
   .tile .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .hero .value { font-size: 48px; font-weight: 650; line-height: 1.1; }
-  .hero .label { font-size: 13px; color: var(--ink-2); }
-  .hero .delta { font-size: 13px; margin-top: 4px; color: var(--ink-2); }
-  .pos { color: var(--good-text); }
-  .neg { color: var(--critical); }
+  .hero { text-align: center; padding: 26px 18px; }
+  .hero .label { font-size: 14px; color: var(--ink-2); }
+  .hero .value { font-size: 52px; font-weight: 650; line-height: 1.15; }
+  .hero .note { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+  .pos { color: var(--good-text); } .neg { color: var(--critical); }
 
-  /* Meter */
   .meter { height: 10px; border-radius: 5px; background: var(--seq-track); overflow: hidden; margin-top: 10px; }
   .meter > div { height: 100%; border-radius: 5px 4px 4px 5px; background: var(--s1); }
   .meter.over > div { background: var(--critical); }
 
-  /* Horizontal category bars */
   .hbar-row { display: grid; grid-template-columns: 110px 1fr 70px; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
   .hbar-row .cat { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hbar-track { height: 16px; position: relative; }
   .hbar { height: 16px; border-radius: 0 4px 4px 0; min-width: 2px; }
-  .hbar-row .val { text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hbar-row .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 
-  /* Column chart (histórico) */
-  .cols { display: flex; align-items: flex-end; gap: 14px; height: 150px; border-bottom: 1px solid var(--baseline); padding: 0 4px; margin-top: 12px; }
-  .colwrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; max-width: 64px; height: 100%; }
-  .colwrap .cval { font-size: 11.5px; color: var(--ink-2); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
-  .colwrap .col { width: 22px; border-radius: 4px 4px 0 0; background: var(--s1); }
-  .colwrap .col.neg { background: var(--critical); }
-  .cols-labels { display: flex; gap: 14px; padding: 4px 4px 0; }
-  .cols-labels span { flex: 1; max-width: 64px; text-align: center; font-size: 11px; color: var(--muted); }
-
-  /* Forms */
   form.inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
   .field { display: flex; flex-direction: column; gap: 3px; }
   .field label { font-size: 12px; color: var(--ink-2); }
-  input, select, textarea {
-    font: inherit; color: var(--ink); background: var(--page);
-    border: 1px solid var(--baseline); border-radius: 6px; padding: 6px 8px;
-  }
+  input, select { font: inherit; color: var(--ink); background: var(--page); border: 1px solid var(--baseline); border-radius: 6px; padding: 6px 8px; }
   input:focus, select:focus { outline: 2px solid var(--s1); outline-offset: -1px; }
-  button.btn {
-    font: inherit; font-weight: 600; padding: 7px 14px; border-radius: 6px;
-    border: none; background: var(--s1); color: #fff; cursor: pointer;
-  }
+  button.btn { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; background: var(--s1); color: #fff; cursor: pointer; }
   button.btn.ghost { background: none; color: var(--ink-2); border: 1px solid var(--baseline); font-weight: 500; }
   button.mini { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 6px; }
   button.mini:hover { color: var(--critical); }
 
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
-  td { padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--grid); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-
   .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
   .badge.covered { background: color-mix(in srgb, var(--status-good) 15%, transparent); color: var(--good-text); }
   .badge.counts { background: color-mix(in srgb, var(--s1) 14%, transparent); color: var(--ink); }
   .badge.warn { background: color-mix(in srgb, var(--warning) 22%, transparent); color: var(--ink); }
   .badge.crit { background: color-mix(in srgb, var(--critical) 15%, transparent); color: var(--critical); }
-
   .hint { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
-  .cycle-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .cycle-nav b { font-size: 14px; }
-  .cycle-nav button { font-size: 15px; }
-  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
-  .disclaimer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--grid); margin-top: 12px; padding-top: 8px; }
   .empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
   .gitem { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--grid); }
   .gitem:last-child { border-bottom: none; }
   .gitem .why { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
   .gitem select { font-size: 12.5px; padding: 3px 6px; }
   .gitem.off { opacity: .5; }
+  .gitem h3, #guide h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 14px 0 4px; }
   input.cellnum { width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
+  .month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .month-nav b { font-size: 15px; text-transform: capitalize; }
+
+  /* ─── Assistente de metas (wizard) ─── */
+  #wizard { position: fixed; inset: 0; background: var(--page); z-index: 50; display: none; overflow-y: auto; }
+  #wizard.on { display: flex; align-items: center; justify-content: center; }
+  .wz { max-width: 480px; width: 100%; padding: 32px 24px; }
+  .wz .step-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 28px; }
+  .wz .step-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--grid); }
+  .wz .step-dots span.done { background: var(--s1); }
+  .wz h2 { font-size: 24px; font-weight: 650; line-height: 1.3; margin-bottom: 8px; }
+  .wz p.sub { color: var(--ink-2); font-size: 14px; margin-bottom: 22px; }
+  .wz .biginput { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .wz .biginput .cur { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .wz input[type=number], .wz input[type=month] { font-size: 26px; font-weight: 600; padding: 10px 12px; width: 100%; }
+  .wz .live { font-size: 14px; color: var(--ink-2); min-height: 44px; margin: 10px 0 18px; }
+  .wz .live b.pos { color: var(--good-text); }
+  .wz .actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 8px; }
+  .wz .sugg { font-size: 13px; color: var(--s1); background: none; border: 1px dashed var(--baseline); border-radius: 6px; padding: 5px 10px; cursor: pointer; margin-bottom: 14px; }
+  .wz .resumo { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 18px; font-size: 14.5px; }
+  .wz .resumo div { display: flex; justify-content: space-between; padding: 5px 0; }
+  .wz .resumo div.total { border-top: 1px solid var(--grid); margin-top: 6px; padding-top: 10px; font-weight: 650; font-size: 16px; }
 </style>
 </head>
 <body>
+
+<!-- ─────────── Assistente de metas ─────────── -->
+<div id="wizard"><div class="wz">
+  <div class="step-dots" id="wz-dots"></div>
+  <div id="wz-body"></div>
+</div></div>
+
 <header>
-  <h1>Controle Financeiro — Temporada EUA</h1>
-  <p class="sub">Ciclo quinzenal · gastos separados por tipo de viagem · meta de investimento</p>
+  <h1>Meu Dinheiro</h1>
   <nav id="nav">
-    <button data-tab="dash" class="active">Dashboard</button>
-    <button data-tab="gastos">Gastos</button>
-    <button data-tab="renda">Renda</button>
-    <button data-tab="comparador">Brasil × EUA</button>
+    <button data-tab="inicio" class="active">Início</button>
+    <button data-tab="lanc">Lançamentos</button>
+    <button data-tab="metas">Metas</button>
     <button data-tab="invest">Investimentos</button>
-    <button data-tab="rewards">Rewards & Combustível</button>
+    <button data-tab="rewards">Rewards</button>
     <button data-tab="config">Config</button>
   </nav>
 </header>
 <main>
 
-<!-- ══════════ DASHBOARD ══════════ -->
-<section class="tab active" id="tab-dash">
-  <div class="cycle-nav">
-    <button class="btn ghost" onclick="moveCycle(-1)">‹</button>
-    <b id="cycle-title"></b>
-    <button class="btn ghost" onclick="moveCycle(1)">›</button>
-    <span id="cycle-badge"></span>
+<!-- ─────────── INÍCIO ─────────── -->
+<section class="tab active" id="tab-inicio">
+  <div class="month-nav">
+    <button class="btn ghost" onclick="moveMonth(-1)">‹</button>
+    <b id="m-title"></b>
+    <button class="btn ghost" onclick="moveMonth(1)">›</button>
+    <span id="m-badge"></span>
   </div>
 
-  <div class="grid cols-2">
-    <div class="card hero">
-      <div class="label">Saldo disponível na quinzena</div>
-      <div class="value" id="d-saldo"></div>
-      <div class="delta" id="d-saldo-note"></div>
-      <div class="meter" id="d-meter"><div></div></div>
-      <div class="hint" id="d-meter-note"></div>
+  <div class="card hero">
+    <div class="label">Livre para gastar este mês</div>
+    <div class="value" id="h-livre"></div>
+    <div class="note" id="h-note"></div>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card tile">
+      <div class="label">Ganhei no mês</div>
+      <div class="value" id="t-ganho"></div>
+      <div class="note" id="t-ganho-n"></div>
     </div>
-    <div class="grid" style="grid-template-columns:1fr 1fr; gap:16px;">
-      <div class="card tile">
-        <div class="label">Entrada</div>
-        <div class="value" id="d-entrada"></div>
-        <div class="note">pagamento quinzenal</div>
-      </div>
-      <div class="card tile">
-        <div class="label">Gasto pessoal</div>
-        <div class="value" id="d-gasto"></div>
-        <div class="note" id="d-gasto-n"></div>
-      </div>
-      <div class="card tile">
-        <div class="label">Coberto pela empresa</div>
-        <div class="value" id="d-coberto"></div>
-        <div class="note">não conta no orçamento</div>
-      </div>
-      <div class="card tile">
-        <div class="label" id="d-dias-label">Dias restantes</div>
-        <div class="value" id="d-dias"></div>
-        <div class="note" id="d-ritmo"></div>
-      </div>
+    <div class="card tile">
+      <div class="label">Guardei no mês</div>
+      <div class="value" id="t-guardado"></div>
+      <div class="note" id="t-guardado-n"></div>
+      <div class="meter" id="t-guardado-m"><div></div></div>
+    </div>
+    <div class="card tile">
+      <div class="label">Gastei no mês</div>
+      <div class="value" id="t-gasto"></div>
+      <div class="note" id="t-gasto-n"></div>
     </div>
   </div>
 
   <div class="grid cols-2">
     <div class="card">
-      <h2>Para onde foi o dinheiro (esta quinzena)</h2>
-      <div id="d-cats"></div>
+      <h2>Para onde foi</h2>
+      <div id="m-cats"></div>
     </div>
     <div class="card">
-      <h2>Sobra por quinzena fechada</h2>
-      <div id="d-hist"></div>
-      <div class="hint" id="d-acum"></div>
+      <h2>Mês passado</h2>
+      <div id="m-prev"></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ GASTOS ══════════ -->
-<section class="tab" id="tab-gastos">
+<!-- ─────────── LANÇAMENTOS ─────────── -->
+<section class="tab" id="tab-lanc">
   <div class="card">
-    <h2>Registrar gasto</h2>
-    <form class="inline" id="f-gasto">
-      <div class="field"><label>Data</label><input type="date" id="g-date" required></div>
-      <div class="field"><label>Valor (US$)</label><input type="number" id="g-amount" step="0.01" min="0.01" required style="width:110px"></div>
-      <div class="field"><label>Categoria</label><select id="g-cat"></select></div>
-      <div class="field"><label>Contexto *</label>
-        <select id="g-trip" required>
+    <h2>Novo lançamento</h2>
+    <form class="inline" id="f-lanc">
+      <div class="field"><label>Tipo</label>
+        <select id="l-type">
+          <option value="gasto">Gasto</option>
+          <option value="renda">Renda extra</option>
+          <option value="aporte">Investimento (aporte)</option>
+        </select>
+      </div>
+      <div class="field"><label>Data</label><input type="date" id="l-date" required></div>
+      <div class="field"><label>Valor</label><input type="number" id="l-amount" step="0.01" min="0.01" required style="width:110px"></div>
+      <div class="field" id="l-cur-f"><label>Moeda</label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
+      <div class="field" id="l-cat-f"><label>Categoria</label><select id="l-cat"></select></div>
+      <div class="field" id="l-trip-f"><label>Contexto</label>
+        <select id="l-trip">
           <option value="none">Sem viagem</option>
           <option value="work">Viagem a trabalho</option>
           <option value="personal">Viagem pessoal</option>
         </select>
       </div>
-      <div class="field" style="flex:1; min-width:160px"><label>Descrição</label><input type="text" id="g-desc" placeholder="opcional"></div>
+      <div class="field" style="flex:1; min-width:140px"><label>Descrição</label><input type="text" id="l-desc" placeholder="opcional"></div>
       <button class="btn" type="submit">Adicionar</button>
     </form>
-    <div class="hint" id="g-hint"></div>
+    <div class="hint" id="l-hint"></div>
   </div>
   <div class="card">
-    <h2>Gastos registrados</h2>
-    <div id="g-list"></div>
+    <h2>Histórico</h2>
+    <div id="l-list"></div>
   </div>
 </section>
 
-<!-- ══════════ RENDA ══════════ -->
-<section class="tab" id="tab-renda">
+<!-- ─────────── METAS ─────────── -->
+<section class="tab" id="tab-metas">
   <div class="card">
-    <h2>Registrar renda extra</h2>
-    <form class="inline" id="f-income">
-      <div class="field"><label>Data</label><input type="date" id="in-date" required></div>
-      <div class="field"><label>Valor (US$)</label><input type="number" id="in-amount" step="0.01" min="0.01" required style="width:110px"></div>
-      <div class="field" style="flex:1; min-width:160px"><label>Fonte</label><input type="text" id="in-source" placeholder="ex: bônus, hora extra, venda, reembolso"></div>
-      <button class="btn" type="submit">Adicionar</button>
-    </form>
-    <div class="hint">A renda extra entra automaticamente na quinzena correspondente à data e aumenta o saldo disponível do dashboard.</div>
+    <h2>Meta de patrimônio</h2>
+    <div id="g-patrimonio"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Rendas extras registradas</h2>
-      <div id="in-list"></div>
+      <h2>Compromisso mensal</h2>
+      <div id="g-mensal"></div>
     </div>
     <div class="card">
-      <h2>Salário quinzenal — histórico</h2>
-      <form class="inline" id="f-pay">
-        <div class="field"><label>Novo valor (US$)</label><input type="number" id="pay-amount" step="1" min="1" required style="width:110px"></div>
-        <div class="field"><label>Válido a partir de</label><input type="date" id="pay-from" required></div>
-        <button class="btn" type="submit">Registrar aumento</button>
-      </form>
-      <div id="pay-list" style="margin-top:10px"></div>
-      <div class="hint">Cada quinzena do dashboard usa o valor de salário vigente na sua data — o histórico antigo não muda quando você registra um aumento.</div>
+      <h2>Minha renda</h2>
+      <div id="g-renda"></div>
     </div>
   </div>
+  <button class="btn ghost" onclick="startWizard()">↺ Refazer conversa de metas</button>
 </section>
 
-<!-- ══════════ COMPARADOR ══════════ -->
-<section class="tab" id="tab-comparador">
-  <div class="card">
-    <h2>Comparador Brasil × EUA</h2>
-    <form class="inline" onsubmit="return false">
-      <div class="field"><label>Salário bruto BR (R$/mês)</label><input type="number" id="c-brgross" step="100" style="width:130px"></div>
-      <div class="field"><label>Câmbio (R$ por US$)</label><input type="number" id="c-fx" step="0.01" style="width:100px"></div>
-      <div class="field"><label>Líquido EUA (US$/quinzena)</label><input type="number" id="c-uspay" step="1" style="width:120px"></div>
-    </form>
-    <div class="grid cols-2" style="margin-top:16px">
-      <div>
-        <h3>Brasil (CLT, tabelas 2025)</h3>
-        <table id="c-br-table"></table>
-      </div>
-      <div>
-        <h3>EUA (líquido, quinzenal → mensal)</h3>
-        <table id="c-us-table"></table>
-      </div>
-    </div>
-    <h3>Sobra líquida mensal comparável</h3>
-    <div id="c-compare"></div>
-    <div class="disclaimer">Nos EUA moradia, contas e carro do dia a dia são cobertos pela empresa — o valor líquido EUA já é quase todo "sobra". No Brasil, o líquido ainda precisaria pagar moradia e contas. FGTS é depósito do empregador (não sai do bruto), mostrado como benefício.</div>
-  </div>
-</section>
-
-<!-- ══════════ INVESTIMENTOS ══════════ -->
+<!-- ─────────── INVESTIMENTOS (visão completa) ─────────── -->
 <section class="tab" id="tab-invest">
+  <div class="card">
+    <h2>Patrimônio</h2>
+    <div id="iv-resumo"></div>
+  </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Meta</h2>
-      <form class="inline" onsubmit="return false">
-        <div class="field"><label>Meta (R$)</label><input type="number" id="i-goal" step="1000" style="width:110px"></div>
-        <div class="field"><label>Prazo (meses)</label><input type="number" id="i-months" min="1" style="width:80px"></div>
-        <div class="field"><label>Início da meta</label><input type="date" id="i-start"></div>
-      </form>
-      <div id="i-pace" style="margin-top:14px"></div>
-    </div>
-    <div class="card">
-      <h2>Carteira atual</h2>
+      <h2>Composição da carteira</h2>
       <form class="inline" id="f-port">
         <div class="field" style="flex:1"><label>Ativo</label><input type="text" id="p-name" placeholder="ex: Tesouro Selic" required></div>
         <div class="field"><label>Valor (R$)</label><input type="number" id="p-value" step="100" min="0" required style="width:110px"></div>
         <button class="btn" type="submit">Adicionar</button>
       </form>
       <div id="p-list" style="margin-top:10px"></div>
-    </div>
-  </div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Aportes registrados</h2>
-      <form class="inline" id="f-aporte">
-        <div class="field"><label>Data</label><input type="date" id="a-date" required></div>
-        <div class="field"><label>Valor</label><input type="number" id="a-amount" step="0.01" min="0.01" required style="width:100px"></div>
-        <div class="field"><label>Moeda</label><select id="a-cur"><option value="BRL">R$</option><option value="USD">US$</option></select></div>
-        <div class="field" style="flex:1"><label>Destino</label><input type="text" id="a-dest" placeholder="ex: Tesouro Direto"></div>
-        <button class="btn" type="submit">Adicionar</button>
-      </form>
-      <div id="a-list" style="margin-top:10px"></div>
+      <div class="hint">Edite os valores conforme os ativos rendem. O botão abaixo ajusta o total do app para bater com a soma da composição.</div>
+      <button class="btn ghost" style="margin-top:8px" onclick="syncPortfolio()">Usar soma da composição como total</button>
     </div>
     <div class="card">
-      <h2>Direcionamento do excedente</h2>
-      <p class="hint" style="margin:0 0 8px">Divisão que <b>você</b> define para a sobra de cada quinzena. Ajuste os percentuais como quiser.</p>
-      <div id="al-rows"></div>
-      <div id="al-sug" style="margin-top:12px"></div>
-      <div class="disclaimer">Isto é uma calculadora com regras definidas por você — não é recomendação de investimento.</div>
+      <h2>Todos os aportes</h2>
+      <div id="iv-aportes"></div>
+      <div class="hint">Aportes são lançados na aba Lançamentos (tipo "Investimento").</div>
     </div>
   </div>
-
   <div class="card">
     <h2>Oportunidades (investimento / negócio)</h2>
     <form class="inline" id="f-opp">
@@ -374,17 +284,16 @@
   </div>
 </section>
 
-<!-- ══════════ REWARDS ══════════ -->
+<!-- ─────────── REWARDS (visão completa) ─────────── -->
 <section class="tab" id="tab-rewards">
   <div class="card">
-    <h2>Guia de benefícios — Bettendorf, IA & viagens pelo país</h2>
-    <p class="hint" style="margin-bottom:4px"><b>Dica-chave:</b> programas de fidelidade creditam na <b>sua</b> conta pessoal mesmo quando o pagamento é no cartão da empresa — basta escanear o app ou informar seu telefone antes de pagar (igual a milhas aéreas em voo de trabalho). Vale confirmar na política da empresa.</p>
-    <p class="hint">Marque o status de cada um conforme for avaliando. Anuidades e regras mudam — confira os valores atuais antes de assinar.</p>
+    <h2>Guia de benefícios — Bettendorf, IA & viagens</h2>
+    <p class="hint" style="margin-bottom:4px"><b>Dica-chave:</b> programas de fidelidade creditam na <b>sua</b> conta pessoal mesmo pagando com o cartão da empresa — escaneie o app ou informe seu telefone antes de pagar. Confirme na política da empresa.</p>
     <div id="guide"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Cashback / milhas por categoria</h2>
+      <h2>Melhor cartão por categoria</h2>
       <form class="inline" id="f-rw">
         <div class="field"><label>Categoria</label><select id="r-cat"></select></div>
         <div class="field" style="flex:1"><label>Cartão / programa</label><input type="text" id="r-prog" required placeholder="ex: Costco Visa"></div>
@@ -392,7 +301,6 @@
         <button class="btn" type="submit">Adicionar</button>
       </form>
       <div id="r-list" style="margin-top:10px"></div>
-      <div class="hint">Use o melhor cartão de cada categoria na hora de pagar.</div>
     </div>
     <div class="card">
       <h2>Preço de combustível por posto</h2>
@@ -402,43 +310,33 @@
         <button class="btn" type="submit">Atualizar</button>
       </form>
       <div id="fu-list" style="margin-top:10px"></div>
-      <div class="hint">Registrar o mesmo posto de novo atualiza o preço e a data.</div>
+      <div class="hint">Registrar o mesmo posto de novo atualiza preço e data.</div>
     </div>
   </div>
 </section>
 
-<!-- ══════════ CONFIG ══════════ -->
+<!-- ─────────── CONFIG ─────────── -->
 <section class="tab" id="tab-config">
   <div class="card">
     <h2>Configurações</h2>
     <form class="inline" onsubmit="return false">
-      <div class="field"><label>Pagamento quinzenal (US$)</label><input type="number" id="cfg-pay" step="1" style="width:110px"></div>
-      <div class="field"><label>Data de um dia de pagamento</label><input type="date" id="cfg-anchor"></div>
+      <div class="field"><label>Câmbio (R$ por US$)</label><input type="number" id="cfg-fx" step="0.01" style="width:100px"></div>
     </form>
-    <div class="hint">A data-âncora define o início dos ciclos de 14 dias. Qualquer dia de pagamento real serve.</div>
-    <h3>Dados</h3>
+    <h2 style="margin-top:18px">Dados</h2>
     <form class="inline" onsubmit="return false">
       <button class="btn ghost" onclick="exportData()">Exportar backup (JSON)</button>
       <button class="btn ghost" onclick="document.getElementById('import-file').click()">Importar backup</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
     </form>
-    <div class="hint">Os dados ficam salvos neste navegador (localStorage). Exporte um backup de vez em quando.</div>
+    <div class="hint">Os dados ficam salvos neste navegador. Exporte um backup de vez em quando — especialmente antes de trocar de aparelho.</div>
   </div>
 </section>
 
 </main>
 <script>
 "use strict";
-/* ═══════════ Modelo de dados ═══════════
-   settings: paycheck, anchor, brGross, fx, usPay, goal, goalMonths, goalStart, alloc[]
-   expenses: {id, date, amount, cat, trip, desc}
-   portfolio: {id, name, value}      (R$)
-   contributions: {id, date, amount, cur, dest}
-   opportunities: {id, name, where, status, prio, notes}
-   rewards: {id, cat, prog, rate}
-   fuel: {id, name, price, date}
-*/
-const KEY = "controle-financeiro-v1";
+const KEY = "controle-financeiro-v2";
+const OLD_KEY = "controle-financeiro-v1";
 const CATS = [
   { id:"combustivel", label:"Combustível",  color:"--s1" },
   { id:"alimentacao", label:"Comida",       color:"--s2" },
@@ -449,408 +347,311 @@ const CATS = [
   { id:"outros",      label:"Outros",       color:"--s7" },
 ];
 const COVERED_ON_WORK = ["combustivel","alimentacao","carro"];
-const TRIPS = { none:"Sem viagem", work:"Trabalho", personal:"Pessoal" };
+const TRIPS = { none:"—", work:"Trabalho", personal:"Pessoal" };
 
 const DEFAULTS = {
   settings: {
-    paycheck: 1367, anchor: "2026-08-14",
-    payHistory: [{ from: "2026-08-14", amount: 1367 }],
-    brGross: 10400, fx: 5.45, usPay: 1367,
-    goal: 200000, goalMonths: 12, goalStart: new Date().toISOString().slice(0,10),
-    alloc: [
-      { name:"Tesouro Direto", pct:50 },
-      { name:"Reserva apartamento (Indaiatuba)", pct:30 },
-      { name:"Bitcoin", pct:20 },
-    ],
+    onboarded: false,
+    usMonthly: 2962,     // US$ líquido/mês
+    brMonthly: 0,        // R$ líquido/mês
+    fx: 5.45,
+    investedBase: 120000, // R$ já investidos quando começou
+    goalAmount: 200000,   // R$
+    goalMonth: "",        // "2027-08"
+    saveMonthly: 0,       // US$ que decide guardar por mês
   },
-  expenses: [], incomes: [], guide: {}, portfolio: [
-    { id: 1, name: "Renda fixa + Tesouro + BTC (carteira inicial)", value: 120000 },
-  ],
-  contributions: [], opportunities: [], rewards: [], fuel: [],
+  expenses: [], incomes: [], contributions: [],
+  portfolio: [], opportunities: [], rewards: [], fuel: [], guide: {},
 };
 
 let S = load();
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return structuredClone(DEFAULTS);
-    const d = JSON.parse(raw);
-    const s = { ...structuredClone(DEFAULTS), ...d, settings: { ...DEFAULTS.settings, ...d.settings } };
-    if (!Array.isArray(s.settings.payHistory) || !s.settings.payHistory.length)
-      s.settings.payHistory = [{ from: s.settings.anchor, amount: s.settings.paycheck }];
+    if (raw) {
+      const d = JSON.parse(raw);
+      return { ...structuredClone(DEFAULTS), ...d, settings: { ...DEFAULTS.settings, ...d.settings } };
+    }
+    const s = structuredClone(DEFAULTS);
+    // migra lançamentos da versão anterior, se houver
+    const old = localStorage.getItem(OLD_KEY);
+    if (old) {
+      const o = JSON.parse(old);
+      s.expenses = o.expenses || [];
+      s.incomes = o.incomes || [];
+      s.contributions = o.contributions || [];
+      s.portfolio = o.portfolio || [];
+      s.opportunities = o.opportunities || [];
+      s.rewards = o.rewards || [];
+      s.fuel = o.fuel || [];
+      s.guide = o.guide || {};
+      if (o.settings) {
+        s.settings.fx = o.settings.fx || s.settings.fx;
+        if (o.settings.paycheck) s.settings.usMonthly = Math.round(o.settings.paycheck * 26 / 12);
+        if (Array.isArray(o.portfolio)) s.settings.investedBase = o.portfolio.reduce((t,p) => t + (p.value||0), 0) || s.settings.investedBase;
+        if (o.settings.goal) s.settings.goalAmount = o.settings.goal;
+      }
+    }
     return s;
   } catch { return structuredClone(DEFAULTS); }
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
 function uid() { return Date.now() + Math.random().toString(16).slice(2, 6); }
 
-/* ═══════════ Utilitários ═══════════ */
-const fmtUS = n => (n < 0 ? "-" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtBR = n => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtUS0 = n => (n < 0 ? "-" : "") + "$" + Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+/* ───────── Utilitários ───────── */
+const fmtUS = n => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUS0 = n => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmtBR = n => "R$ " + n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 const parseDate = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
 const fmtD = d => d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
-const todayStr = () => new Date().toISOString().slice(0,10);
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const monthKey = s => s.slice(0, 7);
+const thisMonth = () => todayStr().slice(0, 7);
+function monthLabel(mk) {
+  const [y, m] = mk.split("-").map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+function shiftMonth(mk, n) {
+  const [y, m] = mk.split("-").map(Number);
+  const d = new Date(y, m-1+n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function counts(e) { return !(e.trip === "work" && COVERED_ON_WORK.includes(e.cat)); }
+const toUSD = (amount, cur) => cur === "BRL" ? amount / S.settings.fx : amount;
+const toBRL = (amount, cur) => cur === "USD" ? amount * S.settings.fx : amount;
 
-/* Regra central: o gasto conta no orçamento pessoal? */
-function counts(e) {
-  return !(e.trip === "work" && COVERED_ON_WORK.includes(e.cat));
+/* ───────── Números do mês ───────── */
+function monthStats(mk) {
+  const st = S.settings;
+  const exp = S.expenses.filter(e => monthKey(e.date) === mk);
+  const spent = exp.filter(counts).reduce((s,e) => s + e.amount, 0);
+  const covered = exp.filter(e => !counts(e)).reduce((s,e) => s + e.amount, 0);
+  const extras = S.incomes.filter(x => monthKey(x.date) === mk).reduce((s,x) => s + toUSD(x.amount, x.cur || "USD"), 0);
+  const saved = S.contributions.filter(c => monthKey(c.date) === mk).reduce((s,c) => s + toUSD(c.amount, c.cur), 0);
+  const salario = st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0);
+  const ganho = salario + extras;
+  // Livre = ganho − compromisso de guardar − gastos do mês.
+  // Se já guardou mais que o compromisso, o excedente também sai do livre.
+  const reservado = Math.max(st.saveMonthly, saved);
+  const livre = ganho - reservado - spent;
+  return { spent, covered, extras, saved, salario, ganho, livre, reservado };
+}
+function invested() {
+  return S.settings.investedBase + S.contributions.reduce((s,c) => s + toBRL(c.amount, c.cur), 0);
+}
+function monthsUntilGoal() {
+  if (!S.settings.goalMonth) return 0;
+  const [gy, gm] = S.settings.goalMonth.split("-").map(Number);
+  const [cy, cm] = thisMonth().split("-").map(Number);
+  return Math.max(0, (gy - cy) * 12 + (gm - cm));
+}
+function paceNeededBRL() {
+  const falta = Math.max(0, S.settings.goalAmount - invested());
+  const m = monthsUntilGoal();
+  return m > 0 ? falta / m : falta;
 }
 
-/* Ciclos quinzenais a partir da âncora */
-const DAY = 86400000;
-function cycleIndex(dateStr) {
-  const a = parseDate(S.settings.anchor), d = parseDate(dateStr);
-  return Math.floor((d - a) / (14 * DAY));
-}
-function cycleRange(i) {
-  const a = parseDate(S.settings.anchor);
-  const start = new Date(a.getTime() + i * 14 * DAY);
-  const end = new Date(start.getTime() + 13 * DAY);
-  return { start, end };
-}
-function cycleExpenses(i) {
-  return S.expenses.filter(e => cycleIndex(e.date) === i);
-}
-function isoDate(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-function payFor(i) {
-  const start = cycleRange(i).start;
-  const hist = [...S.settings.payHistory].sort((a,b) => a.from.localeCompare(b.from));
-  let amt = hist[0].amount;
-  for (const h of hist) if (parseDate(h.from) <= start) amt = h.amount;
-  return amt;
-}
-function cycleStats(i) {
-  const ex = cycleExpenses(i);
-  const spent = ex.filter(counts).reduce((s,e) => s + e.amount, 0);
-  const covered = ex.filter(e => !counts(e)).reduce((s,e) => s + e.amount, 0);
-  const pay = payFor(i);
-  const extras = S.incomes.filter(x => cycleIndex(x.date) === i).reduce((s,x) => s + x.amount, 0);
-  const entrada = pay + extras;
-  return { spent, covered, pay, extras, entrada, sobra: entrada - spent };
-}
-let viewCycle = null; // null = ciclo atual
-function currentCycle() { return cycleIndex(todayStr()); }
+/* ───────── Início ───────── */
+let viewMonth = null;
+function moveMonth(n) { viewMonth = shiftMonth(viewMonth || thisMonth(), n); renderInicio(); }
+function renderInicio() {
+  const mk = viewMonth || thisMonth();
+  const cur = thisMonth();
+  const st = monthStats(mk);
+  document.getElementById("m-title").textContent = monthLabel(mk);
+  document.getElementById("m-badge").innerHTML =
+    mk === cur ? '<span class="badge counts">atual</span>' :
+    mk < cur ? '<span class="badge covered">fechado</span>' : '<span class="badge warn">futuro</span>';
 
-/* ═══════════ Dashboard ═══════════ */
-function moveCycle(dir) {
-  const cur = viewCycle ?? currentCycle();
-  viewCycle = cur + dir;
-  renderDash();
-}
-function renderDash() {
-  const cur = currentCycle();
-  const i = viewCycle ?? cur;
-  const { start, end } = cycleRange(i);
-  const st = cycleStats(i);
-  const pay = st.entrada;
+  const livreEl = document.getElementById("h-livre");
+  livreEl.textContent = fmtUS(st.livre);
+  livreEl.className = "value " + (st.livre < 0 ? "neg" : "");
+  const dias = mk === cur ? Math.max(1, new Date(+mk.split("-")[0], +mk.split("-")[1], 0).getDate() - new Date().getDate() + 1) : 0;
+  document.getElementById("h-note").textContent =
+    mk < cur ? "mês fechado — o que sobrou depois de gastar e guardar" :
+    mk > cur ? "projeção para o mês" :
+    st.livre >= 0
+      ? `dá ~${fmtUS0(st.livre / dias)}/dia até o fim do mês · jantar, passeio, compra — sem culpa e sem furar a meta`
+      : `você passou ${fmtUS0(-st.livre)} do que estava livre — os próximos gastos saem da poupança`;
 
-  document.getElementById("cycle-title").textContent =
-    `Quinzena ${fmtD(start)} – ${fmtD(end)}`;
-  const badge = document.getElementById("cycle-badge");
-  badge.innerHTML = i === cur ? '<span class="badge counts">atual</span>'
-    : i < cur ? '<span class="badge covered">fechada</span>'
-    : '<span class="badge warn">futura</span>';
+  document.getElementById("t-ganho").textContent = fmtUS0(st.ganho);
+  document.getElementById("t-ganho-n").textContent =
+    st.extras > 0 ? `salários ${fmtUS0(st.salario)} + extras ${fmtUS0(st.extras)}` : "salários EUA + Brasil";
 
-  const saldoEl = document.getElementById("d-saldo");
-  saldoEl.textContent = fmtUS(st.sobra);
-  saldoEl.className = "value " + (st.sobra < 0 ? "neg" : "");
-  document.getElementById("d-saldo-note").textContent =
-    i < cur ? "quinzena fechada — sobra final" :
-    i > cur ? "quinzena futura" :
-    `de ${fmtUS(pay)} recebidos`;
+  document.getElementById("t-guardado").textContent = fmtUS0(st.saved);
+  document.getElementById("t-guardado-n").textContent = `meta: ${fmtUS0(S.settings.saveMonthly)}/mês`;
+  const pctSave = S.settings.saveMonthly > 0 ? Math.min(100, st.saved / S.settings.saveMonthly * 100) : 0;
+  document.getElementById("t-guardado-m").firstElementChild.style.width = pctSave + "%";
 
-  const pct = Math.min(100, pay > 0 ? (st.spent / pay) * 100 : 0);
-  const meter = document.getElementById("d-meter");
-  meter.classList.toggle("over", st.spent > pay);
-  meter.firstElementChild.style.width = pct + "%";
-  document.getElementById("d-meter-note").textContent =
-    `${Math.round(pay > 0 ? st.spent / pay * 100 : 0)}% do orçamento usado`;
+  document.getElementById("t-gasto").textContent = fmtUS0(st.spent);
+  document.getElementById("t-gasto-n").textContent =
+    st.covered > 0 ? `+ ${fmtUS0(st.covered)} pagos pela empresa (não contam)` : "só o que sai do seu bolso";
 
-  document.getElementById("d-entrada").textContent = fmtUS(st.entrada);
-  document.querySelector("#tab-dash .tile .note").textContent = st.extras > 0
-    ? `${fmtUS0(st.pay)} salário + ${fmtUS0(st.extras)} extras`
-    : "pagamento quinzenal";
-  document.getElementById("d-gasto").textContent = fmtUS(st.spent);
-  const nPersonal = cycleExpenses(i).filter(counts).length;
-  document.getElementById("d-gasto-n").textContent = `${nPersonal} lançamento${nPersonal === 1 ? "" : "s"}`;
-  document.getElementById("d-coberto").textContent = fmtUS(st.covered);
-
-  const diasEl = document.getElementById("d-dias");
-  const ritmoEl = document.getElementById("d-ritmo");
-  if (i === cur) {
-    const today = parseDate(todayStr());
-    const left = Math.max(0, Math.round((end - today) / DAY) + 1);
-    document.getElementById("d-dias-label").textContent = "Dias restantes";
-    diasEl.textContent = left;
-    ritmoEl.textContent = left > 0 && st.sobra > 0 ? `~${fmtUS0(st.sobra / left)}/dia disponível` : "";
-  } else {
-    document.getElementById("d-dias-label").textContent = "Duração";
-    diasEl.textContent = 14;
-    ritmoEl.textContent = "";
-  }
-
-  /* Categorias (só o que conta) */
+  /* Categorias */
   const byCat = {};
-  cycleExpenses(i).filter(counts).forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
+  S.expenses.filter(e => monthKey(e.date) === mk && counts(e)).forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
   const rows = CATS.filter(c => byCat[c.id]).sort((a,b) => byCat[b.id] - byCat[a.id]);
   const max = rows.length ? byCat[rows[0].id] : 0;
-  document.getElementById("d-cats").innerHTML = rows.length === 0
-    ? '<div class="empty">Nenhum gasto pessoal nesta quinzena.</div>'
+  document.getElementById("m-cats").innerHTML = rows.length === 0
+    ? '<div class="empty">Nenhum gasto neste mês ainda.</div>'
     : rows.map(c => `
       <div class="hbar-row" title="${esc(c.label)}: ${fmtUS(byCat[c.id])}">
         <span class="cat"><span class="dot" style="background:var(${c.color})"></span>${c.label}</span>
-        <div class="hbar-track"><div class="hbar" style="width:${max ? byCat[c.id]/max*100 : 0}%; background:var(${c.color})"></div></div>
+        <div><div class="hbar" style="width:${max ? byCat[c.id]/max*100 : 0}%; background:var(${c.color})"></div></div>
         <span class="val">${fmtUS0(byCat[c.id])}</span>
       </div>`).join("");
 
-  /* Histórico de quinzenas fechadas */
-  const first = S.expenses.length
-    ? Math.min(0, ...S.expenses.map(e => cycleIndex(e.date))) : 0;
-  const closed = [];
-  for (let k = Math.max(first, cur - 8); k < cur; k++) closed.push(k);
-  const hist = document.getElementById("d-hist");
-  if (closed.length === 0) {
-    hist.innerHTML = '<div class="empty">Ainda não há quinzenas fechadas — a primeira fecha automaticamente ao fim do ciclo.</div>';
-    document.getElementById("d-acum").textContent = "";
-  } else {
-    const vals = closed.map(k => cycleStats(k).sobra);
-    const maxAbs = Math.max(1, ...vals.map(Math.abs));
-    hist.innerHTML = `<div class="cols">` + closed.map((k, j) => {
-      const v = vals[j], h = Math.max(3, Math.abs(v) / maxAbs * 110);
-      return `<div class="colwrap" title="Quinzena de ${fmtD(cycleRange(k).start)}: sobra ${fmtUS(v)}">
-        <span class="cval">${fmtUS0(v)}</span>
-        <div class="col ${v < 0 ? "neg" : ""}" style="height:${h}px"></div>
-      </div>`;
-    }).join("") + `</div><div class="cols-labels">` +
-      closed.map(k => `<span>${fmtD(cycleRange(k).start)}</span>`).join("") + `</div>`;
-    const acum = vals.reduce((s,v) => s + v, 0);
-    document.getElementById("d-acum").innerHTML =
-      `Excedente acumulado nas quinzenas fechadas: <b class="${acum >= 0 ? "pos" : "neg"}">${fmtUS(acum)}</b>`;
-  }
+  /* Mês passado */
+  const pmk = shiftMonth(mk, -1);
+  const p = monthStats(pmk);
+  const temDados = S.expenses.some(e => monthKey(e.date) === pmk) || S.contributions.some(c => monthKey(c.date) === pmk) || S.incomes.some(i => monthKey(i.date) === pmk);
+  document.getElementById("m-prev").innerHTML = !temDados
+    ? `<div class="empty">Sem lançamentos em ${monthLabel(pmk)}.</div>`
+    : `<table><tbody>
+      <tr><td>Ganhou</td><td class="num">${fmtUS(p.ganho)}</td></tr>
+      <tr><td>Gastou</td><td class="num">${fmtUS(p.spent)}</td></tr>
+      <tr><td>Guardou</td><td class="num">${fmtUS(p.saved)} ${p.saved >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? '<span class="badge covered">meta ✓</span>' : ""}</td></tr>
+      <tr><td><b>Sobrou</b></td><td class="num"><b class="${p.ganho - p.spent - p.saved >= 0 ? "pos" : "neg"}">${fmtUS(p.ganho - p.spent - p.saved)}</b></td></tr>
+    </tbody></table>
+    <div class="hint">Sobra de mês fechado é dinheiro parado — considere transformar em aporte.</div>`;
 }
 
-/* ═══════════ Gastos ═══════════ */
-function renderGastoHint() {
-  const cat = document.getElementById("g-cat").value;
-  const trip = document.getElementById("g-trip").value;
-  const el = document.getElementById("g-hint");
-  if (trip === "work" && COVERED_ON_WORK.includes(cat)) {
-    el.innerHTML = '✓ Viagem a trabalho + categoria coberta pela empresa — <b>não vai contar</b> no seu orçamento (fica registrado só para histórico).';
-  } else if (trip === "work") {
-    el.innerHTML = 'Extra pessoal durante viagem a trabalho — <b>conta</b> no orçamento.';
-  } else {
-    el.textContent = "";
-  }
+/* ───────── Lançamentos ───────── */
+function updateLancForm() {
+  const t = document.getElementById("l-type").value;
+  document.getElementById("l-cat-f").style.display = t === "gasto" ? "" : "none";
+  document.getElementById("l-trip-f").style.display = t === "gasto" ? "" : "none";
+  document.getElementById("l-cur-f").style.display = t === "gasto" ? "none" : "";
+  updateLancHint();
 }
-function renderGastos() {
-  const list = document.getElementById("g-list");
-  const ex = [...S.expenses].sort((a,b) => b.date.localeCompare(a.date));
-  if (ex.length === 0) { list.innerHTML = '<div class="empty">Nenhum gasto registrado ainda.</div>'; return; }
-  list.innerHTML = `<table><thead><tr>
-      <th>Data</th><th>Categoria</th><th>Contexto</th><th>Descrição</th>
-      <th class="num">Valor</th><th>Orçamento</th><th></th>
-    </tr></thead><tbody>` +
-    ex.map(e => {
-      const c = CATS.find(x => x.id === e.cat) || CATS[6];
-      return `<tr>
-        <td>${fmtD(parseDate(e.date))}</td>
-        <td><span class="dot" style="background:var(${c.color})"></span>${c.label}</td>
-        <td>${TRIPS[e.trip]}</td>
-        <td>${esc(e.desc || "")}</td>
-        <td class="num">${fmtUS(e.amount)}</td>
-        <td>${counts(e) ? '<span class="badge counts">conta</span>' : '<span class="badge covered">coberto</span>'}</td>
-        <td><button class="mini" title="Excluir" onclick="delExpense('${e.id}')">✕</button></td>
-      </tr>`;
-    }).join("") + "</tbody></table>";
+function updateLancHint() {
+  const t = document.getElementById("l-type").value;
+  const el = document.getElementById("l-hint");
+  if (t === "gasto" && document.getElementById("l-trip").value === "work" && COVERED_ON_WORK.includes(document.getElementById("l-cat").value)) {
+    el.innerHTML = "✓ Coberto pela empresa — <b>não desconta</b> do seu livre.";
+  } else if (t === "aporte") {
+    el.textContent = "Aporte conta como 'guardado' no mês e soma no seu patrimônio investido.";
+  } else if (t === "renda") {
+    el.textContent = "Renda extra aumenta o livre do mês da data.";
+  } else el.textContent = "";
 }
-function delExpense(id) {
-  S.expenses = S.expenses.filter(e => String(e.id) !== String(id));
-  save(); renderGastos(); renderDash(); renderInvest();
+function renderLanc() {
+  const all = [
+    ...S.expenses.map(e => ({ ...e, _t: "gasto" })),
+    ...S.incomes.map(x => ({ ...x, _t: "renda" })),
+    ...S.contributions.map(c => ({ ...c, _t: "aporte" })),
+  ].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 60);
+  document.getElementById("l-list").innerHTML = all.length === 0
+    ? '<div class="empty">Nada registrado ainda. Todo gasto, renda extra e aporte entra por aqui.</div>'
+    : `<table><thead><tr><th>Data</th><th>Tipo</th><th>Detalhe</th><th class="num">Valor</th><th></th><th></th></tr></thead><tbody>` +
+      all.map(x => {
+        let det = "", badge = "", val = "";
+        if (x._t === "gasto") {
+          const c = CATS.find(k => k.id === x.cat) || CATS[6];
+          det = `<span class="dot" style="background:var(${c.color})"></span>${c.label}${x.trip !== "none" ? " · " + TRIPS[x.trip] : ""}${x.desc ? " · " + esc(x.desc) : ""}`;
+          badge = counts(x) ? "" : '<span class="badge covered">coberto</span>';
+          val = "− " + fmtUS(x.amount);
+        } else if (x._t === "renda") {
+          det = esc(x.source || "renda extra");
+          badge = '<span class="badge counts">renda</span>';
+          val = "+ " + (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
+        } else {
+          det = esc(x.dest || "investimento");
+          badge = '<span class="badge covered">aporte</span>';
+          val = (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
+        }
+        return `<tr><td>${fmtD(parseDate(x.date))}</td><td>${badge || "gasto"}</td><td>${det}</td>
+          <td class="num">${val}</td><td></td>
+          <td style="width:30px"><button class="mini" onclick="delLanc('${x._t}','${x.id}')">✕</button></td></tr>`;
+      }).join("") + "</tbody></table>";
 }
-
-/* ═══════════ Renda ═══════════ */
-function renderRenda() {
-  const ins = [...S.incomes].sort((a,b) => b.date.localeCompare(a.date));
-  document.getElementById("in-list").innerHTML = ins.length === 0
-    ? '<div class="empty">Nenhuma renda extra registrada. Bônus, horas extras, reembolsos, vendas — tudo entra aqui.</div>'
-    : `<table><thead><tr><th>Data</th><th>Fonte</th><th>Quinzena</th><th class="num">Valor</th><th></th></tr></thead><tbody>` +
-      ins.map(x => `<tr>
-        <td>${fmtD(parseDate(x.date))}</td>
-        <td>${esc(x.source || "")}</td>
-        <td>${fmtD(cycleRange(cycleIndex(x.date)).start)}</td>
-        <td class="num">${fmtUS(x.amount)}</td>
-        <td><button class="mini" onclick="delIncome('${x.id}')">✕</button></td>
-      </tr>`).join("") + "</tbody></table>";
-
-  const hist = [...S.settings.payHistory].sort((a,b) => a.from.localeCompare(b.from));
-  document.getElementById("pay-list").innerHTML =
-    `<table><thead><tr><th>Válido a partir de</th><th class="num">Valor/quinzena</th><th></th></tr></thead><tbody>` +
-    hist.map((h, idx) => `<tr>
-      <td>${fmtD(parseDate(h.from))} ${parseDate(h.from).getFullYear()}</td>
-      <td class="num">${fmtUS(h.amount)}</td>
-      <td>${hist.length > 1 && idx > 0 ? `<button class="mini" onclick="delPay('${h.from}')">✕</button>` : ""}</td>
-    </tr>`).join("") + "</tbody></table>";
-}
-function setPay(from, amount) {
-  const h = S.settings.payHistory;
-  const ex = h.find(x => x.from === from);
-  if (ex) ex.amount = amount; else h.push({ from, amount });
-  h.sort((a,b) => a.from.localeCompare(b.from));
-  S.settings.paycheck = payFor(currentCycle());
-  save(); bindSettings(); renderAll();
-}
-function delPay(from) {
-  if (S.settings.payHistory.length <= 1) return;
-  S.settings.payHistory = S.settings.payHistory.filter(x => x.from !== from);
-  S.settings.paycheck = payFor(currentCycle());
-  save(); bindSettings(); renderAll();
-}
-function delIncome(id) {
-  S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
-  save(); renderRenda(); renderDash(); renderInvest();
+function delLanc(t, id) {
+  if (t === "gasto") S.expenses = S.expenses.filter(x => String(x.id) !== String(id));
+  if (t === "renda") S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
+  if (t === "aporte") S.contributions = S.contributions.filter(x => String(x.id) !== String(id));
+  save(); renderAll();
 }
 
-/* ═══════════ Comparador ═══════════ */
-/* Tabelas 2025 — atualizar quando sair a tabela nova */
-const INSS_BANDS = [[1518.00,.075],[2793.88,.09],[4190.83,.12],[8157.41,.14]];
-const IRRF_BANDS = [
-  { up: 2259.20, rate: 0,    ded: 0      },
-  { up: 2826.65, rate: .075, ded: 169.44 },
-  { up: 3751.05, rate: .15,  ded: 381.44 },
-  { up: 4664.68, rate: .225, ded: 662.77 },
-  { up: Infinity, rate: .275, ded: 896.00 },
-];
-function calcINSS(gross) {
-  let t = 0, prev = 0;
-  for (const [up, rate] of INSS_BANDS) {
-    if (gross <= prev) break;
-    t += (Math.min(gross, up) - prev) * rate;
-    prev = up;
-  }
-  return t;
-}
-function calcIRRF(base) {
-  const b = IRRF_BANDS.find(x => base <= x.up);
-  return Math.max(0, base * b.rate - b.ded);
-}
-function renderComparador() {
-  const { brGross, fx, usPay } = S.settings;
-  const inss = calcINSS(brGross);
-  const irrf = calcIRRF(brGross - inss);
-  const brNet = brGross - inss - irrf;
-  const fgts = brGross * 0.08;
-  const usMonthly = usPay * 26 / 12;
-  const usBRL = usMonthly * fx;
+/* ───────── Metas ───────── */
+function renderMetas() {
+  const st = S.settings;
+  const inv = invested();
+  const pct = Math.min(100, st.goalAmount > 0 ? inv / st.goalAmount * 100 : 0);
+  const mLeft = monthsUntilGoal();
+  const pace = paceNeededBRL();
+  const paceUSD = pace / st.fx;
+  const last3 = [1,2,3].map(n => monthStats(shiftMonth(thisMonth(), -n)).saved);
+  const media = last3.reduce((a,b) => a+b, 0) / 3;
+  const ritmoOk = media * st.fx >= pace;
 
-  document.getElementById("c-br-table").innerHTML = `
-    <tr><td>Bruto</td><td class="num">${fmtBR(brGross)}</td></tr>
-    <tr><td>INSS</td><td class="num neg">− ${fmtBR(inss)}</td></tr>
-    <tr><td>IRRF</td><td class="num neg">− ${fmtBR(irrf)}</td></tr>
-    <tr><td><b>Líquido</b></td><td class="num"><b>${fmtBR(brNet)}</b></td></tr>
-    <tr><td>FGTS (benefício)</td><td class="num pos">+ ${fmtBR(fgts)}</td></tr>
-    <tr><td>Líquido em US$</td><td class="num">${fmtUS(brNet / fx)}</td></tr>`;
-
-  document.getElementById("c-us-table").innerHTML = `
-    <tr><td>Por quinzena</td><td class="num">${fmtUS(usPay)}</td></tr>
-    <tr><td>Mensal (×26/12)</td><td class="num"><b>${fmtUS(usMonthly)}</b></td></tr>
-    <tr><td>Em R$</td><td class="num">${fmtBR(usBRL)}</td></tr>
-    <tr><td>Moradia/contas/carro</td><td class="num pos">cobertos</td></tr>`;
-
-  const a = brNet, b = usBRL, mx = Math.max(a, b);
-  document.getElementById("c-compare").innerHTML = `
-    <div class="hbar-row" style="grid-template-columns:150px 1fr 110px">
-      <span class="cat"><span class="dot" style="background:var(--s2)"></span>Brasil (líquido)</span>
-      <div class="hbar-track"><div class="hbar" style="width:${a/mx*100}%; background:var(--s2)"></div></div>
-      <span class="val">${fmtBR(Math.round(a))}</span>
-    </div>
-    <div class="hbar-row" style="grid-template-columns:150px 1fr 110px">
-      <span class="cat"><span class="dot" style="background:var(--s1)"></span>EUA (líquido em R$)</span>
-      <div class="hbar-track"><div class="hbar" style="width:${b/mx*100}%; background:var(--s1)"></div></div>
-      <span class="val">${fmtBR(Math.round(b))}</span>
-    </div>
-    <div class="hint" style="margin-top:8px">Diferença: <b>${fmtBR(Math.abs(b - a))}/mês ${b >= a ? "a favor dos EUA" : "a favor do Brasil"}</b> — antes de considerar que nos EUA moradia e carro já estão pagos.</div>`;
-}
-
-/* ═══════════ Investimentos ═══════════ */
-function contribBRL(c) { return c.cur === "USD" ? c.amount * S.settings.fx : c.amount; }
-function renderInvest() {
-  const { goal, goalMonths, goalStart, fx } = S.settings;
-  const total = S.portfolio.reduce((s,p) => s + p.value, 0);
-
-  /* Ritmo */
-  const start = parseDate(goalStart);
-  const endGoal = new Date(start); endGoal.setMonth(endGoal.getMonth() + goalMonths);
-  const now = new Date();
-  const monthsLeft = Math.max(0, (endGoal - now) / (30.44 * DAY));
-  const biweeksLeft = Math.max(1, monthsLeft * 2.17);
-  const falta = Math.max(0, goal - total);
-  const perBiweek = falta / biweeksLeft;
-  const recent = S.contributions.filter(c => cycleIndex(c.date) >= currentCycle() - 3);
-  const recentAvg = recent.length ? recent.reduce((s,c) => s + contribBRL(c), 0) / Math.min(4, Math.max(1, currentCycle() - Math.min(...recent.map(c => cycleIndex(c.date))) + 1)) : 0;
-  const onTrack = falta === 0 ? "done" : recentAvg >= perBiweek ? "ok" : recentAvg >= perBiweek * 0.7 ? "close" : "behind";
-  const pctGoal = Math.min(100, total / goal * 100);
-
-  document.getElementById("i-pace").innerHTML = `
+  document.getElementById("g-patrimonio").innerHTML = `
     <div class="tile">
-      <div class="label">Carteira hoje</div>
-      <div class="value">${fmtBR(total)}</div>
-      <div class="meter" style="margin-top:8px"><div style="width:${pctGoal}%"></div></div>
-      <div class="hint">${pctGoal.toFixed(0)}% da meta de ${fmtBR(goal)} · faltam ${fmtBR(falta)}</div>
+      <div class="label">Investido hoje</div>
+      <div class="value">${fmtBR(inv)}</div>
+      <div class="meter"><div style="width:${pct}%"></div></div>
+      <div class="hint">${pct.toFixed(0)}% da meta de ${fmtBR(st.goalAmount)}${st.goalMonth ? " até " + monthLabel(st.goalMonth) : ""} · faltam ${fmtBR(Math.max(0, st.goalAmount - inv))}</div>
     </div>
-    <div style="margin-top:12px; font-size:13.5px">
-      Ritmo necessário: <b>${fmtBR(perBiweek)}</b>/quinzena (≈ ${fmtUS(perBiweek / fx)})<br>
-      Ritmo recente (últimas 4 quinzenas): <b>${fmtBR(recentAvg)}</b>/quinzena<br>
-      ${{
-        done:  '<span class="badge covered">meta atingida 🎉</span>',
-        ok:    '<span class="badge covered">no ritmo</span>',
-        close: '<span class="badge warn">quase no ritmo — falta pouco</span>',
-        behind:'<span class="badge crit">abaixo do ritmo</span>',
-      }[onTrack]}
+    <div style="margin-top:12px; font-size:14px">
+      Para chegar lá: guardar <b>${fmtBR(pace)}</b>/mês (≈ ${fmtUS0(paceUSD)})${mLeft > 0 ? ` por ${mLeft} meses` : ""}<br>
+      Você tem guardado em média <b>${fmtUS0(media)}</b>/mês nos últimos 3 meses
+      ${inv >= st.goalAmount ? '<span class="badge covered">meta atingida 🎉</span>' : ritmoOk ? '<span class="badge covered">no ritmo</span>' : '<span class="badge warn">abaixo do ritmo</span>'}
     </div>`;
 
-  /* Carteira */
+  document.getElementById("g-mensal").innerHTML = `
+    <form class="inline" onsubmit="return false">
+      <div class="field"><label>Guardar por mês (US$)</label>
+        <input type="number" step="10" value="${st.saveMonthly}" style="width:110px" onchange="setS('saveMonthly', this.value)"></div>
+    </form>
+    <div class="hint" style="margin-top:10px">
+      Renda ${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0))} − guardar ${fmtUS0(st.saveMonthly)} =
+      <b>${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0) - st.saveMonthly)}</b> para viver o mês.
+      O que você não gastar disso vira livre de verdade.
+    </div>`;
+
+  document.getElementById("g-renda").innerHTML = `
+    <form class="inline" onsubmit="return false">
+      <div class="field"><label>EUA (US$/mês)</label>
+        <input type="number" step="10" value="${st.usMonthly}" style="width:100px" onchange="setS('usMonthly', this.value)"></div>
+      <div class="field"><label>Brasil (R$/mês)</label>
+        <input type="number" step="100" value="${st.brMonthly}" style="width:100px" onchange="setS('brMonthly', this.value)"></div>
+      <div class="field"><label>Investido base (R$)</label>
+        <input type="number" step="1000" value="${st.investedBase}" style="width:110px" onchange="setS('investedBase', this.value)"></div>
+    </form>
+    <div class="hint" style="margin-top:10px">Total: <b>${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0))}/mês</b>${st.brMonthly > 0 ? ` (Brasil convertido a ${st.fx})` : ""}</div>`;
+}
+function setS(key, v) { S.settings[key] = Number(v) || 0; save(); renderAll(); }
+
+/* ───────── Investimentos (visão completa) ───────── */
+function renderInvest() {
+  const st = S.settings;
+  const inv = invested();
+  const pct = Math.min(100, st.goalAmount > 0 ? inv / st.goalAmount * 100 : 0);
+  const pace = paceNeededBRL();
+  document.getElementById("iv-resumo").innerHTML = `
+    <div class="tile">
+      <div class="value" style="font-size:32px">${fmtBR(inv)}</div>
+      <div class="meter"><div style="width:${pct}%"></div></div>
+      <div class="hint">${pct.toFixed(0)}% da meta de ${fmtBR(st.goalAmount)}${st.goalMonth ? " até " + monthLabel(st.goalMonth) : ""} · ritmo necessário: ${fmtBR(pace)}/mês (≈ ${fmtUS0(pace / st.fx)})</div>
+    </div>`;
+
+  const totalPort = S.portfolio.reduce((s,p) => s + p.value, 0);
   document.getElementById("p-list").innerHTML = S.portfolio.length === 0
-    ? '<div class="empty">Carteira vazia.</div>'
+    ? '<div class="empty">Detalhe sua carteira aqui: Tesouro, renda fixa, Bitcoin…</div>'
     : `<table><tbody>` + S.portfolio.map(p => `
       <tr><td>${esc(p.name)}</td>
-        <td class="num"><input type="number" class="cellnum" value="${p.value}" step="100"
-          onchange="setPortValue('${p.id}', this.value)" title="Edite para atualizar o valor"></td>
+        <td class="num"><input type="number" class="cellnum" value="${p.value}" step="100" onchange="setPortValue('${p.id}', this.value)"></td>
         <td style="width:30px"><button class="mini" onclick="delPort('${p.id}')">✕</button></td></tr>`).join("") +
-      `<tr><td><b>Total</b></td><td class="num"><b>${fmtBR(total)}</b></td><td></td></tr></tbody></table>`;
+      `<tr><td><b>Soma</b></td><td class="num"><b>${fmtBR(totalPort)}</b></td><td></td></tr></tbody></table>`;
 
-  /* Aportes */
   const cs = [...S.contributions].sort((a,b) => b.date.localeCompare(a.date));
-  document.getElementById("a-list").innerHTML = cs.length === 0
-    ? '<div class="empty">Nenhum aporte registrado. Registre cada transferência para investimento aqui.</div>'
-    : `<table><tbody>` + cs.slice(0, 12).map(c => `
-      <tr><td>${fmtD(parseDate(c.date))}</td>
-        <td>${esc(c.dest || "")}</td>
-        <td class="num">${c.cur === "USD" ? fmtUS(c.amount) : fmtBR(c.amount)}</td>
-        <td style="width:30px"><button class="mini" onclick="delContrib('${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
+  document.getElementById("iv-aportes").innerHTML = cs.length === 0
+    ? '<div class="empty">Nenhum aporte ainda.</div>'
+    : `<table><tbody>` + cs.map(c => `
+      <tr><td>${fmtD(parseDate(c.date))}</td><td>${esc(c.dest || "")}</td>
+        <td class="num">${c.cur === "BRL" ? fmtBR(c.amount) : fmtUS(c.amount)}</td>
+        <td style="width:30px"><button class="mini" onclick="delLanc('aporte','${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
 
-  /* Alocação do excedente */
-  const alloc = S.settings.alloc;
-  document.getElementById("al-rows").innerHTML = alloc.map((a, idx) => `
-    <div class="hbar-row" style="grid-template-columns:1fr 80px">
-      <span class="cat" style="white-space:normal">${esc(a.name)}</span>
-      <span><input type="number" min="0" max="100" value="${a.pct}" style="width:60px"
-        onchange="setAlloc(${idx}, this.value)"> %</span>
-    </div>`).join("");
-  const sumPct = alloc.reduce((s,a) => s + a.pct, 0);
-  const lastClosed = currentCycle() - 1;
-  const lastSobra = lastClosed >= 0 ? Math.max(0, cycleStats(lastClosed).sobra) : 0;
-  document.getElementById("al-sug").innerHTML =
-    (sumPct !== 100 ? `<div class="badge warn">os percentuais somam ${sumPct}% (ideal: 100%)</div>` : "") +
-    (lastSobra > 0 ? `<h3>Sobra da última quinzena fechada: ${fmtUS(lastSobra)}</h3>` +
-      alloc.filter(a => a.pct > 0).map(a =>
-        `<div style="font-size:13.5px; margin:3px 0">→ ${esc(a.name)}: <b>${fmtUS(lastSobra * a.pct / 100)}</b> (≈ ${fmtBR(lastSobra * a.pct / 100 * fx)})</div>`).join("")
-      : '<div class="hint">Quando uma quinzena fechar com sobra positiva, a divisão sugerida aparece aqui.</div>');
-
-  /* Oportunidades */
   const prioOrder = { alta: 0, media: 1, baixa: 2 };
   const statusBadge = { avaliando: "warn", investido: "covered", descartado: "crit" };
   const os = [...S.opportunities].sort((a,b) =>
@@ -862,48 +663,50 @@ function renderInvest() {
         <td>${esc(o.name)}</td><td>${esc(o.where)}</td>
         <td>${o.prio === "alta" ? "🔺 Alta" : o.prio === "media" ? "Média" : "Baixa"}</td>
         <td><span class="badge ${statusBadge[o.status]}">${o.status}</span>
-          <select class="mini-sel" onchange="setOppStatus('${o.id}', this.value)" style="font-size:11px; padding:1px 2px; margin-left:4px">
+          <select onchange="setOppStatus('${o.id}', this.value)" style="font-size:11px; padding:1px 2px; margin-left:4px">
             ${["avaliando","investido","descartado"].map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
           </select></td>
         <td>${esc(o.notes || "")}</td>
         <td><button class="mini" onclick="delOpp('${o.id}')">✕</button></td>
       </tr>`).join("") + "</tbody></table>";
 }
-function setAlloc(idx, v) { S.settings.alloc[idx].pct = Math.max(0, Math.min(100, Number(v) || 0)); save(); renderInvest(); }
+function setPortValue(id, v) { const p = S.portfolio.find(p => String(p.id) === String(id)); if (p) { p.value = Math.max(0, Number(v) || 0); save(); renderInvest(); } }
 function delPort(id) { S.portfolio = S.portfolio.filter(p => String(p.id) !== String(id)); save(); renderInvest(); }
-function setPortValue(id, v) {
-  const p = S.portfolio.find(p => String(p.id) === String(id));
-  if (p) { p.value = Math.max(0, Number(v) || 0); save(); renderInvest(); }
-}
-function delContrib(id) { S.contributions = S.contributions.filter(c => String(c.id) !== String(id)); save(); renderInvest(); }
 function delOpp(id) { S.opportunities = S.opportunities.filter(o => String(o.id) !== String(id)); save(); renderInvest(); }
 function setOppStatus(id, st) { const o = S.opportunities.find(o => String(o.id) === String(id)); if (o) { o.status = st; save(); renderInvest(); } }
+function syncPortfolio() {
+  const totalPort = S.portfolio.reduce((s,p) => s + p.value, 0);
+  if (totalPort <= 0) return;
+  const aportes = S.contributions.reduce((s,c) => s + toBRL(c.amount, c.cur), 0);
+  S.settings.investedBase = totalPort - aportes;
+  save(); renderAll();
+}
 
-/* ═══════════ Guia de benefícios (Bettendorf, IA / Quad Cities) ═══════════ */
+/* ───────── Rewards (visão completa) ───────── */
 const GUIDE = [
   { group: "Clubes & mercados — Quad Cities", items: [
-    { id:"costco",   name:"Costco (Davenport)", why:"Gasolina normalmente a mais barata da região + atacado. Anuidade ~US$65; o tier Executive (~US$130) devolve 2% do gasto no ano — só vale se comprar muito." },
-    { id:"samsclub", name:"Sam's Club (Davenport / Moline)", why:"Alternativa mais barata (~US$50/ano), gasolina barata e pagamento pelo app (Scan & Go)." },
-    { id:"hyvee",    name:"Hy-Vee Perks + Fuel Saver", why:"Maior rede de mercado de Iowa. Compras acumulam desconto por galão, resgatável nos postos Hy-Vee e Casey's participantes. Grátis." },
-    { id:"kwikstar", name:"Kwik Rewards (Kwik Star)", why:"Rede forte em Iowa/Wisconsin/Minnesota — desconto por galão e pontos na loja. Grátis." },
+    { id:"costco",   name:"Costco (Davenport)", why:"Gasolina normalmente a mais barata da região + atacado. Anuidade ~US$65; tier Executive (~US$130) devolve 2% do gasto anual." },
+    { id:"samsclub", name:"Sam's Club (Davenport / Moline)", why:"Alternativa mais barata (~US$50/ano), gasolina barata e Scan & Go." },
+    { id:"hyvee",    name:"Hy-Vee Perks + Fuel Saver", why:"Maior mercado de Iowa; compras acumulam desconto por galão (vale nos Casey's participantes). Grátis." },
+    { id:"kwikstar", name:"Kwik Rewards (Kwik Star)", why:"Forte em Iowa/Wisconsin/Minnesota; desconto por galão e pontos. Grátis." },
   ]},
-  { group: "Combustível — redes nacionais (para as viagens de carro)", items: [
-    { id:"caseys",  name:"Casey's Rewards", why:"Onipresente no Meio-Oeste (Iowa é a sede). Pontos viram desconto em combustível — mesmo pagando com o cartão da empresa, os pontos são seus." },
-    { id:"shell",   name:"Shell Fuel Rewards", why:"Rede nacional — bom padrão para rotas longas. Grátis." },
-    { id:"exxon",   name:"Exxon Mobil Rewards+", why:"Nacional; pontos por galão e em compras na loja. Grátis." },
-    { id:"bpme",    name:"BPme Rewards (BP/Amoco)", why:"Nacional; desconto por galão para membros. Grátis." },
-    { id:"pilot",   name:"Pilot Flying J — myRewards", why:"Postos de rodovia interestadual — útil nas viagens longas. Grátis." },
-    { id:"gasbuddy",name:"GasBuddy (app)", why:"Comparar preço de postos em qualquer cidade na estrada. Use só o app grátis." },
-    { id:"upside",  name:"Upside (app)", why:"Cashback real em postos e restaurantes, mas exige pagar com cartão vinculado — confirme antes se funciona com o cartão da empresa." },
+  { group: "Combustível — redes nacionais (viagens de carro)", items: [
+    { id:"caseys",  name:"Casey's Rewards", why:"Onipresente no Meio-Oeste; pontos viram desconto em combustível — mesmo pagando com o cartão da empresa, os pontos são seus." },
+    { id:"shell",   name:"Shell Fuel Rewards", why:"Rede nacional — padrão para rotas longas. Grátis." },
+    { id:"exxon",   name:"Exxon Mobil Rewards+", why:"Nacional; pontos por galão e na loja. Grátis." },
+    { id:"bpme",    name:"BPme Rewards (BP/Amoco)", why:"Nacional; desconto por galão. Grátis." },
+    { id:"pilot",   name:"Pilot Flying J — myRewards", why:"Postos de rodovia interestadual. Grátis." },
+    { id:"gasbuddy",name:"GasBuddy (app)", why:"Comparar preços de postos em qualquer cidade. Use só o app grátis." },
+    { id:"upside",  name:"Upside (app)", why:"Cashback real em postos e restaurantes; exige cartão vinculado — confirme se funciona com o cartão da empresa." },
   ]},
-  { group: "Voos — MLI (Moline), CID (Cedar Rapids), ORD (Chicago)", items: [
-    { id:"airline", name:"Escolher 1 programa de milhas principal", why:"American, Delta e United atendem MLI. Descubra qual companhia a empresa mais usa nas reservas e concentre as milhas nela — sempre informe SEU número de fidelidade: as milhas de voos de trabalho são suas." },
-    { id:"precheck",name:"TSA PreCheck", why:"~US$78 por 5 anos, fila rápida de segurança. Para quem voa toda semana, se paga em tempo. Vários cartões de crédito reembolsam a taxa." },
+  { group: "Voos — MLI (Moline), CID, ORD", items: [
+    { id:"airline", name:"Escolher 1 programa de milhas principal", why:"American, Delta e United atendem MLI. Concentre na companhia que a empresa mais usa e SEMPRE informe seu número: as milhas de voos de trabalho são suas." },
+    { id:"precheck",name:"TSA PreCheck", why:"~US$78 por 5 anos, fila rápida. Quem voa toda semana recupera em tempo; vários cartões reembolsam." },
   ]},
   { group: "Alimentação fora & delivery", items: [
-    { id:"dashpass", name:"DoorDash DashPass", why:"~US$10/mês com entrega grátis — só compensa com 3+ pedidos/mês pessoais (em viagem a trabalho a comida já é coberta)." },
-    { id:"uberone",  name:"Uber One", why:"~US$10/mês: desconto em Uber Eats E em corridas — pode compensar mais que o DashPass se você usa Uber nas viagens." },
-    { id:"chainapps",name:"Apps de redes (McDonald's, Chipotle, Starbucks…)", why:"Grátis; nos EUA os apps dão descontos agressivos e pontos que viram refeição." },
+    { id:"dashpass", name:"DoorDash DashPass", why:"~US$10/mês, entrega grátis — só compensa com 3+ pedidos pessoais/mês (em viagem a trabalho a comida é coberta)." },
+    { id:"uberone",  name:"Uber One", why:"~US$10/mês: Uber Eats + desconto em corridas — pode valer mais que o DashPass se usa Uber nas viagens." },
+    { id:"chainapps",name:"Apps de redes (McDonald's, Chipotle, Starbucks…)", why:"Grátis; descontos agressivos e pontos que viram refeição." },
   ]},
 ];
 const GUIDE_STATUS = { pendente:"Pendente", avaliando:"Avaliando", membro:"Sou membro", descartado:"Descartado" };
@@ -922,20 +725,17 @@ function renderGuide() {
     }).join("")).join("");
 }
 function setGuide(id, v) { S.guide[id] = v; save(); renderGuide(); }
-
-/* ═══════════ Rewards & combustível ═══════════ */
 function renderRewards() {
   const rs = [...S.rewards].sort((a,b) => a.cat.localeCompare(b.cat) || b.rate - a.rate);
   const bestByCat = {};
   rs.forEach(r => { if (!bestByCat[r.cat] || r.rate > bestByCat[r.cat]) bestByCat[r.cat] = r.rate; });
   document.getElementById("r-list").innerHTML = rs.length === 0
-    ? '<div class="empty">Nenhum programa registrado.</div>'
+    ? '<div class="empty">Registre seus cartões e o retorno por categoria.</div>'
     : `<table><thead><tr><th>Categoria</th><th>Programa</th><th class="num">Retorno</th><th></th></tr></thead><tbody>` +
       rs.map(r => {
         const c = CATS.find(x => x.id === r.cat) || CATS[6];
-        const best = bestByCat[r.cat] === r.rate;
         return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${c.label}</td>
-          <td>${esc(r.prog)} ${best ? '<span class="badge covered">melhor</span>' : ""}</td>
+          <td>${esc(r.prog)} ${bestByCat[r.cat] === r.rate ? '<span class="badge covered">melhor</span>' : ""}</td>
           <td class="num">${r.rate}%</td>
           <td><button class="mini" onclick="delReward('${r.id}')">✕</button></td></tr>`;
       }).join("") + "</tbody></table>";
@@ -956,12 +756,150 @@ function renderRewards() {
 function delReward(id) { S.rewards = S.rewards.filter(r => String(r.id) !== String(id)); save(); renderRewards(); }
 function delFuel(id) { S.fuel = S.fuel.filter(f => String(f.id) !== String(id)); save(); renderRewards(); }
 
-/* ═══════════ Config / backup ═══════════ */
+/* ───────── Assistente de metas ───────── */
+let wzStep = 0, wzData = {};
+const WZ_STEPS = [
+  {
+    title: "Vamos começar pelo que entra. 💵",
+    sub: "Quanto cai na sua conta por mês nos EUA, já líquido? (Se recebe $1.367 por quinzena, dá ~$2.962/mês.)",
+    render: () => `<div class="biginput"><span class="cur">$</span><input type="number" id="wz-in" value="${wzData.usMonthly}" step="10" min="0"></div>`,
+    live: () => "",
+    saveStep: () => wzData.usMonthly = num("wz-in"),
+  },
+  {
+    title: "E no Brasil, entra algo por mês?",
+    sub: "Salário, aluguel, renda de investimento — líquido, em reais. Pode ser 0.",
+    render: () => `
+      <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.brMonthly}" step="100" min="0"></div>
+      <div class="field" style="margin-top:10px"><label>Câmbio para converter (R$ por US$)</label>
+      <input type="number" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>`,
+    live: () => {
+      const br = num("wz-in"), fx = num("wz-fx") || 5.45;
+      const total = wzData.usMonthly + (br > 0 ? br / fx : 0);
+      return `Sua renda total: <b>${fmtUS0(total)}/mês</b>`;
+    },
+    saveStep: () => { wzData.brMonthly = num("wz-in"); wzData.fx = num("wz-fx") || 5.45; },
+  },
+  {
+    title: "Quanto você já tem investido hoje?",
+    sub: "Some tudo: renda fixa, Tesouro, Bitcoin… em reais.",
+    render: () => `<div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.investedBase}" step="1000" min="0"></div>`,
+    live: () => "",
+    saveStep: () => wzData.investedBase = num("wz-in"),
+  },
+  {
+    title: "Onde você quer chegar? 🎯",
+    sub: "Valor investido que você quer alcançar, e até quando.",
+    render: () => `
+      <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.goalAmount}" step="5000" min="0"></div>
+      <div class="field" style="margin-top:10px"><label>Até quando?</label>
+      <input type="month" id="wz-month" value="${wzData.goalMonth}"></div>`,
+    live: () => {
+      const goal = num("wz-in"), mm = val("wz-month");
+      if (!goal || !mm) return "";
+      const [gy, gm] = mm.split("-").map(Number);
+      const [cy, cmo] = thisMonth().split("-").map(Number);
+      const m = (gy - cy) * 12 + (gm - cmo);
+      if (m <= 0) return "Escolha um mês no futuro.";
+      const pace = Math.max(0, goal - wzData.investedBase) / m;
+      return `Faltam ${fmtBR(Math.max(0, goal - wzData.investedBase))} em ${m} meses → guardar <b>${fmtBR(pace)}/mês</b> (≈ <b>${fmtUS0(pace / wzData.fx)}</b>)`;
+    },
+    saveStep: () => { wzData.goalAmount = num("wz-in"); wzData.goalMonth = val("wz-month"); },
+  },
+  {
+    title: "Quanto vai guardar por mês?",
+    sub: "Esse é o combinado entre você e a meta. O que passar disso no mês é seu, livre, sem culpa.",
+    render: () => {
+      const pace = suggestedPace();
+      return `<button class="sugg" onclick="document.getElementById('wz-in').value=${Math.ceil(pace)}; wzLive()">Usar o ritmo da meta: ${fmtUS0(pace)}/mês</button>
+        <div class="biginput"><span class="cur">$</span><input type="number" id="wz-in" value="${wzData.saveMonthly || Math.ceil(pace)}" step="10" min="0"></div>`;
+    },
+    live: () => {
+      const sv = num("wz-in");
+      const total = wzData.usMonthly + (wzData.brMonthly > 0 ? wzData.brMonthly / wzData.fx : 0);
+      const pace = suggestedPace();
+      const viver = total - sv;
+      let msg = `Sobram <b class="pos">${fmtUS0(viver)}/mês</b> para viver + extras.`;
+      if (sv < pace) msg += ` <br>Abaixo do ritmo da meta (${fmtUS0(pace)}) — a meta vai atrasar, e tudo bem se for uma escolha.`;
+      return msg;
+    },
+    saveStep: () => wzData.saveMonthly = num("wz-in"),
+  },
+  {
+    title: "Fechado. Esse é o seu mapa. 🗺️",
+    sub: "Você pode mudar tudo depois na aba Metas.",
+    render: () => {
+      const total = wzData.usMonthly + (wzData.brMonthly > 0 ? wzData.brMonthly / wzData.fx : 0);
+      return `<div class="resumo">
+        <div><span>Entra por mês</span><b>${fmtUS0(total)}</b></div>
+        <div><span>Vai guardar</span><b>${fmtUS0(wzData.saveMonthly)}</b></div>
+        <div><span>Meta</span><b>${fmtBR(wzData.goalAmount)}${wzData.goalMonth ? " até " + monthLabel(wzData.goalMonth) : ""}</b></div>
+        <div class="total"><span>Livre para viver o mês</span><b class="pos">${fmtUS0(total - wzData.saveMonthly)}</b></div>
+      </div>
+      <p class="sub">Cada gasto que você lançar desconta desse livre. O número grande da tela inicial é sua liberdade em tempo real.</p>`;
+    },
+    live: () => "",
+    saveStep: () => {},
+  },
+];
+const num = id => Number(document.getElementById(id)?.value) || 0;
+const val = id => document.getElementById(id)?.value || "";
+function suggestedPace() {
+  if (!wzData.goalMonth) return 0;
+  const [gy, gm] = wzData.goalMonth.split("-").map(Number);
+  const [cy, cmo] = thisMonth().split("-").map(Number);
+  const m = Math.max(1, (gy - cy) * 12 + (gm - cmo));
+  return Math.max(0, wzData.goalAmount - wzData.investedBase) / m / wzData.fx;
+}
+function startWizard() {
+  const st = S.settings;
+  wzData = {
+    usMonthly: st.usMonthly, brMonthly: st.brMonthly, fx: st.fx,
+    investedBase: st.investedBase, goalAmount: st.goalAmount,
+    goalMonth: st.goalMonth || shiftMonth(thisMonth(), 12),
+    saveMonthly: st.saveMonthly,
+  };
+  wzStep = 0;
+  document.getElementById("wizard").classList.add("on");
+  renderWizard();
+}
+function renderWizard() {
+  const s = WZ_STEPS[wzStep];
+  document.getElementById("wz-dots").innerHTML =
+    WZ_STEPS.map((_, i) => `<span class="${i <= wzStep ? "done" : ""}"></span>`).join("");
+  document.getElementById("wz-body").innerHTML = `
+    <h2>${s.title}</h2><p class="sub">${s.sub}</p>
+    ${s.render()}
+    <div class="live" id="wz-live"></div>
+    <div class="actions">
+      ${wzStep > 0 ? '<button class="btn ghost" onclick="wzBack()">‹ Voltar</button>' : "<span></span>"}
+      <button class="btn" onclick="wzNext()">${wzStep === WZ_STEPS.length - 1 ? "Começar a usar ✓" : "Continuar ›"}</button>
+    </div>`;
+  const inp = document.getElementById("wz-in");
+  if (inp) { inp.focus(); inp.select?.(); }
+  document.querySelectorAll("#wz-body input").forEach(i => i.addEventListener("input", wzLive));
+  wzLive();
+}
+function wzLive() {
+  document.getElementById("wz-live").innerHTML = WZ_STEPS[wzStep].live() || "";
+}
+function wzBack() { WZ_STEPS[wzStep].saveStep(); wzStep--; renderWizard(); }
+function wzNext() {
+  WZ_STEPS[wzStep].saveStep();
+  if (wzStep < WZ_STEPS.length - 1) { wzStep++; renderWizard(); return; }
+  Object.assign(S.settings, wzData, { onboarded: true });
+  save();
+  document.getElementById("wizard").classList.remove("on");
+  document.getElementById("cfg-fx").value = S.settings.fx;
+  renderAll();
+}
+
+/* ───────── Config / backup ───────── */
 function exportData() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `controle-financeiro-backup-${todayStr()}.json`;
+  a.download = `meu-dinheiro-backup-${todayStr()}.json`;
   a.click();
 }
 function importData(input) {
@@ -972,33 +910,15 @@ function importData(input) {
       const d = JSON.parse(r.result);
       if (!d.settings || !Array.isArray(d.expenses)) throw new Error("formato inválido");
       S = { ...structuredClone(DEFAULTS), ...d, settings: { ...DEFAULTS.settings, ...d.settings } };
-      save(); bindSettings(); renderAll();
+      save(); document.getElementById("cfg-fx").value = S.settings.fx; renderAll();
       alert("Backup importado com sucesso.");
     } catch (e) { alert("Não foi possível importar: " + e.message); }
   };
   r.readAsText(f);
 }
 
-/* ═══════════ Bindings ═══════════ */
-function bindSettings() {
-  const map = {
-    "cfg-anchor": "anchor",
-    "c-brgross": "brGross", "c-fx": "fx", "c-uspay": "usPay",
-    "i-goal": "goal", "i-months": "goalMonths", "i-start": "goalStart",
-  };
-  for (const [id, key] of Object.entries(map)) {
-    const el = document.getElementById(id);
-    el.value = S.settings[key];
-    el.onchange = () => {
-      S.settings[key] = el.type === "number" ? Number(el.value) : el.value;
-      save(); renderAll();
-    };
-  }
-  const payEl = document.getElementById("cfg-pay");
-  payEl.value = S.settings.paycheck;
-  payEl.onchange = () => setPay(isoDate(cycleRange(currentCycle()).start), Number(payEl.value));
-}
-function renderAll() { renderDash(); renderGastos(); renderRenda(); renderComparador(); renderInvest(); renderGuide(); renderRewards(); }
+/* ───────── Bindings ───────── */
+function renderAll() { renderInicio(); renderLanc(); renderMetas(); renderInvest(); renderGuide(); renderRewards(); }
 
 document.getElementById("nav").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return;
@@ -1006,58 +926,32 @@ document.getElementById("nav").addEventListener("click", e => {
   document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === "tab-" + b.dataset.tab));
 });
 
-const gcat = document.getElementById("g-cat");
-gcat.innerHTML = CATS.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
-document.getElementById("r-cat").innerHTML = gcat.innerHTML;
-document.getElementById("g-date").value = todayStr();
-document.getElementById("a-date").value = todayStr();
-document.getElementById("in-date").value = todayStr();
-document.getElementById("pay-from").value = todayStr();
-gcat.onchange = renderGastoHint;
-document.getElementById("g-trip").onchange = renderGastoHint;
+document.getElementById("l-cat").innerHTML = CATS.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
+document.getElementById("l-date").value = todayStr();
+document.getElementById("l-type").onchange = updateLancForm;
+document.getElementById("l-trip").onchange = updateLancHint;
+document.getElementById("l-cat").onchange = updateLancHint;
 
-document.getElementById("f-gasto").onsubmit = e => {
+document.getElementById("f-lanc").onsubmit = e => {
   e.preventDefault();
-  S.expenses.push({
-    id: uid(), date: document.getElementById("g-date").value,
-    amount: Number(document.getElementById("g-amount").value),
-    cat: gcat.value, trip: document.getElementById("g-trip").value,
-    desc: document.getElementById("g-desc").value.trim(),
-  });
+  const t = document.getElementById("l-type").value;
+  const base = { id: uid(), date: document.getElementById("l-date").value, amount: Number(document.getElementById("l-amount").value) };
+  const desc = document.getElementById("l-desc").value.trim();
+  const cur = document.getElementById("l-cur").value;
+  if (t === "gasto") S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, trip: document.getElementById("l-trip").value, desc });
+  if (t === "renda") S.incomes.push({ ...base, cur, source: desc });
+  if (t === "aporte") S.contributions.push({ ...base, cur, dest: desc });
   save();
-  document.getElementById("g-amount").value = "";
-  document.getElementById("g-desc").value = "";
-  renderGastos(); renderDash(); renderInvest();
+  document.getElementById("l-amount").value = ""; document.getElementById("l-desc").value = "";
+  renderAll();
 };
-document.getElementById("f-income").onsubmit = e => {
-  e.preventDefault();
-  S.incomes.push({ id: uid(), date: document.getElementById("in-date").value,
-    amount: Number(document.getElementById("in-amount").value),
-    source: document.getElementById("in-source").value.trim() });
-  save();
-  document.getElementById("in-amount").value = ""; document.getElementById("in-source").value = "";
-  renderRenda(); renderDash(); renderInvest();
-};
-document.getElementById("f-pay").onsubmit = e => {
-  e.preventDefault();
-  setPay(document.getElementById("pay-from").value, Number(document.getElementById("pay-amount").value));
-  document.getElementById("pay-amount").value = "";
-};
+
+document.getElementById("r-cat").innerHTML = document.getElementById("l-cat").innerHTML;
 document.getElementById("f-port").onsubmit = e => {
   e.preventDefault();
   S.portfolio.push({ id: uid(), name: document.getElementById("p-name").value.trim(),
     value: Number(document.getElementById("p-value").value) });
   save(); e.target.reset(); renderInvest();
-};
-document.getElementById("f-aporte").onsubmit = e => {
-  e.preventDefault();
-  S.contributions.push({ id: uid(), date: document.getElementById("a-date").value,
-    amount: Number(document.getElementById("a-amount").value),
-    cur: document.getElementById("a-cur").value,
-    dest: document.getElementById("a-dest").value.trim() });
-  save();
-  document.getElementById("a-amount").value = ""; document.getElementById("a-dest").value = "";
-  renderInvest();
 };
 document.getElementById("f-opp").onsubmit = e => {
   e.preventDefault();
@@ -1086,10 +980,14 @@ document.getElementById("f-fuel").onsubmit = e => {
   save(); e.target.reset(); renderRewards();
 };
 
-bindSettings();
-renderAll();
+const fxEl = document.getElementById("cfg-fx");
+fxEl.value = S.settings.fx;
+fxEl.onchange = () => { S.settings.fx = Number(fxEl.value) || 5.45; save(); renderAll(); };
 
-/* PWA: service worker só funciona via http(s) — hospedado, o app instala no celular e funciona offline */
+updateLancForm();
+renderAll();
+if (!S.settings.onboarded) startWizard();
+
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
