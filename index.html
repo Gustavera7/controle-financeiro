@@ -105,6 +105,21 @@
   .month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .month-nav b { font-size: 15px; text-transform: capitalize; }
 
+  .chiprow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .mchip { border: 1px solid var(--border); background: var(--page); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--ink-2); }
+  .mchip b { font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .warnbox { background: color-mix(in srgb, var(--warning) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .chk { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13.5px; cursor: pointer; }
+  .chk:last-child { border-bottom: none; }
+  .chk input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; flex-shrink: 0; }
+  .chk .done { text-decoration: line-through; color: var(--muted); }
+  .chk .done .hint { text-decoration: none; }
+  .rate-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13.5px; align-items: baseline; }
+  .rate-row:last-child { border-bottom: none; }
+  .rate-row .rr-rate { font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rate-row .why { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+  @media print { header nav, form, button, select, .month-nav button, #mk-status { display: none !important } body { background: #fff } .card { break-inside: avoid } }
+
   /* ─── Assistente de metas (wizard) ─── */
   #wizard { position: fixed; inset: 0; background: var(--page); z-index: 50; display: none; overflow-y: auto; }
   #wizard.on { display: flex; align-items: center; justify-content: center; }
@@ -139,9 +154,11 @@
   <nav id="nav">
     <button data-tab="inicio" class="active">Início</button>
     <button data-tab="lanc">Lançamentos</button>
-    <button data-tab="metas">Metas</button>
-    <button data-tab="invest">Investimentos</button>
+    <button data-tab="invest">Investir</button>
+    <button data-tab="ideias">Ideias</button>
+    <button data-tab="relatorio">Relatório</button>
     <button data-tab="rewards">Rewards</button>
+    <button data-tab="metas">Metas</button>
     <button data-tab="config">Config</button>
   </nav>
 </header>
@@ -180,6 +197,8 @@
       <div class="note" id="t-gasto-n"></div>
     </div>
   </div>
+
+  <div class="card" id="br-strip" style="padding:10px 18px; font-size:13.5px"></div>
 
   <div class="grid cols-2">
     <div class="card">
@@ -246,8 +265,38 @@
   <button class="btn ghost" onclick="startWizard()">↺ Refazer conversa de metas</button>
 </section>
 
-<!-- ─────────── INVESTIMENTOS (visão completa) ─────────── -->
+<!-- ─────────── INVESTIR (visão completa) ─────────── -->
 <section class="tab" id="tab-invest">
+  <div class="card">
+    <h2 style="display:flex; justify-content:space-between; align-items:center; gap:10px">Mercado agora
+      <button class="btn ghost" style="font-size:12.5px; padding:4px 10px" onclick="fetchMarket(true)">↻ Atualizar</button>
+    </h2>
+    <div class="chiprow" id="mk-chips"></div>
+    <div class="hint" id="mk-status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Assistente de aporte — onde o dinheiro rende hoje</h2>
+    <div id="ap-context" style="font-size:13.5px; margin-bottom:10px"></div>
+    <div class="grid cols-2">
+      <div>
+        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0">🇧🇷 Brasil — em reais</h3>
+        <div id="ap-br"></div>
+      </div>
+      <div>
+        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0">🇺🇸 EUA — em dólares (seu banco: Empeople)</h3>
+        <div id="ap-us"></div>
+      </div>
+    </div>
+    <div class="disclaimer" id="ap-foot"></div>
+  </div>
+
+  <div class="card">
+    <h2>Checklist do mês — o caminho certo do dinheiro</h2>
+    <div id="chk-list"></div>
+    <div class="hint">Ordem sugerida pela prática de finanças pessoais: sem dívida cara → reserva líquida → compromisso do mês → excedente. Os itens automáticos se marcam sozinhos pelos seus lançamentos.</div>
+  </div>
+
   <div class="card">
     <h2>Patrimônio</h2>
     <div id="iv-resumo"></div>
@@ -315,6 +364,50 @@
   </div>
 </section>
 
+<!-- ─────────── IDEIAS ─────────── -->
+<section class="tab" id="tab-ideias">
+  <div class="card">
+    <h2>Renda extra — o que pode (e o que não pode) no seu visto</h2>
+    <div class="warnbox">⚠️ <b>Regra de ouro do visto de trabalho:</b> você só pode ter <i>emprego</i> nos EUA com a empresa patrocinadora. Renda <b>ativa</b> por fora (Uber, DoorDash, freelas americanos, revenda habitual) viola o visto e ameaça vistos futuros. O caminho seguro: renda <b>passiva</b> nos EUA + renda gerada no <b>Brasil</b>.</div>
+    <div id="id-renda"></div>
+  </div>
+  <div class="card">
+    <h2>Economia — onde soltar menos dinheiro</h2>
+    <div id="id-econ-head" style="font-size:13.5px; margin-bottom:6px"></div>
+    <div id="id-econ"></div>
+    <div class="hint">Estimativas para o seu perfil (mora só, viaja muito, remete dinheiro ao Brasil). Marque "Adotei" para somar no potencial.</div>
+  </div>
+</section>
+
+<!-- ─────────── RELATÓRIO ─────────── -->
+<section class="tab" id="tab-relatorio">
+  <div class="month-nav">
+    <button class="btn ghost" onclick="moveRep(-1)">‹</button>
+    <b id="rep-title"></b>
+    <button class="btn ghost" onclick="moveRep(1)">›</button>
+    <span style="flex:1"></span>
+    <button class="btn ghost" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+  <div class="card">
+    <h2>Resumo do mês</h2>
+    <div id="rep-resumo"></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Gastos por categoria</h2>
+      <div id="rep-cats"></div>
+    </div>
+    <div class="card">
+      <h2>Patrimônio & meta</h2>
+      <div id="rep-meta"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Ano até aqui</h2>
+    <div id="rep-ytd"></div>
+  </div>
+</section>
+
 <!-- ─────────── CONFIG ─────────── -->
 <section class="tab" id="tab-config">
   <div class="card">
@@ -362,6 +455,7 @@ const DEFAULTS = {
   },
   expenses: [], incomes: [], contributions: [],
   portfolio: [], opportunities: [], rewards: [], fuel: [], guide: {},
+  ideas: {}, checklist: {}, market: null,
 };
 
 let S = load();
@@ -427,18 +521,32 @@ function monthStats(mk) {
   const exp = S.expenses.filter(e => monthKey(e.date) === mk);
   const spent = exp.filter(counts).reduce((s,e) => s + e.amount, 0);
   const covered = exp.filter(e => !counts(e)).reduce((s,e) => s + e.amount, 0);
-  const extras = S.incomes.filter(x => monthKey(x.date) === mk).reduce((s,x) => s + toUSD(x.amount, x.cur || "USD"), 0);
-  const saved = S.contributions.filter(c => monthKey(c.date) === mk).reduce((s,c) => s + toUSD(c.amount, c.cur), 0);
-  const salario = st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0);
-  const ganho = salario + extras;
-  // Livre = ganho − compromisso de guardar − gastos do mês.
-  // Se já guardou mais que o compromisso, o excedente também sai do livre.
-  const reservado = Math.max(st.saveMonthly, saved);
+  const inc = S.incomes.filter(x => monthKey(x.date) === mk);
+  const extrasUS = inc.filter(x => (x.cur || "USD") === "USD").reduce((s,x) => s + x.amount, 0);
+  const extrasBR = inc.filter(x => x.cur === "BRL").reduce((s,x) => s + x.amount, 0);
+  const con = S.contributions.filter(c => monthKey(c.date) === mk);
+  const savedUSD = con.filter(c => c.cur === "USD").reduce((s,c) => s + c.amount, 0);
+  const savedBRL = con.filter(c => c.cur === "BRL").reduce((s,c) => s + c.amount, 0);
+  // Livre = SÓ o lado EUA: salário US + extras US − compromisso de guardar − gastos.
+  // O Brasil (salário + extras em R$) fica à parte, destinado a investimentos.
+  const ganho = st.usMonthly + extrasUS;
+  const brGanho = st.brMonthly + extrasBR;
+  const saved = savedUSD + (savedBRL > 0 ? savedBRL / st.fx : 0);
+  const reservado = Math.max(st.saveMonthly, savedUSD);
   const livre = ganho - reservado - spent;
-  return { spent, covered, extras, saved, salario, ganho, livre, reservado };
+  return { spent, covered, extrasUS, extrasBR, savedUSD, savedBRL, saved, ganho, brGanho, livre, reservado };
 }
 function invested() {
   return S.settings.investedBase + S.contributions.reduce((s,c) => s + toBRL(c.amount, c.cur), 0);
+}
+function monthHasData(mk) {
+  return S.expenses.some(e => monthKey(e.date) === mk) ||
+    S.incomes.some(x => monthKey(x.date) === mk) ||
+    S.contributions.some(c => monthKey(c.date) === mk);
+}
+function firstDataMonth() {
+  const all = [...S.expenses, ...S.incomes, ...S.contributions].map(x => monthKey(x.date));
+  return all.length ? all.sort()[0] : thisMonth();
 }
 function monthsUntilGoal() {
   if (!S.settings.goalMonth) return 0;
@@ -477,7 +585,14 @@ function renderInicio() {
 
   document.getElementById("t-ganho").textContent = fmtUS0(st.ganho);
   document.getElementById("t-ganho-n").textContent =
-    st.extras > 0 ? `salários ${fmtUS0(st.salario)} + extras ${fmtUS0(st.extras)}` : "salários EUA + Brasil";
+    st.extrasUS > 0 ? `salário ${fmtUS0(S.settings.usMonthly)} + extras ${fmtUS0(st.extrasUS)}` : "só EUA — Brasil fica à parte";
+
+  const brStrip = document.getElementById("br-strip");
+  if (st.brGanho > 0) {
+    brStrip.style.display = "";
+    brStrip.innerHTML = `🇧🇷 <b>Brasil este mês: ${fmtBR(st.brGanho)}</b> — fora do livre, reservado para investir.
+      ${st.savedBRL > 0 ? `Aportado: <b class="pos">${fmtBR(st.savedBRL)}</b> ✓` : `<span style="color:var(--muted)">registre o aporte quando transferir — o assistente na aba Investir mostra onde render mais</span>`}`;
+  } else brStrip.style.display = "none";
 
   document.getElementById("t-guardado").textContent = fmtUS0(st.saved);
   document.getElementById("t-guardado-n").textContent = `meta: ${fmtUS0(S.settings.saveMonthly)}/mês`;
@@ -509,12 +624,12 @@ function renderInicio() {
   document.getElementById("m-prev").innerHTML = !temDados
     ? `<div class="empty">Sem lançamentos em ${monthLabel(pmk)}.</div>`
     : `<table><tbody>
-      <tr><td>Ganhou</td><td class="num">${fmtUS(p.ganho)}</td></tr>
+      <tr><td>Ganhou (EUA)</td><td class="num">${fmtUS(p.ganho)}</td></tr>
       <tr><td>Gastou</td><td class="num">${fmtUS(p.spent)}</td></tr>
       <tr><td>Guardou</td><td class="num">${fmtUS(p.saved)} ${p.saved >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? '<span class="badge covered">meta ✓</span>' : ""}</td></tr>
-      <tr><td><b>Sobrou</b></td><td class="num"><b class="${p.ganho - p.spent - p.saved >= 0 ? "pos" : "neg"}">${fmtUS(p.ganho - p.spent - p.saved)}</b></td></tr>
+      <tr><td><b>Sobrou</b></td><td class="num"><b class="${p.ganho - p.spent - p.savedUSD >= 0 ? "pos" : "neg"}">${fmtUS(p.ganho - p.spent - p.savedUSD)}</b></td></tr>
     </tbody></table>
-    <div class="hint">Sobra de mês fechado é dinheiro parado — considere transformar em aporte.</div>`;
+    <div class="hint">Sobra de mês fechado é dinheiro parado — o assistente em Investir mostra onde ele rende.</div>`;
 }
 
 /* ───────── Lançamentos ───────── */
@@ -604,9 +719,9 @@ function renderMetas() {
         <input type="number" step="10" value="${st.saveMonthly}" style="width:110px" onchange="setS('saveMonthly', this.value)"></div>
     </form>
     <div class="hint" style="margin-top:10px">
-      Renda ${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0))} − guardar ${fmtUS0(st.saveMonthly)} =
-      <b>${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0) - st.saveMonthly)}</b> para viver o mês.
-      O que você não gastar disso vira livre de verdade.
+      Renda EUA ${fmtUS0(st.usMonthly)} − guardar ${fmtUS0(st.saveMonthly)} =
+      <b>${fmtUS0(st.usMonthly - st.saveMonthly)}</b> para viver o mês.
+      O que você não gastar disso vira livre de verdade. O Brasil fica à parte, direto para investimentos.
     </div>`;
 
   document.getElementById("g-renda").innerHTML = `
@@ -618,7 +733,7 @@ function renderMetas() {
       <div class="field"><label>Investido base (R$)</label>
         <input type="number" step="1000" value="${st.investedBase}" style="width:110px" onchange="setS('investedBase', this.value)"></div>
     </form>
-    <div class="hint" style="margin-top:10px">Total: <b>${fmtUS0(st.usMonthly + (st.brMonthly > 0 ? st.brMonthly / st.fx : 0))}/mês</b>${st.brMonthly > 0 ? ` (Brasil convertido a ${st.fx})` : ""}</div>`;
+    <div class="hint" style="margin-top:10px">EUA sustenta o mês e o "livre"; o Brasil${st.brMonthly > 0 ? ` (${fmtBR(st.brMonthly)}/mês)` : ""} fica separado, destinado a aportes.</div>`;
 }
 function setS(key, v) { S.settings[key] = Number(v) || 0; save(); renderAll(); }
 
@@ -774,9 +889,10 @@ const WZ_STEPS = [
       <div class="field" style="margin-top:10px"><label>Câmbio para converter (R$ por US$)</label>
       <input type="number" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>`,
     live: () => {
-      const br = num("wz-in"), fx = num("wz-fx") || 5.45;
-      const total = wzData.usMonthly + (br > 0 ? br / fx : 0);
-      return `Sua renda total: <b>${fmtUS0(total)}/mês</b>`;
+      const br = num("wz-in");
+      return br > 0
+        ? `Anotado: <b>${fmtBR(br)}/mês</b> ficam à parte, reservados para investir — não entram no seu "livre" nos EUA.`
+        : "Sem problema — o livre do mês fica só com o salário EUA.";
     },
     saveStep: () => { wzData.brMonthly = num("wz-in"); wzData.fx = num("wz-fx") || 5.45; },
   },
@@ -816,7 +932,7 @@ const WZ_STEPS = [
     },
     live: () => {
       const sv = num("wz-in");
-      const total = wzData.usMonthly + (wzData.brMonthly > 0 ? wzData.brMonthly / wzData.fx : 0);
+      const total = wzData.usMonthly;
       const pace = suggestedPace();
       const viver = total - sv;
       let msg = `Sobram <b class="pos">${fmtUS0(viver)}/mês</b> para viver + extras.`;
@@ -829,12 +945,12 @@ const WZ_STEPS = [
     title: "Fechado. Esse é o seu mapa. 🗺️",
     sub: "Você pode mudar tudo depois na aba Metas.",
     render: () => {
-      const total = wzData.usMonthly + (wzData.brMonthly > 0 ? wzData.brMonthly / wzData.fx : 0);
       return `<div class="resumo">
-        <div><span>Entra por mês</span><b>${fmtUS0(total)}</b></div>
+        <div><span>Entra por mês (EUA)</span><b>${fmtUS0(wzData.usMonthly)}</b></div>
+        ${wzData.brMonthly > 0 ? `<div><span>Brasil — à parte, para investir</span><b>${fmtBR(wzData.brMonthly)}</b></div>` : ""}
         <div><span>Vai guardar</span><b>${fmtUS0(wzData.saveMonthly)}</b></div>
         <div><span>Meta</span><b>${fmtBR(wzData.goalAmount)}${wzData.goalMonth ? " até " + monthLabel(wzData.goalMonth) : ""}</b></div>
-        <div class="total"><span>Livre para viver o mês</span><b class="pos">${fmtUS0(total - wzData.saveMonthly)}</b></div>
+        <div class="total"><span>Livre para viver o mês</span><b class="pos">${fmtUS0(wzData.usMonthly - wzData.saveMonthly)}</b></div>
       </div>
       <p class="sub">Cada gasto que você lançar desconta desse livre. O número grande da tela inicial é sua liberdade em tempo real.</p>`;
     },
@@ -894,6 +1010,256 @@ function wzNext() {
   renderAll();
 }
 
+/* ───────── Mercado ao vivo ─────────
+   Fontes: AwesomeAPI (dólar), CoinGecko (BTC), Banco Central SGS (Selic 432, CDI 4389, IPCA 12m 13522).
+   Sem chave de API; falha silenciosa → usa último dado salvo ou o snapshot da pesquisa. */
+const MARKET_FALLBACK = { fx: 5.24, selic: 14.00, cdi: 13.90, ipca12: 4.64, btcusd: null, ts: null };
+function marketData() { return { ...MARKET_FALLBACK, ...(S.market || {}) }; }
+async function fetchMarket(force = false) {
+  if (!navigator.onLine) { renderMarket(); return; }
+  if (!force && S.market?.ts && Date.now() - S.market.ts < 30 * 60 * 1000) { renderMarket(); return; }
+  const stEl = document.getElementById("mk-status");
+  if (stEl) stEl.textContent = "atualizando…";
+  const j = u => fetch(u).then(r => r.json());
+  const bcbNum = v => Number(String(v?.[0]?.valor ?? "").replace(",", ".")) || null;
+  const [fx, btc, selic, cdi, ipca] = await Promise.allSettled([
+    j("https://economia.awesomeapi.com.br/json/last/USD-BRL"),
+    j("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"),
+    j("https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json"),
+    j("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json"),
+    j("https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/1?formato=json"),
+  ]);
+  const m = { ...(S.market || {}) };
+  let ok = false;
+  if (fx.status === "fulfilled" && Number(fx.value?.USDBRL?.bid)) { m.fx = Number(fx.value.USDBRL.bid); ok = true; }
+  if (btc.status === "fulfilled" && btc.value?.bitcoin?.usd) { m.btcusd = btc.value.bitcoin.usd; ok = true; }
+  if (selic.status === "fulfilled" && bcbNum(selic.value)) { m.selic = bcbNum(selic.value); ok = true; }
+  if (cdi.status === "fulfilled" && bcbNum(cdi.value)) { m.cdi = bcbNum(cdi.value); ok = true; }
+  if (ipca.status === "fulfilled" && bcbNum(ipca.value)) { m.ipca12 = bcbNum(ipca.value); ok = true; }
+  if (ok) {
+    m.ts = Date.now();
+    S.market = m;
+    if (m.fx) S.settings.fx = Math.round(m.fx * 100) / 100; // câmbio vivo entra nos cálculos
+    save();
+    renderAll();
+  } else renderMarket();
+}
+function renderMarket() {
+  const el = document.getElementById("mk-chips");
+  if (!el) return;
+  const m = marketData();
+  const pt = n => n.toFixed(2).replace(".", ",");
+  el.innerHTML = `
+    <span class="mchip">Dólar <b>R$ ${pt(m.fx)}</b></span>
+    ${m.btcusd ? `<span class="mchip">Bitcoin <b>$${Math.round(m.btcusd).toLocaleString("en-US")}</b></span>` : ""}
+    <span class="mchip">Selic <b>${pt(m.selic)}%</b></span>
+    <span class="mchip">CDI <b>${pt(m.cdi)}%</b></span>
+    <span class="mchip">IPCA 12m <b>${pt(m.ipca12)}%</b></span>`;
+  document.getElementById("mk-status").textContent = S.market?.ts
+    ? `ao vivo · ${new Date(S.market.ts).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} · o câmbio é aplicado automaticamente aos cálculos`
+    : "snapshot da pesquisa de 15/08/2026 — toque em Atualizar para dados ao vivo";
+}
+
+/* ───────── Assistente de aporte (pesquisa 15/08/2026) ─────────
+   Empeople: taxas oficiais empeople.com. Tesouro: tesourodireto.com.br. Ao atualizar a pesquisa, mude RATES_ASOF. */
+const RATES_ASOF = "15/08/2026";
+function renderAporte() {
+  const el = document.getElementById("ap-br");
+  if (!el) return;
+  const m = marketData();
+  const ms = monthStats(thisMonth());
+  const prevMk = shiftMonth(thisMonth(), -1);
+  const lastLivre = monthHasData(prevMk) ? Math.max(0, monthStats(prevMk).livre) : 0;
+  const pt = n => n.toFixed(2).replace(".", ",");
+
+  const partes = [];
+  if (ms.brGanho > 0) partes.push(`<b>${fmtBR(ms.brGanho)}</b> da renda Brasil deste mês`);
+  if (lastLivre > 0) partes.push(`<b>${fmtUS0(lastLivre)}</b> livres que sobraram do mês passado`);
+  document.getElementById("ap-context").innerHTML = partes.length
+    ? `Dinheiro procurando destino: ${partes.join(" + ")}. Com CDI a ${pt(m.cdi)}% a.a., cada R$ 10.000 parados deixam de render ~${fmtBR(10000 * m.cdi / 100 / 12)}/mês.`
+    : `Nenhum dinheiro parado detectado agora — quando um mês fechar com sobra ou entrar renda do Brasil, o assistente aponta o destino aqui.`;
+
+  const row = (name, rate, why, link) => `<div class="rate-row">
+    <div><b>${name}</b>${link ? ` <a href="${link}" target="_blank" style="font-size:11.5px">↗</a>` : ""}<div class="why">${why}</div></div>
+    <span class="rr-rate">${rate}</span></div>`;
+
+  el.innerHTML =
+    row("Tesouro Selic 2029", `${pt(m.selic)}%`, "liquidez diária, risco soberano — a 'reserva' em reais", "https://www.tesourodireto.com.br") +
+    row("CDB 100%+ do CDI", `≥ ${pt(m.cdi)}%`, "via corretora; garantia FGC até R$ 250 mil por instituição", "") +
+    row("LCI / LCA (≥90% CDI)", "isento IR", `rende líquido perto do CDI cheio (${pt(m.cdi)}%); carência típica de 9+ meses`, "") +
+    row("Tesouro IPCA+ 2035", "IPCA + 6,65%", `taxa recorde em 14/08 — juro real altíssimo; oscila antes do vencimento`, "https://www.tesourodireto.com.br") +
+    row("Tesouro Prefixado 2029/31", "≈ 14,2%", "trava a taxa de hoje — ganha mais se os juros caírem", "") +
+    (m.btcusd ? row("Bitcoin", `$${Math.round(m.btcusd).toLocaleString("en-US")}`, "você já tem — mantenha uma fatia pequena, que aguente cair 50%", "") : "");
+
+  document.getElementById("ap-us").innerHTML =
+    row("Empeople · Share Certificate 12m", "4,10% APY", "a melhor taxa da casa (mín. $500) — bate T-bills e empata com as melhores HYSAs do país", "https://empeople.com/tools-resources/rates/") +
+    row("Empeople · Certificates 6m / 24m", "4,00% APY", "escada de prazos: parte em 6m, parte em 12m, parte em 24m = liquidez escalonada", "") +
+    row("Empeople · All-In Savings", "3,10% APY", "acima de $5.000, exigindo 21+ compras no cartão/mês e $1.500 em depósitos — com salário caindo lá, você tende a se qualificar. Lugar da reserva de emergência", "https://empeople.com/bank/savings/") +
+    row("T-bills (TreasuryDirect)", "3,8–4,0%", "3m ~3,80% / 12m ~3,97% — isentos de imposto estadual de Iowa", "https://treasurydirect.gov") +
+    row("Empeople · Money Market", "0,25–1,35%", "só melhora acima de $100 mil — evite como reserva principal", "");
+
+  document.getElementById("ap-foot").innerHTML =
+    `Leitura do especialista: em reais o Brasil paga <b>~${pt(m.cdi)}% a.a.</b> (juro real ~${pt(Math.max(0, m.cdi - m.ipca12))}%); em dólares o teto está em <b>~4,1%</b> (Empeople 12m). A diferença é o prêmio do risco-câmbio — dividir entre os dois países, como você já faz, é a prática comum. Taxas Empeople/Tesouro da pesquisa de ${RATES_ASOF} (confira no dia do aporte); Selic/CDI/IPCA/dólar ao vivo. Informação educacional — não é recomendação individual.`;
+}
+
+/* ───────── Checklist do mês ───────── */
+function renderChecklist() {
+  const el = document.getElementById("chk-list");
+  if (!el) return;
+  const mk = thisMonth();
+  const ms = monthStats(mk);
+  const marks = S.checklist[mk] || {};
+  const prev = shiftMonth(mk, -1);
+  const lastLivre = monthHasData(prev) ? monthStats(prev).livre : 0;
+  const spent3 = [1, 2, 3].map(n => monthStats(shiftMonth(mk, -n)).spent).filter(v => v > 0);
+  const avgSpend = spent3.length ? spent3.reduce((a, b) => a + b, 0) / spent3.length : Math.max(ms.spent, 800);
+  const reservaAlvo = Math.round(avgSpend * 3 / 100) * 100;
+  const items = [
+    { id: "fatura", t: "Fatura do cartão paga integral", w: "juros de cartão nos EUA passam de 25% a.a. — nenhum investimento cobre isso", manual: true },
+    { id: "reserva", t: `Reserva de emergência: ~${fmtUS0(reservaAlvo)} líquidos`, w: `3× seu gasto médio (${fmtUS0(avgSpend)}/mês) na All-In Savings do Empeople (3,10%) — protege o plano de imprevistos`, manual: true },
+    { id: "aporte", t: `Compromisso do mês aportado (${fmtUS0(S.settings.saveMonthly)})`, w: "marca sozinho quando você lançar aportes em US$ somando o compromisso", auto: S.settings.saveMonthly > 0 && ms.savedUSD >= S.settings.saveMonthly },
+    ...(S.settings.brMonthly > 0 ? [{ id: "brasil", t: `Renda Brasil destinada (${fmtBR(S.settings.brMonthly)})`, w: "marca sozinho quando os aportes em R$ do mês somarem o valor — com CDI a ~14%, cada mês parado custa caro", auto: ms.savedBRL >= S.settings.brMonthly * 0.9 }] : []),
+    { id: "parado", t: "Sobra do mês passado direcionada", w: lastLivre > 0 ? `${fmtUS0(lastLivre)} sobraram em ${monthLabel(prev)} — transforme em aporte ou deixe combinado que é para a próxima viagem` : "nada parado do mês passado 🎉", auto: lastLivre <= 0 },
+  ];
+  el.innerHTML = items.map(it => {
+    const done = it.manual ? !!marks[it.id] : it.auto;
+    return `<label class="chk"><input type="checkbox" ${done ? "checked" : ""} ${it.manual ? `onchange="toggleChk('${it.id}', this.checked)"` : "disabled"}>
+      <span class="${done ? "done" : ""}"><b>${it.t}</b><div class="hint" style="margin:0">${it.w}</div></span></label>`;
+  }).join("");
+}
+function toggleChk(id, v) {
+  const mk = thisMonth();
+  if (!S.checklist[mk]) S.checklist[mk] = {};
+  S.checklist[mk][id] = v;
+  save(); renderChecklist();
+}
+
+/* ───────── Ideias: renda extra & economia ───────── */
+const IDEAS_RENDA = [
+  { id: "juros", ok: "✅", n: "Deixar o dinheiro trabalhar (juros e dividendos)", w: "Renda passiva é permitida no visto. Empeople paga 4,10% no certificate de 12m; no Brasil o CDI está em ~14% — é a renda extra que não dá trabalho nem risco de visto." },
+  { id: "brrenda", ok: "✅", n: "Renda gerada no Brasil (aluguel, dividendos, PJ remota paga no BR)", w: "O visto americano não alcança renda produzida no Brasil. Atenção: como residente fiscal nos EUA você declara renda global ao IRS — combine com um contador." },
+  { id: "vender", ok: "✅", n: "Vender itens pessoais usados", w: "Permitido quando ocasional (mudança, garage sale, Marketplace). Virar revenda habitual = trabalho não autorizado." },
+  { id: "cashref", ok: "✅", n: "Cashback, bônus bancários e indicações", w: "Rebate e referral não são salário — permitidos. Somam com a aba Rewards: cartão certo + programas de posto + bônus de abertura de conta." },
+  { id: "gig", ok: "🚫", n: "Uber, DoorDash, freelas para clientes nos EUA", w: "NÃO permitido: seu visto só autoriza trabalho para a patrocinadora. Multa real: perder o visto atual e complicar os futuros." },
+  { id: "trade", ok: "🚫", n: "Day trade como atividade / e-commerce ativo", w: "Investir é permitido; operar como negócio, não. Mantenha compras de longo prazo e aportes regulares." },
+];
+const IDEAS_ECON = [
+  { id: "remessa", n: "Remessas ao Brasil via Wise / Remessa Online", w: "Banco tradicional cobra 3–5% entre spread e tarifas; fintechs ~1%. Você vai remeter todo mês — em cada $1.000, ~$20–40 ficam com você.", est: [30, 80] },
+  { id: "cozinha", n: "Meal prep no domingo", w: "Refeição fora nos EUA: $15–25. Em casa: $4–6. Três marmitas por semana já pagam um jantar bom no fim do mês.", est: [150, 300] },
+  { id: "mercado", n: "Mercado no Aldi / Costco + marca própria", w: "20–30% mais barato que redes premium para a mesma qualidade.", est: [60, 120] },
+  { id: "chip", n: "Celular em MVNO (Mint, US Mobile, Visible)", w: "Mesmas antenas das grandes operadoras por $15–30/mês em vez de $70+.", est: [25, 45] },
+  { id: "cartao", n: "Cartão certo em cada categoria", w: "1–3% de volta em tudo que você já gasta — configure uma vez na aba Rewards.", est: [20, 60] },
+  { id: "assin", n: "Auditoria trimestral de assinaturas", w: "Streaming, apps, academia fantasma — cancele o que não usou no último mês.", est: [20, 50] },
+  { id: "sale", n: "Compra grande só em promoção + portal de cashback", w: "Black Friday, fim de estação, Rakuten/TopCashback por cima do desconto.", est: [0, 100] },
+];
+const IDEA_STATUS = { pendente: "Pendente", avaliando: "Avaliando", adotei: "Adotei ✓", descartado: "Não é pra mim" };
+function renderIdeias() {
+  const el = document.getElementById("id-renda");
+  if (!el) return;
+  const item = (it, extra) => {
+    const st = S.ideas[it.id] || "pendente";
+    return `<div class="gitem ${st === "descartado" ? "off" : ""}">
+      <div><b>${it.ok ? it.ok + " " : ""}${it.n}</b> ${st === "adotei" ? '<span class="badge covered">adotei</span>' : ""}${extra || ""}<div class="why">${it.w}</div></div>
+      <select onchange="setIdea('${it.id}', this.value)">
+        ${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${v}</option>`).join("")}
+      </select>
+    </div>`;
+  };
+  el.innerHTML = IDEAS_RENDA.map(it => item(it)).join("");
+  document.getElementById("id-econ").innerHTML = IDEAS_ECON.map(it =>
+    item(it, ` <span class="badge counts">~$${it.est[0]}–${it.est[1]}/mês</span>`)).join("");
+  const adopted = IDEAS_ECON.filter(it => S.ideas[it.id] === "adotei");
+  const lo = adopted.reduce((s, it) => s + it.est[0], 0);
+  const hi = adopted.reduce((s, it) => s + it.est[1], 0);
+  document.getElementById("id-econ-head").innerHTML = adopted.length
+    ? `Você adotou <b>${adopted.length}</b> ideia${adopted.length > 1 ? "s" : ""} — potencial de <b class="pos">~$${lo}–${hi}/mês</b> de volta no bolso (dá ${fmtUS0(hi * 12)} por ano no ritmo máximo).`
+    : `Total possível adotando tudo: <b>~$${IDEAS_ECON.reduce((s, i) => s + i.est[0], 0)}–${IDEAS_ECON.reduce((s, i) => s + i.est[1], 0)}/mês</b>. Comece pela remessa — é a de maior impacto no seu caso.`;
+}
+function setIdea(id, v) { S.ideas[id] = v; save(); renderIdeias(); }
+
+/* ───────── Relatório ───────── */
+let repMonth = null;
+function moveRep(n) { repMonth = shiftMonth(repMonth || thisMonth(), n); renderRelatorio(); }
+function renderRelatorio() {
+  const el = document.getElementById("rep-resumo");
+  if (!el) return;
+  const mk = repMonth || thisMonth();
+  const ms = monthStats(mk);
+  const prev = monthStats(shiftMonth(mk, -1));
+  document.getElementById("rep-title").textContent = monthLabel(mk);
+
+  const taxaPoup = ms.ganho > 0 ? Math.max(0, (ms.ganho - ms.spent) / ms.ganho * 100) : 0;
+  el.innerHTML = `<table class="rep"><tbody>
+    <tr><td>Ganhou (EUA)</td><td class="num">${fmtUS(ms.ganho)}</td></tr>
+    ${ms.brGanho > 0 ? `<tr><td>Ganhou (Brasil, à parte)</td><td class="num">${fmtBR(ms.brGanho)}</td></tr>` : ""}
+    <tr><td>Gastou do próprio bolso</td><td class="num">${fmtUS(ms.spent)}</td></tr>
+    <tr><td>Empresa cobriu (viagens a trabalho)</td><td class="num">${fmtUS(ms.covered)}</td></tr>
+    <tr><td>Aportou em US$</td><td class="num">${fmtUS(ms.savedUSD)}</td></tr>
+    ${ms.savedBRL > 0 ? `<tr><td>Aportou em R$</td><td class="num">${fmtBR(ms.savedBRL)}</td></tr>` : ""}
+    <tr><td><b>Livre restante</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtUS(ms.livre)}</b></td></tr>
+    <tr><td>Do que ganhou nos EUA, não gastou</td><td class="num">${taxaPoup.toFixed(0)}%</td></tr>
+  </tbody></table>`;
+
+  const byCat = {}, byCatPrev = {};
+  S.expenses.filter(e => monthKey(e.date) === mk && counts(e)).forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
+  S.expenses.filter(e => monthKey(e.date) === shiftMonth(mk, -1) && counts(e)).forEach(e => byCatPrev[e.cat] = (byCatPrev[e.cat] || 0) + e.amount);
+  const rows = CATS.filter(c => byCat[c.id] || byCatPrev[c.id]).sort((a, b) => (byCat[b.id] || 0) - (byCat[a.id] || 0));
+  document.getElementById("rep-cats").innerHTML = rows.length === 0
+    ? '<div class="empty">Sem gastos registrados no período.</div>'
+    : `<table class="rep"><tbody>` + rows.map(c => {
+        const now = byCat[c.id] || 0, was = byCatPrev[c.id] || 0, d = now - was;
+        const delta = was === 0 && now === 0 ? "" : d === 0 ? "=" :
+          `<span class="${d > 0 ? "neg" : "pos"}">${d > 0 ? "▲" : "▼"} ${fmtUS0(Math.abs(d))}</span>`;
+        return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${c.label}</td>
+          <td class="num">${fmtUS0(now)}</td><td class="num" style="font-size:12px">${delta}</td></tr>`;
+      }).join("") + `</tbody></table><div class="hint">▲▼ comparado com o mês anterior.</div>`;
+
+  /* Patrimônio & meta */
+  const st = S.settings;
+  const inv = invested();
+  const falta = Math.max(0, st.goalAmount - inv);
+  const fdm = firstDataMonth();
+  const [fy, fm] = fdm.split("-").map(Number);
+  const [cy, cm] = thisMonth().split("-").map(Number);
+  const span = Math.max(1, Math.min(3, (cy - fy) * 12 + (cm - fm) + 1));
+  const media3 = [...Array(span)].map((_, n) => { const s = monthStats(shiftMonth(thisMonth(), -n)); return s.savedUSD * st.fx + s.savedBRL; });
+  const mediaBRL = media3.reduce((a, b) => a + b, 0) / span;
+  let proj = "";
+  if (falta <= 0) proj = '<span class="badge covered">meta atingida 🎉</span>';
+  else if (mediaBRL > 0) {
+    const meses = Math.ceil(falta / mediaBRL);
+    const dataEst = shiftMonth(thisMonth(), meses);
+    const alvoOk = st.goalMonth && dataEst <= st.goalMonth;
+    proj = `No ritmo real dos últimos 3 meses (${fmtBR(mediaBRL)}/mês), você chega em <b>${monthLabel(dataEst)}</b> ${st.goalMonth ? (alvoOk ? '<span class="badge covered">antes do alvo ✓</span>' : `<span class="badge warn">depois do alvo (${monthLabel(st.goalMonth)})</span>`) : ""}`;
+  } else proj = "Registre aportes para o app projetar a data de chegada da meta.";
+  document.getElementById("rep-meta").innerHTML = `<table class="rep"><tbody>
+    <tr><td>Investido hoje</td><td class="num">${fmtBR(inv)}</td></tr>
+    <tr><td>Meta</td><td class="num">${fmtBR(st.goalAmount)}${st.goalMonth ? " · " + monthLabel(st.goalMonth) : ""}</td></tr>
+    <tr><td>Falta</td><td class="num">${fmtBR(falta)}</td></tr>
+    <tr><td>Aportes no mês</td><td class="num">${fmtBR(ms.savedUSD * st.fx + ms.savedBRL)}</td></tr>
+  </tbody></table><div style="font-size:13px; margin-top:8px">${proj}</div>`;
+
+  /* Ano até aqui */
+  const year = mk.slice(0, 4);
+  const yms = [];
+  const dataStart = firstDataMonth();
+  for (let m = 1; m <= 12; m++) { const k = `${year}-${String(m).padStart(2, "0")}`; if (k <= mk && k >= dataStart) yms.push(k); }
+  const tot = yms.reduce((acc, k) => {
+    const s = monthStats(k);
+    acc.ganho += s.ganho; acc.gasto += s.spent; acc.coberto += s.covered;
+    acc.aporte += s.savedUSD * st.fx + s.savedBRL; acc.br += s.brGanho;
+    return acc;
+  }, { ganho: 0, gasto: 0, coberto: 0, aporte: 0, br: 0 });
+  document.getElementById("rep-ytd").innerHTML = `<table class="rep"><tbody>
+    <tr><td>Ganhos EUA no ano</td><td class="num">${fmtUS(tot.ganho)}</td></tr>
+    ${tot.br > 0 ? `<tr><td>Ganhos Brasil no ano</td><td class="num">${fmtBR(tot.br)}</td></tr>` : ""}
+    <tr><td>Gastos do bolso</td><td class="num">${fmtUS(tot.gasto)}</td></tr>
+    <tr><td>Viagens cobertas pela empresa</td><td class="num">${fmtUS(tot.coberto)}</td></tr>
+    <tr><td><b>Aportado no ano</b></td><td class="num"><b>${fmtBR(tot.aporte)}</b></td></tr>
+  </tbody></table>
+  <div class="hint">Conta apenas meses de ${year} até ${monthLabel(mk)} — sem input nenhum seu, tudo vem dos lançamentos.</div>`;
+}
+
 /* ───────── Config / backup ───────── */
 function exportData() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
@@ -918,7 +1284,7 @@ function importData(input) {
 }
 
 /* ───────── Bindings ───────── */
-function renderAll() { renderInicio(); renderLanc(); renderMetas(); renderInvest(); renderGuide(); renderRewards(); }
+function renderAll() { renderInicio(); renderLanc(); renderMetas(); renderInvest(); renderGuide(); renderRewards(); renderMarket(); renderAporte(); renderChecklist(); renderIdeias(); renderRelatorio(); }
 
 document.getElementById("nav").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return;
@@ -987,6 +1353,7 @@ fxEl.onchange = () => { S.settings.fx = Number(fxEl.value) || 5.45; save(); rend
 updateLancForm();
 renderAll();
 if (!S.settings.onboarded) startWizard();
+fetchMarket();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
