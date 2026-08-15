@@ -1,6 +1,6 @@
 /* Service worker: app funciona offline depois da primeira visita.
    Ao publicar uma versão nova do app, incremente CACHE para forçar atualização. */
-const CACHE = "cf-v3";
+const CACHE = "cf-v4";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -29,6 +29,15 @@ self.addEventListener("fetch", e => {
         .catch(() => caches.match(e.request).then(r => r || caches.match("./index.html")))
     );
   } else {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+        // guarda também assets de CDN (ex: supabase-js) para funcionar offline
+        if (e.request.method === "GET" && (resp.ok || resp.type === "opaque")) {
+          const copy = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return resp;
+      }))
+    );
   }
 });

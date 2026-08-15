@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0d0d">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
 <style>
   :root {
     color-scheme: light;
@@ -139,6 +140,20 @@
   .wz .resumo { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 18px; font-size: 14.5px; }
   .wz .resumo div { display: flex; justify-content: space-between; padding: 5px 0; }
   .wz .resumo div.total { border-top: 1px solid var(--grid); margin-top: 6px; padding-top: 10px; font-weight: 650; font-size: 16px; }
+
+  /* ─── Login / conta ─── */
+  #auth { position: fixed; inset: 0; background: var(--page); z-index: 60; display: none; overflow-y: auto; }
+  #auth.on { display: flex; align-items: center; justify-content: center; }
+  .auth-card { max-width: 380px; width: 100%; padding: 32px 24px; }
+  .auth-card h2 { font-size: 24px; font-weight: 650; margin-bottom: 6px; }
+  .auth-card p.sub { color: var(--ink-2); font-size: 14px; margin-bottom: 20px; }
+  .auth-card input { width: 100%; font-size: 16px; padding: 10px 12px; margin-bottom: 10px; }
+  .auth-card .btn { width: 100%; padding: 11px; margin-top: 4px; }
+  .auth-err { color: var(--critical); font-size: 13px; min-height: 18px; margin: 6px 0; }
+  .auth-skip { text-align: center; margin-top: 14px; }
+  .auth-skip button { background: none; border: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+  #sync-badge { float: right; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  #sync-badge button { background: none; border: 1px solid var(--baseline); border-radius: 6px; color: var(--ink-2); font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -149,7 +164,20 @@
   <div id="wz-body"></div>
 </div></div>
 
+<!-- ─────────── Login / conta ─────────── -->
+<div id="auth"><div class="auth-card">
+  <h2>Meu Dinheiro</h2>
+  <p class="sub">Entre para sincronizar seus dados entre o celular e o computador. Na primeira vez, crie sua conta — o assistente de metas configura tudo em seguida.</p>
+  <input type="email" id="au-email" placeholder="seu e-mail" autocomplete="email">
+  <input type="password" id="au-pass" placeholder="senha (mín. 6 caracteres)" autocomplete="current-password">
+  <div class="auth-err" id="au-err"></div>
+  <button class="btn" onclick="sbLogin()">Entrar</button>
+  <button class="btn ghost" onclick="sbSignup()">Criar conta</button>
+  <div class="auth-skip"><button onclick="authSkip()">usar sem conta, só neste aparelho</button></div>
+</div></div>
+
 <header>
+  <span id="sync-badge"></span>
   <h1>Meu Dinheiro</h1>
   <nav id="nav">
     <button data-tab="inicio" class="active">Início</button>
@@ -411,6 +439,10 @@
 <!-- ─────────── CONFIG ─────────── -->
 <section class="tab" id="tab-config">
   <div class="card">
+    <h2>Conta & sincronização</h2>
+    <div id="cfg-account"></div>
+  </div>
+  <div class="card">
     <h2>Configurações</h2>
     <form class="inline" onsubmit="return false">
       <div class="field"><label>Câmbio (R$ por US$)</label><input type="number" id="cfg-fx" step="0.01" style="width:100px"></div>
@@ -445,13 +477,13 @@ const TRIPS = { none:"—", work:"Trabalho", personal:"Pessoal" };
 const DEFAULTS = {
   settings: {
     onboarded: false,
-    usMonthly: 2962,     // US$ líquido/mês
+    usMonthly: 0,        // US$ líquido/mês — definido no assistente de metas
     brMonthly: 0,        // R$ líquido/mês
-    fx: 5.45,
-    investedBase: 120000, // R$ já investidos quando começou
-    goalAmount: 200000,   // R$
-    goalMonth: "",        // "2027-08"
-    saveMonthly: 0,       // US$ que decide guardar por mês
+    fx: 5.24,
+    investedBase: 0,     // R$ já investidos ao começar
+    goalAmount: 0,       // R$
+    goalMonth: "",       // "2027-08"
+    saveMonthly: 0,      // US$ que decide guardar por mês
   },
   expenses: [], incomes: [], contributions: [],
   portfolio: [], opportunities: [], rewards: [], fuel: [], guide: {},
@@ -489,7 +521,7 @@ function load() {
     return s;
   } catch { return structuredClone(DEFAULTS); }
 }
-function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+function save() { S._ts = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); sbQueuePush(); }
 function uid() { return Date.now() + Math.random().toString(16).slice(2, 6); }
 
 /* ───────── Utilitários ───────── */
@@ -876,7 +908,7 @@ let wzStep = 0, wzData = {};
 const WZ_STEPS = [
   {
     title: "Vamos começar pelo que entra. 💵",
-    sub: "Quanto cai na sua conta por mês nos EUA, já líquido? (Se recebe $1.367 por quinzena, dá ~$2.962/mês.)",
+    sub: "Quanto cai na sua conta por mês nos EUA, já líquido? (Recebe por quinzena? Multiplique o pagamento por 26 e divida por 12.)",
     render: () => `<div class="biginput"><span class="cur">$</span><input type="number" id="wz-in" value="${wzData.usMonthly}" step="10" min="0"></div>`,
     live: () => "",
     saveStep: () => wzData.usMonthly = num("wz-in"),
@@ -1260,6 +1292,134 @@ function renderRelatorio() {
   <div class="hint">Conta apenas meses de ${year} até ${monthLabel(mk)} — sem input nenhum seu, tudo vem dos lançamentos.</div>`;
 }
 
+/* ───────── Conta & sincronização (Supabase) ─────────
+   Preencher SB_URL e SB_KEY (anon public) do projeto Supabase para ativar.
+   Vazios = app funciona 100% local, sem login. Estratégia de sync: estado
+   inteiro com last-write-wins por _ts (suficiente para 1 usuário, N aparelhos). */
+const SB_URL = "";
+const SB_KEY = "";
+let sb = null, sbUser = null, sbPushTimer = null, sbLastPush = 0;
+
+function sbConfigured() { return !!(SB_URL && SB_KEY && window.supabase); }
+function initAuth() {
+  if (!sbConfigured()) { renderAuthUI(); return; }
+  sb = window.supabase.createClient(SB_URL, SB_KEY);
+  sb.auth.onAuthStateChange((_e, session) => {
+    const was = !!sbUser;
+    sbUser = session?.user || null;
+    renderAuthUI();
+    if (sbUser && !was) firstSync();
+  });
+  if (!localStorage.getItem("mf-skip-login")) {
+    sb.auth.getSession().then(({ data }) => {
+      if (!data?.session) document.getElementById("auth").classList.add("on");
+    });
+  }
+}
+async function sbSignup() {
+  const email = document.getElementById("au-email").value.trim();
+  const pass = document.getElementById("au-pass").value;
+  if (!email || pass.length < 6) return authErr("Preencha e-mail e uma senha de 6+ caracteres.");
+  authErr("");
+  const { error } = await sb.auth.signUp({ email, password: pass });
+  if (error) return authErr(traduzErro(error.message));
+  document.getElementById("auth").classList.remove("on");
+}
+async function sbLogin() {
+  const email = document.getElementById("au-email").value.trim();
+  const pass = document.getElementById("au-pass").value;
+  if (!email || !pass) return authErr("Preencha e-mail e senha.");
+  authErr("");
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) return authErr(traduzErro(error.message));
+  document.getElementById("auth").classList.remove("on");
+}
+async function sbLogout() {
+  if (sb) await sb.auth.signOut();
+  sbUser = null; renderAuthUI();
+}
+function authSkip() {
+  localStorage.setItem("mf-skip-login", "1");
+  document.getElementById("auth").classList.remove("on");
+}
+function authOpen() {
+  localStorage.removeItem("mf-skip-login");
+  authErr("");
+  document.getElementById("auth").classList.add("on");
+}
+function authErr(msg) { document.getElementById("au-err").textContent = msg; }
+function traduzErro(m) {
+  if (/invalid login/i.test(m)) return "E-mail ou senha incorretos.";
+  if (/already registered/i.test(m)) return "Este e-mail já tem conta — use Entrar.";
+  if (/rate limit/i.test(m)) return "Muitas tentativas — aguarde um minuto.";
+  if (/valid email/i.test(m)) return "Digite um e-mail válido.";
+  return m;
+}
+
+/* Sync: pull no login/abertura, push (debounced) a cada save */
+async function firstSync() {
+  if (!sb || !sbUser) return;
+  try {
+    const { data, error } = await sb.from("app_state").select("data, updated_at").eq("user_id", sbUser.id).maybeSingle();
+    if (error) throw error;
+    const localTs = S._ts || 0;
+    const localHasData = S.settings.onboarded || S.expenses.length || S.contributions.length;
+    if (!data) {
+      if (localHasData) await sbPushNow();      // primeiro aparelho: sobe o que já existe
+    } else {
+      const remoteTs = data.data?._ts || new Date(data.updated_at).getTime();
+      if (remoteTs > localTs || !localHasData) {
+        S = { ...structuredClone(DEFAULTS), ...data.data, settings: { ...DEFAULTS.settings, ...data.data.settings } };
+        localStorage.setItem(KEY, JSON.stringify(S));
+        document.getElementById("cfg-fx").value = S.settings.fx;
+        renderAll();
+        if (!S.settings.onboarded) startWizard();
+      } else if (localTs > remoteTs) await sbPushNow();
+    }
+  } catch (e) { console.warn("sync pull falhou:", e.message); }
+  renderAuthUI();
+}
+function sbQueuePush() {
+  if (!sb || !sbUser) return;
+  clearTimeout(sbPushTimer);
+  sbPushTimer = setTimeout(sbPushNow, 1500);
+}
+async function sbPushNow() {
+  if (!sb || !sbUser) return;
+  try {
+    const { error } = await sb.from("app_state").upsert({
+      user_id: sbUser.id, data: S, updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    sbLastPush = Date.now();
+    renderAuthUI();
+  } catch (e) { console.warn("sync push falhou:", e.message); }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && sbUser) firstSync();
+});
+
+function renderAuthUI() {
+  const badge = document.getElementById("sync-badge");
+  const cfg = document.getElementById("cfg-account");
+  if (!sbConfigured()) {
+    badge.innerHTML = "";
+    if (cfg) cfg.innerHTML = '<div class="hint" style="margin:0">Sincronização ainda não configurada nesta versão — os dados ficam neste aparelho. Backup manual logo abaixo.</div>';
+    return;
+  }
+  if (sbUser) {
+    badge.innerHTML = `☁ ${sbLastPush ? "sincronizado " + new Date(sbLastPush).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "conectado"}`;
+    if (cfg) cfg.innerHTML = `
+      <div style="font-size:13.5px">Conectado como <b>${esc(sbUser.email)}</b> — seus lançamentos sincronizam sozinhos entre aparelhos.</div>
+      <button class="btn ghost" style="margin-top:10px" onclick="sbLogout()">Sair da conta</button>`;
+  } else {
+    badge.innerHTML = `<button onclick="authOpen()">☁ Entrar</button>`;
+    if (cfg) cfg.innerHTML = `
+      <div style="font-size:13.5px">Sem conta neste aparelho — os dados ficam só aqui até você entrar.</div>
+      <button class="btn" style="margin-top:10px" onclick="authOpen()">Entrar / criar conta</button>`;
+  }
+}
+
 /* ───────── Config / backup ───────── */
 function exportData() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
@@ -1354,6 +1514,7 @@ updateLancForm();
 renderAll();
 if (!S.settings.onboarded) startWizard();
 fetchMarket();
+document.addEventListener("DOMContentLoaded", initAuth);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
