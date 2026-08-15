@@ -1,7 +1,7 @@
 {
-  "name": "Meu Dinheiro — Clareza mensal",
-  "short_name": "Meu Dinheiro",
-  "description": "Quanto entra, quanto guardo, quanto está livre — clareza financeira mensal",
+  "name": "Folga — quanto está livre este mês",
+  "short_name": "Folga",
+  "description": "Sua folga do mês em um número: quanto entra, quanto guardar, quanto está livre para gastar sem culpa",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0d0d0d",

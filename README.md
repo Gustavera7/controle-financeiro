@@ -1,6 +1,6 @@
-# Meu Dinheiro — Clareza mensal
+# Folga
 
-App pessoal de finanças para uma temporada de trabalho nos EUA. Um número guia tudo: **quanto está livre para gastar este mês** depois de cumprir a meta de guardar.
+Sua folga do mês em um número: **quanto está livre para gastar** depois de cumprir a meta de guardar. Feito para quem vive (e ganha) entre dois países, mas serve para qualquer pessoa que queira clareza mensal.
 
 **Privacidade:** este repositório contém apenas o código. Todos os dados financeiros ficam no `localStorage` do navegador de quem usa — nada é enviado a servidor algum.
 

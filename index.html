@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meu Dinheiro — Clareza mensal</title>
+<title>Folga — quanto está livre este mês</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0d0d">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -166,7 +166,7 @@
 
 <!-- ─────────── Login / conta ─────────── -->
 <div id="auth"><div class="auth-card">
-  <h2>Meu Dinheiro</h2>
+  <h2>Folga</h2>
   <p class="sub">Entre para sincronizar seus dados entre o celular e o computador. Na primeira vez, crie sua conta — o assistente de metas configura tudo em seguida.</p>
   <input type="email" id="au-email" placeholder="seu e-mail" autocomplete="email">
   <input type="password" id="au-pass" placeholder="senha (mín. 6 caracteres)" autocomplete="current-password">
@@ -178,7 +178,7 @@
 
 <header>
   <span id="sync-badge"></span>
-  <h1>Meu Dinheiro</h1>
+  <h1>Folga</h1>
   <nav id="nav">
     <button data-tab="inicio" class="active">Início</button>
     <button data-tab="lanc">Lançamentos</button>
@@ -1446,7 +1446,7 @@ function exportData() {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `meu-dinheiro-backup-${todayStr()}.json`;
+  a.download = `folga-backup-${todayStr()}.json`;
   a.click();
 }
 function importData(input) {
