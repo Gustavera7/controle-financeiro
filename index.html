@@ -914,19 +914,30 @@ const WZ_STEPS = [
     saveStep: () => wzData.usMonthly = num("wz-in"),
   },
   {
-    title: "E no Brasil, entra algo por mês?",
-    sub: "Salário, aluguel, renda de investimento — líquido, em reais. Pode ser 0.",
+    title: "Você tem renda em outro país também?",
+    sub: "A maioria das pessoas não tem — é só seguir. Se tiver (salário, aluguel, dividendos no Brasil), ela fica separada do dia a dia, reservada para investir.",
     render: () => `
-      <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.brMonthly}" step="100" min="0"></div>
-      <div class="field" style="margin-top:10px"><label>Câmbio para converter (R$ por US$)</label>
-      <input type="number" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>`,
+      <div class="field"><label>Renda em outro país</label>
+        <select id="wz-has2" style="font-size:16px" onchange="document.getElementById('wz-br-fields').style.display = this.value === 'sim' ? '' : 'none'; wzLive()">
+          <option value="nao" ${wzData.brMonthly > 0 ? "" : "selected"}>Não — só a renda principal</option>
+          <option value="sim" ${wzData.brMonthly > 0 ? "selected" : ""}>Sim — tenho renda no Brasil</option>
+        </select></div>
+      <div id="wz-br-fields" style="display:${wzData.brMonthly > 0 ? "" : "none"}; margin-top:14px">
+        <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.brMonthly}" step="100" min="0"></div>
+        <div class="field" style="margin-top:10px"><label>Câmbio para converter (R$ por US$)</label>
+        <input type="number" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>
+      </div>`,
     live: () => {
+      if (val("wz-has2") !== "sim") return "Fechado — o livre do mês usa só a renda principal.";
       const br = num("wz-in");
       return br > 0
-        ? `Anotado: <b>${fmtBR(br)}/mês</b> ficam à parte, reservados para investir — não entram no seu "livre" nos EUA.`
-        : "Sem problema — o livre do mês fica só com o salário EUA.";
+        ? `Anotado: <b>${fmtBR(br)}/mês</b> ficam à parte, reservados para investir — não entram no seu "livre".`
+        : "Informe o valor líquido mensal dessa segunda renda.";
     },
-    saveStep: () => { wzData.brMonthly = num("wz-in"); wzData.fx = num("wz-fx") || 5.45; },
+    saveStep: () => {
+      wzData.brMonthly = val("wz-has2") === "sim" ? num("wz-in") : 0;
+      wzData.fx = num("wz-fx") || wzData.fx || 5.24;
+    },
   },
   {
     title: "Quanto você já tem investido hoje?",
@@ -1302,7 +1313,7 @@ let sb = null, sbUser = null, sbPushTimer = null, sbLastPush = 0;
 
 function sbConfigured() { return !!(SB_URL && SB_KEY && window.supabase); }
 function initAuth() {
-  if (!sbConfigured()) { renderAuthUI(); return; }
+  if (!sbConfigured()) { renderAuthUI(); wizardIfNeeded(); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY);
   sb.auth.onAuthStateChange((_e, session) => {
     const was = !!sbUser;
@@ -1310,11 +1321,19 @@ function initAuth() {
     renderAuthUI();
     if (sbUser && !was) firstSync();
   });
-  if (!localStorage.getItem("mf-skip-login")) {
-    sb.auth.getSession().then(({ data }) => {
-      if (!data?.session) document.getElementById("auth").classList.add("on");
-    });
-  }
+  sb.auth.getSession().then(({ data }) => {
+    if (!data?.session) {
+      if (localStorage.getItem("mf-skip-login")) wizardIfNeeded();
+      else document.getElementById("auth").classList.add("on");
+    }
+    // com sessão, o onAuthStateChange dispara firstSync, que decide sobre o wizard
+  });
+}
+/* O wizard só abre depois que sabemos se há dados na nuvem — evita
+   perguntar tudo de novo num aparelho novo já logado. */
+function wizardIfNeeded() {
+  if (!S.settings.onboarded) startWizard();
+  else document.getElementById("wizard").classList.remove("on");
 }
 async function sbSignup() {
   const email = document.getElementById("au-email").value.trim();
@@ -1342,6 +1361,7 @@ async function sbLogout() {
 function authSkip() {
   localStorage.setItem("mf-skip-login", "1");
   document.getElementById("auth").classList.remove("on");
+  wizardIfNeeded();
 }
 function authOpen() {
   localStorage.removeItem("mf-skip-login");
@@ -1374,10 +1394,10 @@ async function firstSync() {
         localStorage.setItem(KEY, JSON.stringify(S));
         document.getElementById("cfg-fx").value = S.settings.fx;
         renderAll();
-        if (!S.settings.onboarded) startWizard();
       } else if (localTs > remoteTs) await sbPushNow();
     }
   } catch (e) { console.warn("sync pull falhou:", e.message); }
+  wizardIfNeeded();   // já configurado na nuvem? fecha o wizard; conta nova? abre
   renderAuthUI();
 }
 function sbQueuePush() {
@@ -1513,8 +1533,8 @@ fxEl.onchange = () => { S.settings.fx = Number(fxEl.value) || 5.45; save(); rend
 
 updateLancForm();
 renderAll();
-if (!S.settings.onboarded) startWizard();
 fetchMarket();
+/* O wizard de primeiras metas é decidido pelo initAuth (depois de checar a nuvem) */
 document.addEventListener("DOMContentLoaded", initAuth);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
