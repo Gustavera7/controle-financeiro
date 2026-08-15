@@ -1296,8 +1296,8 @@ function renderRelatorio() {
    Preencher SB_URL e SB_KEY (anon public) do projeto Supabase para ativar.
    Vazios = app funciona 100% local, sem login. Estratégia de sync: estado
    inteiro com last-write-wins por _ts (suficiente para 1 usuário, N aparelhos). */
-const SB_URL = "";
-const SB_KEY = "";
+const SB_URL = "https://yeilsajnttrmkxnewpun.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllaWxzYWpudHRybWt4bmV3cHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4Mjk5MDAsImV4cCI6MjEwMjQwNTkwMH0.dqFnTtaiwKKuEPbFK4xfguM9rJFYqW4cEwMCn_x7UqY";
 let sb = null, sbUser = null, sbPushTimer = null, sbLastPush = 0;
 
 function sbConfigured() { return !!(SB_URL && SB_KEY && window.supabase); }
@@ -1321,8 +1321,9 @@ async function sbSignup() {
   const pass = document.getElementById("au-pass").value;
   if (!email || pass.length < 6) return authErr("Preencha e-mail e uma senha de 6+ caracteres.");
   authErr("");
-  const { error } = await sb.auth.signUp({ email, password: pass });
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
   if (error) return authErr(traduzErro(error.message));
+  if (!data?.session) return authErr("Conta criada! Confirme pelo link enviado ao seu e-mail e depois toque em Entrar.");
   document.getElementById("auth").classList.remove("on");
 }
 async function sbLogin() {
