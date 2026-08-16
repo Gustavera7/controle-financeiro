@@ -34,6 +34,18 @@ o que mantém o custo zero e o deploy instantâneo.
 5. **Nunca criar contas nem inserir credenciais pelo Gustavo** — ele cria as próprias
    contas (Supabase, Google Play, etc.).
 6. **`DEFAULTS` fica zerado** — nenhum dado pessoal no código. Usuário novo cai no wizard.
+7. **O wizard só abre por `wizardIfNeeded()`, depois da resposta da nuvem.** Se abrir antes,
+   quem já tem metas salvas e entra num aparelho novo é perguntado de novo. Bug já corrigido
+   uma vez — não reintroduzir.
+8. **Mês sem lançamento não gera "livre fantasma"** — use `monthHasData()` / `firstDataMonth()`
+   antes de exibir números de um mês vazio.
+
+## Dados externos (ao vivo)
+
+Cotações e índices vêm de APIs públicas com CORS liberado, sem chave: **AwesomeAPI** (dólar, que
+alimenta o câmbio automático), **CoinGecko** (Bitcoin) e **BCB SGS** (séries 432 Selic, 4389 CDI,
+13522 IPCA). Taxas que não têm API — como os CDs do Empeople — ficam fixas no código com a
+constante `RATES_ASOF` indicando a data da pesquisa; ao atualizar os números, atualize a data.
 
 ## Dados
 
