@@ -53,7 +53,27 @@
   @media (max-width: 680px) {
     nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     nav::-webkit-scrollbar { display: none; }
+    /* dedo, não mouse: alvos de toque confortáveis e sem zoom no foco (iOS amplia abaixo de 16px) */
+    input, select { min-height: 44px; font-size: 16px; }
+    button.btn { min-height: 44px; padding: 10px 18px; }
+    nav button { padding: 10px 12px; }
+    button.mini { min-width: 36px; min-height: 36px; font-size: 15px; }
+    header { position: sticky; top: 0; z-index: 20; background: var(--page); padding-bottom: 0; }
+    /* a borda do header vira a dica de que há mais abas para o lado */
+    nav { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); }
+    nav.at-end { -webkit-mask-image: none; mask-image: none; }
+    main { padding-bottom: 90px; }
   }
+
+  /* Convite para instalar — só aparece no navegador, some depois de instalado */
+  #install-bar { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 40; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: 520px; margin: 0 auto; }
+  #install-bar.on { display: block; }
+  #install-bar b { font-size: 14.5px; }
+  #install-bar p { font-size: 13px; color: var(--ink-2); margin: 3px 0 10px; }
+  #install-bar .row { display: flex; gap: 8px; align-items: center; }
+  #install-bar .row .btn { flex: 1; }
   main { max-width: 860px; margin: 0 auto; padding: 20px; }
   section.tab { display: none; }
   section.tab.active { display: block; }
@@ -186,6 +206,15 @@
   <button class="btn ghost" onclick="sbSignup()" data-i18n="authSignup"></button>
   <div class="auth-skip"><button onclick="authSkip()" data-i18n="authSkip"></button></div>
 </div></div>
+
+<div id="install-bar">
+  <b data-i18n="installTitle"></b>
+  <p id="install-text"></p>
+  <div class="row">
+    <button class="btn" id="install-go" data-i18n="installBtn"></button>
+    <button class="btn ghost" onclick="dismissInstall()" data-i18n="installLater"></button>
+  </div>
+</div>
 
 <header>
   <div class="hdr-right">
@@ -654,8 +683,20 @@ pt: {
   wzBack: "‹ Voltar", wzNext: "Continuar ›", wzDone: "Começar a usar ✓",
   wzNeedIncome: "Informe quanto você recebe por mês — é a base de todo o resto.",
   otherLang: "English",
+  installTitle: "Instalar no celular",
+  installBody: "Deixe a Folga na tela inicial: abre em tela cheia e funciona sem internet.",
+  installBtn: "Instalar",
+  installLater: "Agora não",
+  installIos: "No iPhone: toque em Compartilhar (⬆️) na barra do Safari e escolha “Adicionar à Tela de Início”.",
+  installDone: "Pronto — a Folga está instalada. 🎉",
 },
 en: {
+  installTitle: "Install on your phone",
+  installBody: "Keep Folga on your home screen: full screen, works offline.",
+  installBtn: "Install",
+  installLater: "Not now",
+  installIos: "On iPhone: tap Share (⬆️) in the Safari bar and choose “Add to Home Screen”.",
+  installDone: "Done — Folga is installed. 🎉",
   docTitle: "Folga — how much is free this month",
   navHome: "Home", navEntries: "Entries", navInvest: "Invest", navIdeas: "Ideas",
   navReport: "Report", navRewards: "Rewards", navGoals: "Goals", navConfig: "Settings",
@@ -919,6 +960,9 @@ function applyLang() {
   renderAll();
   renderAuthUI();
   if (document.getElementById("wizard").classList.contains("on")) renderWizard();
+  const ibar = document.getElementById("install-bar");
+  if (ibar.classList.contains("on"))
+    document.getElementById("install-text").textContent = deferredPrompt ? t("installBody") : t("installIos");
 }
 
 /* ───────── Utilitários ───────── */
@@ -2018,6 +2062,59 @@ document.addEventListener("DOMContentLoaded", initAuth);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+
+/* ───────── Instalação no celular ─────────
+   Android/Chrome entrega um prompt nativo; iOS/Safari só aceita o caminho manual,
+   então ali mostramos as instruções em vez do botão. */
+let deferredPrompt = null;
+const isStandalone = () =>
+  matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+function showInstallBar() {
+  if (isStandalone() || localStorage.getItem("install-dismissed") === "1") return;
+  const bar = document.getElementById("install-bar");
+  const go = document.getElementById("install-go");
+  const txt = document.getElementById("install-text");
+  if (deferredPrompt) {
+    txt.textContent = t("installBody");
+    go.style.display = "";
+  } else if (isIos()) {
+    txt.textContent = t("installIos");
+    go.style.display = "none";
+  } else return; // desktop sem prompt: não atrapalha
+  bar.classList.add("on");
+}
+function dismissInstall() {
+  localStorage.setItem("install-dismissed", "1");
+  document.getElementById("install-bar").classList.remove("on");
+}
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBar();
+});
+document.getElementById("install-go").onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("install-bar").classList.remove("on");
+  if (outcome === "accepted") localStorage.setItem("install-dismissed", "1");
+};
+window.addEventListener("appinstalled", () => {
+  localStorage.setItem("install-dismissed", "1");
+  document.getElementById("install-bar").classList.remove("on");
+});
+if (isIos()) setTimeout(showInstallBar, 1500);
+
+/* Marca o fim da rolagem das abas para tirar o esmaecido da borda */
+const navEl = document.getElementById("nav");
+const markNavEnd = () =>
+  navEl.classList.toggle("at-end", navEl.scrollLeft + navEl.clientWidth >= navEl.scrollWidth - 4);
+navEl.addEventListener("scroll", markNavEnd, { passive: true });
+addEventListener("resize", markNavEnd);
+markNavEnd();
 </script>
 </body>
 </html>
