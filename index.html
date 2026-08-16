@@ -2060,7 +2060,18 @@ fetchMarket();
 document.addEventListener("DOMContentLoaded", initAuth);
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    reg.update();                                   // procura versão nova a cada abertura
+    setInterval(() => reg.update(), 60 * 60 * 1000);
+  }).catch(() => {});
+  /* Quando uma versão nova assume o controle, recarrega uma vez para o app já
+     abrir atualizado — sem isso a novidade só apareceria na abertura seguinte. */
+  let recarregando = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (recarregando) return;
+    recarregando = true;
+    location.reload();
+  });
 }
 
 /* ───────── Instalação no celular ─────────
