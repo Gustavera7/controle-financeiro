@@ -1,17 +1,17 @@
 # Folga
 
-Sua folga do mês em um número: **quanto está livre para gastar** depois de cumprir a meta de guardar. Feito para quem vive (e ganha) entre dois países, mas serve para qualquer pessoa que queira clareza mensal.
+Sua folga do mês em um número: **quanto está livre para gastar** depois de cumprir a meta de guardar. Funciona com um país só e, para quem vive e ganha entre dois, com dois — mas só se você disser isso na conversa inicial.
 
-**Privacidade:** este repositório contém apenas o código. Todos os dados financeiros ficam no `localStorage` do navegador de quem usa — nada é enviado a servidor algum.
+**Privacidade:** este repositório contém apenas o código. Os dados financeiros ficam no `localStorage` do navegador de quem usa e, se você criar conta, na sua linha no Supabase — nada é compartilhado com anunciantes, bancos ou parceiros.
 
 ## Como funciona
 
-1. **Conversa de metas** — na primeira abertura o app pergunta: renda EUA, renda Brasil, quanto já tem investido, onde quer chegar e até quando, e quanto vai guardar por mês. Tudo ajustável depois na aba Metas.
+1. **Conversa inicial** — o app pergunta onde você vive e quanto recebe, se tem renda em outro país (e, se tiver, se ela entra no seu "livre" ou fica reservada para investir), quanto já tem investido, onde quer chegar e quanto vai guardar por mês. Tudo ajustável depois em Metas e Config.
 2. **Início** — o número grande é o livre do mês: renda − compromisso de guardar − gastos. Abaixo, quanto ganhou, guardou e gastou, para onde foi o dinheiro e o resumo do mês passado.
-3. **Lançamentos** — um formulário só para gasto, renda extra e aporte. Gastos de combustível, comida e carro alugado em *viagem a trabalho* são cobertos pela empresa e não descontam do livre.
-4. **Investimentos** — patrimônio vs. meta, composição da carteira, histórico de aportes e lista de oportunidades (avaliando / investido / descartado).
-5. **Rewards** — guia de programas de benefícios (clubes e mercados das Quad Cities, redes nacionais de combustível, milhas aéreas, delivery), melhor cartão por categoria e comparador de preço por posto.
+3. **Lançamentos** — um formulário só para gasto, renda extra e aporte. Gastos em *viagem a trabalho* nas categorias que a sua empresa cobre não descontam do livre (você escolhe quais em Config).
+4. **Investir** — patrimônio com gráfico por tipo de ativo e alvo por perfil de risco, plano do mês (o que fazer com o dinheiro, nesta ordem, com valores), taxas do seu país e as taxas das suas próprias contas, histórico de aportes e oportunidades.
+5. **Rewards** — leitura dos seus gastos: quanto volta hoje em cashback, quanto poderia voltar, e o que mudar em cada categoria. Ofertas de parceiros entram na conta automaticamente.
 
 ## Uso
 
-App estático (HTML + JS puro, sem dependências). Abra `index.html` no navegador ou acesse a versão hospedada. Instalável como PWA no celular (funciona offline). Faça backups pelo botão **Exportar** na aba Config.
+App estático (HTML + JS puro, sem dependências, sem build). Abra `index.html` no navegador ou acesse a versão hospedada. Instalável como PWA no celular (funciona offline). Faça backups pelo botão **Exportar** na aba Config.
