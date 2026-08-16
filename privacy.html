@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Folga — Política de Privacidade / Privacy Policy</title>
+<style>
+  :root { color-scheme: light; --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781; --grid:#e1e0d9; --s1:#2a78d6; }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --page:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink-2:#c3c2b7; --muted:#898781; --grid:#2c2c2a; --s1:#3987e5; }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--ink); line-height: 1.55; font-size: 15px; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+  h1 { font-size: 26px; font-weight: 650; margin-bottom: 4px; }
+  h2 { font-size: 18px; font-weight: 650; margin: 28px 0 8px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 18px 0 6px; }
+  p, li { color: var(--ink-2); margin-bottom: 10px; }
+  ul { padding-left: 20px; }
+  .updated { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .lang-switch { display: flex; gap: 8px; margin-bottom: 24px; }
+  .lang-switch button { font: inherit; font-size: 13px; padding: 5px 14px; border-radius: 6px; border: 1px solid var(--grid); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+  .lang-switch button.on { border-color: var(--s1); color: var(--s1); font-weight: 600; }
+  section[hidden] { display: none; }
+  .box { background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 14px 16px; margin: 16px 0; }
+  a { color: var(--s1); }
+  footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--grid); font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="lang-switch">
+    <button id="b-pt" class="on" onclick="setL('pt')">Português</button>
+    <button id="b-en" onclick="setL('en')">English</button>
+  </div>
+
+  <!-- ═══════ PORTUGUÊS ═══════ -->
+  <section id="pt">
+    <h1>Política de Privacidade — Folga</h1>
+    <p class="updated">Última atualização: 15 de agosto de 2026</p>
+
+    <div class="box">
+      <b>Resumo em uma frase:</b> o Folga não vende, compartilha nem monetiza seus dados; ele não se conecta ao seu banco; e tudo que você registra fica no seu aparelho — e, se você criar uma conta, também numa área privada da nuvem acessível somente por você.
+    </div>
+
+    <h2>1. Quem somos</h2>
+    <p>O Folga é um aplicativo pessoal de organização financeira, distribuído como aplicativo web (PWA). Contato: <a href="mailto:gustavodasilveira2018@gmail.com">gustavodasilveira2018@gmail.com</a>.</p>
+
+    <h2>2. Quais dados o app trata</h2>
+    <h3>a) Dados que você digita</h3>
+    <ul>
+      <li>Renda mensal, meta de economia e meta de patrimônio;</li>
+      <li>Lançamentos: gastos (valor, data, categoria, contexto de viagem, descrição), rendas extras e aportes;</li>
+      <li>Composição de carteira, oportunidades, programas de benefícios e preços de combustível que você registrar.</li>
+    </ul>
+    <p>Esses dados existem porque <b>você</b> os digitou. O app <b>não</b> se conecta a bancos, cartões, corretoras nem importa extratos.</p>
+
+    <h3>b) Dados de conta (opcional)</h3>
+    <p>Se você optar por criar uma conta para sincronizar entre aparelhos, tratamos <b>e-mail</b> e <b>senha</b>. A senha é armazenada de forma criptografada (hash) pelo provedor de autenticação e nunca fica visível para nós.</p>
+
+    <h3>c) O que NÃO coletamos</h3>
+    <ul>
+      <li>Não coletamos localização, contatos, fotos, microfone ou câmera;</li>
+      <li>Não usamos rastreadores publicitários, cookies de marketing nem analytics de terceiros;</li>
+      <li>Não coletamos números de cartão, contas bancárias, CPF, SSN ou documentos.</li>
+    </ul>
+
+    <h2>3. Onde seus dados ficam</h2>
+    <ul>
+      <li><b>Sem conta:</b> exclusivamente no armazenamento local do seu navegador/aparelho. Ninguém, nem nós, tem acesso.</li>
+      <li><b>Com conta:</b> além do aparelho, numa base de dados hospedada no <b>Supabase</b> (infraestrutura em nuvem), protegida por regras de acesso por linha (<i>Row Level Security</i>): cada registro só pode ser lido ou escrito pelo próprio usuário autenticado dono dele.</li>
+    </ul>
+
+    <h2>4. Serviços de terceiros</h2>
+    <p>Para funcionar, o app consulta serviços externos. Nenhum deles recebe seus dados financeiros — as consultas são apenas por cotações públicas:</p>
+    <ul>
+      <li><b>Supabase</b> — autenticação e sincronização (recebe apenas e-mail e os dados que você registra, quando você tem conta);</li>
+      <li><b>AwesomeAPI</b> — cotação do dólar; <b>CoinGecko</b> — cotação do Bitcoin; <b>Banco Central do Brasil</b> — Selic, CDI e IPCA;</li>
+      <li><b>jsDelivr</b> — entrega da biblioteca de código usada para autenticação;</li>
+      <li><b>GitHub Pages</b> — hospedagem do site.</li>
+    </ul>
+    <p>Esses serviços podem registrar dados técnicos de conexão (como endereço IP) conforme as políticas deles, como acontece em qualquer acesso à internet.</p>
+
+    <h2>5. Finalidade e base legal</h2>
+    <p>Tratamos os dados unicamente para <b>fornecer as funções do app a você</b> — calcular seu saldo livre, acompanhar metas e sincronizar entre seus aparelhos. A base legal é a <b>execução do serviço solicitado por você</b> e o seu <b>consentimento</b> ao criar uma conta (LGPD, art. 7º; GDPR, art. 6º).</p>
+    <p>Não há compartilhamento com anunciantes, corretoras, bancos ou parceiros comerciais. Não fazemos perfilamento nem decisões automatizadas sobre você.</p>
+
+    <h2>6. Seus direitos</h2>
+    <ul>
+      <li><b>Acessar e exportar:</b> botão “Exportar backup” na aba Config gera um arquivo com todos os seus dados;</li>
+      <li><b>Corrigir:</b> qualquer registro pode ser editado ou excluído dentro do app;</li>
+      <li><b>Excluir tudo:</b> peça a exclusão da conta pelo e-mail acima e apagamos seu registro da nuvem em até 30 dias; para apagar do aparelho, basta limpar os dados do site ou desinstalar o app;</li>
+      <li><b>Revogar consentimento:</b> saia da conta e use o app apenas localmente.</li>
+    </ul>
+
+    <h2>7. Retenção</h2>
+    <p>Mantemos seus dados enquanto sua conta existir. Após pedido de exclusão, removemos em até 30 dias. Dados guardados apenas no aparelho permanecem sob seu controle exclusivo.</p>
+
+    <h2>8. Crianças</h2>
+    <p>O Folga não é direcionado a menores de 13 anos e não coleta conscientemente dados dessa faixa etária.</p>
+
+    <h2>9. Segurança</h2>
+    <p>A comunicação é criptografada (HTTPS/TLS), o acesso aos dados exige autenticação e as regras do banco impedem que um usuário leia dados de outro. Nenhum sistema é perfeitamente seguro — mantenha sua senha protegida e não a reutilize de outros serviços.</p>
+
+    <h2>10. Aviso importante sobre conteúdo financeiro</h2>
+    <p>O Folga é uma ferramenta de <b>organização e informação educacional</b>. Ele exibe taxas públicas de mercado e cálculos baseados no que você registra. <b>Não é recomendação de investimento</b>, consultoria financeira, tributária ou jurídica, e não somos consultores licenciados. Decisões financeiras são suas; para orientação personalizada, procure um profissional habilitado.</p>
+
+    <h2>11. Alterações</h2>
+    <p>Se esta política mudar, atualizaremos a data no topo e, em mudanças relevantes, avisaremos dentro do app.</p>
+  </section>
+
+  <!-- ═══════ ENGLISH ═══════ -->
+  <section id="en" hidden>
+    <h1>Privacy Policy — Folga</h1>
+    <p class="updated">Last updated: August 15, 2026</p>
+
+    <div class="box">
+      <b>One-sentence summary:</b> Folga does not sell, share or monetize your data; it does not connect to your bank; and everything you log stays on your device — and, if you create an account, in a private cloud area only you can access.
+    </div>
+
+    <h2>1. Who we are</h2>
+    <p>Folga is a personal finance organization app, distributed as a web app (PWA). Contact: <a href="mailto:gustavodasilveira2018@gmail.com">gustavodasilveira2018@gmail.com</a>.</p>
+
+    <h2>2. What data the app handles</h2>
+    <h3>a) Data you type</h3>
+    <ul>
+      <li>Monthly income, savings commitment and wealth goal;</li>
+      <li>Entries: expenses (amount, date, category, trip context, description), extra income and investment contributions;</li>
+      <li>Portfolio breakdown, opportunities, rewards programs and fuel prices you choose to log.</li>
+    </ul>
+    <p>This data exists because <b>you</b> typed it. The app does <b>not</b> connect to banks, cards or brokerages, and does not import statements.</p>
+
+    <h3>b) Account data (optional)</h3>
+    <p>If you choose to create an account to sync across devices, we handle your <b>email</b> and <b>password</b>. The password is stored hashed by the authentication provider and is never visible to us.</p>
+
+    <h3>c) What we do NOT collect</h3>
+    <ul>
+      <li>No location, contacts, photos, microphone or camera;</li>
+      <li>No advertising trackers, marketing cookies or third-party analytics;</li>
+      <li>No card numbers, bank account numbers, SSN, tax IDs or identity documents.</li>
+    </ul>
+
+    <h2>3. Where your data lives</h2>
+    <ul>
+      <li><b>Without an account:</b> exclusively in your browser/device local storage. Nobody, including us, can access it.</li>
+      <li><b>With an account:</b> also in a database hosted on <b>Supabase</b> (cloud infrastructure), protected by Row Level Security: each record can only be read or written by the authenticated user who owns it.</li>
+    </ul>
+
+    <h2>4. Third-party services</h2>
+    <p>To work, the app queries external services. None of them receive your financial data — the calls only fetch public market quotes:</p>
+    <ul>
+      <li><b>Supabase</b> — authentication and sync (receives only your email and the data you log, when you have an account);</li>
+      <li><b>AwesomeAPI</b> — USD/BRL rate; <b>CoinGecko</b> — Bitcoin price; <b>Central Bank of Brazil</b> — Selic, CDI and IPCA rates;</li>
+      <li><b>jsDelivr</b> — delivery of the authentication code library;</li>
+      <li><b>GitHub Pages</b> — website hosting.</li>
+    </ul>
+    <p>These services may log technical connection data (such as IP address) under their own policies, as happens with any internet request.</p>
+
+    <h2>5. Purpose and legal basis</h2>
+    <p>We process data solely to <b>provide the app's features to you</b> — computing your free-to-spend balance, tracking goals and syncing across your devices. The legal basis is <b>performance of the service you requested</b> and your <b>consent</b> when creating an account (GDPR art. 6; Brazil's LGPD art. 7).</p>
+    <p>There is no sharing with advertisers, brokerages, banks or commercial partners. We do not profile you or make automated decisions about you.</p>
+
+    <h2>6. Your rights</h2>
+    <ul>
+      <li><b>Access and export:</b> the “Export backup” button in Settings produces a file with all your data;</li>
+      <li><b>Correct:</b> any entry can be edited or deleted inside the app;</li>
+      <li><b>Delete everything:</b> request account deletion at the email above and we remove your cloud record within 30 days; to erase from the device, clear the site data or uninstall the app;</li>
+      <li><b>Withdraw consent:</b> sign out and use the app locally only.</li>
+    </ul>
+
+    <h2>7. Retention</h2>
+    <p>We keep your data while your account exists. After a deletion request, we remove it within 30 days. Data stored only on your device remains under your exclusive control.</p>
+
+    <h2>8. Children</h2>
+    <p>Folga is not directed to children under 13 and does not knowingly collect data from them.</p>
+
+    <h2>9. Security</h2>
+    <p>Traffic is encrypted (HTTPS/TLS), data access requires authentication, and database rules prevent any user from reading another user's data. No system is perfectly secure — keep your password safe and do not reuse it from other services.</p>
+
+    <h2>10. Important notice about financial content</h2>
+    <p>Folga is an <b>organization and educational information</b> tool. It displays public market rates and calculations based on what you log. It is <b>not investment advice</b>, nor financial, tax or legal counsel, and we are not licensed advisors. Financial decisions are yours; for personalized guidance, consult a qualified professional.</p>
+
+    <h2>11. Changes</h2>
+    <p>If this policy changes, we will update the date at the top and, for material changes, notify you inside the app.</p>
+  </section>
+
+  <footer>
+    <a href="./">← Folga</a>
+  </footer>
+</main>
+<script>
+  function setL(l) {
+    document.getElementById("pt").hidden = l !== "pt";
+    document.getElementById("en").hidden = l !== "en";
+    document.getElementById("b-pt").classList.toggle("on", l === "pt");
+    document.getElementById("b-en").classList.toggle("on", l === "en");
+    document.documentElement.lang = l === "pt" ? "pt-BR" : "en";
+    location.hash = l;
+  }
+  const initial = location.hash.replace("#", "") ||
+    ((navigator.language || "en").toLowerCase().startsWith("pt") ? "pt" : "en");
+  setL(initial === "en" ? "en" : "pt");
+</script>
+</body>
+</html>

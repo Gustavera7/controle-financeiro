@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Folga — quanto está livre este mês</title>
+<meta name="description" content="Sua folga do mês em um número: quanto entra, quanto guardar, quanto está livre para gastar sem culpa. Your month's slack in one number.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0d0d">
+<link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
 <style>
@@ -44,9 +46,14 @@
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--ink); font-size: 15px; line-height: 1.45; }
   header { padding: 16px 20px 0; max-width: 860px; margin: 0 auto; }
   header h1 { font-size: 20px; font-weight: 650; }
+  .hdr-right { float: right; display: flex; gap: 8px; align-items: center; margin-top: 4px; }
   nav { display: flex; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--grid); }
-  nav button { background: none; border: none; font: inherit; color: var(--ink-2); padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; }
+  nav button { background: none; border: none; font: inherit; color: var(--ink-2); padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; white-space: nowrap; }
   nav button.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--s1); }
+  @media (max-width: 680px) {
+    nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+  }
   main { max-width: 860px; margin: 0 auto; padding: 20px; }
   section.tab { display: none; }
   section.tab.active { display: block; }
@@ -119,7 +126,7 @@
   .rate-row:last-child { border-bottom: none; }
   .rate-row .rr-rate { font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .rate-row .why { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
-  @media print { header nav, form, button, select, .month-nav button, #mk-status { display: none !important } body { background: #fff } .card { break-inside: avoid } }
+  @media print { header nav, form, button, select, .month-nav button, #mk-status, .hdr-right { display: none !important } body { background: #fff } .card { break-inside: avoid } }
 
   /* ─── Assistente de metas (wizard) ─── */
   #wizard { position: fixed; inset: 0; background: var(--page); z-index: 50; display: none; overflow-y: auto; }
@@ -140,6 +147,8 @@
   .wz .resumo { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 18px; font-size: 14.5px; }
   .wz .resumo div { display: flex; justify-content: space-between; padding: 5px 0; }
   .wz .resumo div.total { border-top: 1px solid var(--grid); margin-top: 6px; padding-top: 10px; font-weight: 650; font-size: 16px; }
+  .wz-lang { text-align: center; margin-bottom: 16px; }
+  .wz-lang button, .lang-btn { background: none; border: 1px solid var(--baseline); border-radius: 6px; color: var(--ink-2); font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer; }
 
   /* ─── Login / conta ─── */
   #auth { position: fixed; inset: 0; background: var(--page); z-index: 60; display: none; overflow-y: auto; }
@@ -152,7 +161,7 @@
   .auth-err { color: var(--critical); font-size: 13px; min-height: 18px; margin: 6px 0; }
   .auth-skip { text-align: center; margin-top: 14px; }
   .auth-skip button { background: none; border: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
-  #sync-badge { float: right; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  #sync-badge { font-size: 12px; color: var(--muted); }
   #sync-badge button { background: none; border: 1px solid var(--baseline); border-radius: 6px; color: var(--ink-2); font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer; }
 </style>
 </head>
@@ -160,34 +169,39 @@
 
 <!-- ─────────── Assistente de metas ─────────── -->
 <div id="wizard"><div class="wz">
+  <div class="wz-lang"><button onclick="toggleLang()" id="wz-lang-btn">English</button></div>
   <div class="step-dots" id="wz-dots"></div>
   <div id="wz-body"></div>
 </div></div>
 
 <!-- ─────────── Login / conta ─────────── -->
 <div id="auth"><div class="auth-card">
+  <div class="wz-lang" style="text-align:right"><button onclick="toggleLang()" id="au-lang-btn">English</button></div>
   <h2>Folga</h2>
-  <p class="sub">Entre para sincronizar seus dados entre o celular e o computador. Na primeira vez, crie sua conta — o assistente de metas configura tudo em seguida.</p>
-  <input type="email" id="au-email" placeholder="seu e-mail" autocomplete="email">
-  <input type="password" id="au-pass" placeholder="senha (mín. 6 caracteres)" autocomplete="current-password">
+  <p class="sub" data-i18n="authSub"></p>
+  <input type="email" id="au-email" data-i18n-ph="authEmail" autocomplete="email">
+  <input type="password" id="au-pass" data-i18n-ph="authPass" autocomplete="current-password">
   <div class="auth-err" id="au-err"></div>
-  <button class="btn" onclick="sbLogin()">Entrar</button>
-  <button class="btn ghost" onclick="sbSignup()">Criar conta</button>
-  <div class="auth-skip"><button onclick="authSkip()">usar sem conta, só neste aparelho</button></div>
+  <button class="btn" onclick="sbLogin()" data-i18n="authLogin"></button>
+  <button class="btn ghost" onclick="sbSignup()" data-i18n="authSignup"></button>
+  <div class="auth-skip"><button onclick="authSkip()" data-i18n="authSkip"></button></div>
 </div></div>
 
 <header>
-  <span id="sync-badge"></span>
+  <div class="hdr-right">
+    <span id="sync-badge"></span>
+    <button class="lang-btn" onclick="toggleLang()" id="hdr-lang-btn">EN</button>
+  </div>
   <h1>Folga</h1>
   <nav id="nav">
-    <button data-tab="inicio" class="active">Início</button>
-    <button data-tab="lanc">Lançamentos</button>
-    <button data-tab="invest">Investir</button>
-    <button data-tab="ideias">Ideias</button>
-    <button data-tab="relatorio">Relatório</button>
-    <button data-tab="rewards">Rewards</button>
-    <button data-tab="metas">Metas</button>
-    <button data-tab="config">Config</button>
+    <button data-tab="inicio" class="active" data-i18n="navHome"></button>
+    <button data-tab="lanc" data-i18n="navEntries"></button>
+    <button data-tab="invest" data-i18n="navInvest"></button>
+    <button data-tab="ideias" data-i18n="navIdeas"></button>
+    <button data-tab="relatorio" data-i18n="navReport"></button>
+    <button data-tab="rewards" data-i18n="navRewards"></button>
+    <button data-tab="metas" data-i18n="navGoals"></button>
+    <button data-tab="config" data-i18n="navConfig"></button>
   </nav>
 </header>
 <main>
@@ -195,32 +209,32 @@
 <!-- ─────────── INÍCIO ─────────── -->
 <section class="tab active" id="tab-inicio">
   <div class="month-nav">
-    <button class="btn ghost" onclick="moveMonth(-1)">‹</button>
+    <button class="btn ghost" onclick="moveMonth(-1)" aria-label="prev">‹</button>
     <b id="m-title"></b>
-    <button class="btn ghost" onclick="moveMonth(1)">›</button>
+    <button class="btn ghost" onclick="moveMonth(1)" aria-label="next">›</button>
     <span id="m-badge"></span>
   </div>
 
   <div class="card hero">
-    <div class="label">Livre para gastar este mês</div>
+    <div class="label" data-i18n="heroLabel"></div>
     <div class="value" id="h-livre"></div>
     <div class="note" id="h-note"></div>
   </div>
 
   <div class="grid cols-3">
     <div class="card tile">
-      <div class="label">Ganhei no mês</div>
+      <div class="label" data-i18n="tEarned"></div>
       <div class="value" id="t-ganho"></div>
       <div class="note" id="t-ganho-n"></div>
     </div>
     <div class="card tile">
-      <div class="label">Guardei no mês</div>
+      <div class="label" data-i18n="tSaved"></div>
       <div class="value" id="t-guardado"></div>
       <div class="note" id="t-guardado-n"></div>
       <div class="meter" id="t-guardado-m"><div></div></div>
     </div>
     <div class="card tile">
-      <div class="label">Gastei no mês</div>
+      <div class="label" data-i18n="tSpent"></div>
       <div class="value" id="t-gasto"></div>
       <div class="note" id="t-gasto-n"></div>
     </div>
@@ -230,11 +244,11 @@
 
   <div class="grid cols-2">
     <div class="card">
-      <h2>Para onde foi</h2>
+      <h2 data-i18n="whereTitle"></h2>
       <div id="m-cats"></div>
     </div>
     <div class="card">
-      <h2>Mês passado</h2>
+      <h2 data-i18n="prevTitle"></h2>
       <div id="m-prev"></div>
     </div>
   </div>
@@ -243,33 +257,33 @@
 <!-- ─────────── LANÇAMENTOS ─────────── -->
 <section class="tab" id="tab-lanc">
   <div class="card">
-    <h2>Novo lançamento</h2>
+    <h2 data-i18n="lancTitle"></h2>
     <form class="inline" id="f-lanc">
-      <div class="field"><label>Tipo</label>
+      <div class="field"><label data-i18n="lancType"></label>
         <select id="l-type">
-          <option value="gasto">Gasto</option>
-          <option value="renda">Renda extra</option>
-          <option value="aporte">Investimento (aporte)</option>
+          <option value="gasto" data-i18n="typeExpense"></option>
+          <option value="renda" data-i18n="typeIncome"></option>
+          <option value="aporte" data-i18n="typeInvest"></option>
         </select>
       </div>
-      <div class="field"><label>Data</label><input type="date" id="l-date" required></div>
-      <div class="field"><label>Valor</label><input type="number" id="l-amount" step="0.01" min="0.01" required style="width:110px"></div>
-      <div class="field" id="l-cur-f"><label>Moeda</label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
-      <div class="field" id="l-cat-f"><label>Categoria</label><select id="l-cat"></select></div>
-      <div class="field" id="l-trip-f"><label>Contexto</label>
+      <div class="field"><label data-i18n="lancDate"></label><input type="date" id="l-date" required></div>
+      <div class="field"><label data-i18n="lancAmount"></label><input type="number" id="l-amount" inputmode="decimal" step="0.01" min="0.01" required style="width:110px"></div>
+      <div class="field" id="l-cur-f"><label data-i18n="lancCur"></label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
+      <div class="field" id="l-cat-f"><label data-i18n="lancCat"></label><select id="l-cat"></select></div>
+      <div class="field" id="l-trip-f"><label data-i18n="lancTrip"></label>
         <select id="l-trip">
-          <option value="none">Sem viagem</option>
-          <option value="work">Viagem a trabalho</option>
-          <option value="personal">Viagem pessoal</option>
+          <option value="none" data-i18n="tripNone"></option>
+          <option value="work" data-i18n="tripWork"></option>
+          <option value="personal" data-i18n="tripPersonal"></option>
         </select>
       </div>
-      <div class="field" style="flex:1; min-width:140px"><label>Descrição</label><input type="text" id="l-desc" placeholder="opcional"></div>
-      <button class="btn" type="submit">Adicionar</button>
+      <div class="field" style="flex:1; min-width:140px"><label data-i18n="lancDesc"></label><input type="text" id="l-desc" data-i18n-ph="lancDescPh"></div>
+      <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
     <div class="hint" id="l-hint"></div>
   </div>
   <div class="card">
-    <h2>Histórico</h2>
+    <h2 data-i18n="lancHist"></h2>
     <div id="l-list"></div>
   </div>
 </section>
@@ -277,85 +291,85 @@
 <!-- ─────────── METAS ─────────── -->
 <section class="tab" id="tab-metas">
   <div class="card">
-    <h2>Meta de patrimônio</h2>
+    <h2 data-i18n="goalWealthTitle"></h2>
     <div id="g-patrimonio"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Compromisso mensal</h2>
+      <h2 data-i18n="goalMonthlyTitle"></h2>
       <div id="g-mensal"></div>
     </div>
     <div class="card">
-      <h2>Minha renda</h2>
+      <h2 data-i18n="goalIncomeTitle"></h2>
       <div id="g-renda"></div>
     </div>
   </div>
-  <button class="btn ghost" onclick="startWizard()">↺ Refazer conversa de metas</button>
+  <button class="btn ghost" onclick="startWizard()" data-i18n="goalRedo"></button>
 </section>
 
 <!-- ─────────── INVESTIR (visão completa) ─────────── -->
 <section class="tab" id="tab-invest">
   <div class="card">
-    <h2 style="display:flex; justify-content:space-between; align-items:center; gap:10px">Mercado agora
-      <button class="btn ghost" style="font-size:12.5px; padding:4px 10px" onclick="fetchMarket(true)">↻ Atualizar</button>
+    <h2 style="display:flex; justify-content:space-between; align-items:center; gap:10px"><span data-i18n="mkTitle"></span>
+      <button class="btn ghost" style="font-size:12.5px; padding:4px 10px" onclick="fetchMarket(true)" data-i18n="mkRefresh"></button>
     </h2>
     <div class="chiprow" id="mk-chips"></div>
     <div class="hint" id="mk-status"></div>
   </div>
 
   <div class="card">
-    <h2>Assistente de aporte — onde o dinheiro rende hoje</h2>
+    <h2 data-i18n="apTitle"></h2>
     <div id="ap-context" style="font-size:13.5px; margin-bottom:10px"></div>
     <div class="grid cols-2">
       <div>
-        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0">🇧🇷 Brasil — em reais</h3>
+        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0" data-i18n="apBrTitle"></h3>
         <div id="ap-br"></div>
       </div>
       <div>
-        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0">🇺🇸 EUA — em dólares (seu banco: Empeople)</h3>
+        <h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:8px 0" data-i18n="apUsTitle"></h3>
         <div id="ap-us"></div>
       </div>
     </div>
-    <div class="disclaimer" id="ap-foot"></div>
+    <div class="disclaimer hint" id="ap-foot"></div>
   </div>
 
   <div class="card">
-    <h2>Checklist do mês — o caminho certo do dinheiro</h2>
+    <h2 data-i18n="chkTitle"></h2>
     <div id="chk-list"></div>
-    <div class="hint">Ordem sugerida pela prática de finanças pessoais: sem dívida cara → reserva líquida → compromisso do mês → excedente. Os itens automáticos se marcam sozinhos pelos seus lançamentos.</div>
+    <div class="hint" data-i18n="chkHint"></div>
   </div>
 
   <div class="card">
-    <h2>Patrimônio</h2>
+    <h2 data-i18n="ivTitle"></h2>
     <div id="iv-resumo"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Composição da carteira</h2>
+      <h2 data-i18n="portTitle"></h2>
       <form class="inline" id="f-port">
-        <div class="field" style="flex:1"><label>Ativo</label><input type="text" id="p-name" placeholder="ex: Tesouro Selic" required></div>
-        <div class="field"><label>Valor (R$)</label><input type="number" id="p-value" step="100" min="0" required style="width:110px"></div>
-        <button class="btn" type="submit">Adicionar</button>
+        <div class="field" style="flex:1"><label data-i18n="portAsset"></label><input type="text" id="p-name" data-i18n-ph="portAssetPh" required></div>
+        <div class="field"><label data-i18n="portValue"></label><input type="number" id="p-value" inputmode="decimal" step="100" min="0" required style="width:110px"></div>
+        <button class="btn" type="submit" data-i18n="btnAdd"></button>
       </form>
       <div id="p-list" style="margin-top:10px"></div>
-      <div class="hint">Edite os valores conforme os ativos rendem. O botão abaixo ajusta o total do app para bater com a soma da composição.</div>
-      <button class="btn ghost" style="margin-top:8px" onclick="syncPortfolio()">Usar soma da composição como total</button>
+      <div class="hint" data-i18n="portHint"></div>
+      <button class="btn ghost" style="margin-top:8px" onclick="syncPortfolio()" data-i18n="portSync"></button>
     </div>
     <div class="card">
-      <h2>Todos os aportes</h2>
+      <h2 data-i18n="apListTitle"></h2>
       <div id="iv-aportes"></div>
-      <div class="hint">Aportes são lançados na aba Lançamentos (tipo "Investimento").</div>
+      <div class="hint" data-i18n="apListHint"></div>
     </div>
   </div>
   <div class="card">
-    <h2>Oportunidades (investimento / negócio)</h2>
+    <h2 data-i18n="oppTitle"></h2>
     <form class="inline" id="f-opp">
-      <div class="field" style="flex:1; min-width:150px"><label>Oportunidade</label><input type="text" id="o-name" required></div>
-      <div class="field"><label>Onde</label><select id="o-where"><option>EUA</option><option>Brasil</option></select></div>
-      <div class="field"><label>Status</label><select id="o-status"><option value="avaliando">Avaliando</option><option value="descartado">Descartado</option><option value="investido">Investido</option></select></div>
-      <div class="field"><label>Prioridade</label><select id="o-prio"><option value="alta">Alta</option><option value="media" selected>Média</option><option value="baixa">Baixa</option></select></div>
-      <div class="field" style="flex:1; min-width:150px"><label>Notas</label><input type="text" id="o-notes"></div>
-      <button class="btn" type="submit">Adicionar</button>
+      <div class="field" style="flex:1; min-width:150px"><label data-i18n="oppName"></label><input type="text" id="o-name" required></div>
+      <div class="field"><label data-i18n="oppWhere"></label><select id="o-where"><option value="EUA" data-i18n="oppUS"></option><option value="Brasil" data-i18n="oppBR"></option></select></div>
+      <div class="field"><label>Status</label><select id="o-status"><option value="avaliando" data-i18n="stEval"></option><option value="descartado" data-i18n="stDrop"></option><option value="investido" data-i18n="stDone"></option></select></div>
+      <div class="field"><label data-i18n="oppPrio"></label><select id="o-prio"><option value="alta" data-i18n="prHigh"></option><option value="media" selected data-i18n="prMed"></option><option value="baixa" data-i18n="prLow"></option></select></div>
+      <div class="field" style="flex:1; min-width:150px"><label data-i18n="oppNotes"></label><input type="text" id="o-notes"></div>
+      <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
     <div id="o-list" style="margin-top:10px"></div>
   </div>
@@ -364,30 +378,30 @@
 <!-- ─────────── REWARDS (visão completa) ─────────── -->
 <section class="tab" id="tab-rewards">
   <div class="card">
-    <h2>Guia de benefícios — Bettendorf, IA & viagens</h2>
-    <p class="hint" style="margin-bottom:4px"><b>Dica-chave:</b> programas de fidelidade creditam na <b>sua</b> conta pessoal mesmo pagando com o cartão da empresa — escaneie o app ou informe seu telefone antes de pagar. Confirme na política da empresa.</p>
+    <h2 data-i18n="gdTitle"></h2>
+    <p class="hint" style="margin-bottom:4px" data-i18n-html="gdTip"></p>
     <div id="guide"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Melhor cartão por categoria</h2>
+      <h2 data-i18n="rwTitle"></h2>
       <form class="inline" id="f-rw">
-        <div class="field"><label>Categoria</label><select id="r-cat"></select></div>
-        <div class="field" style="flex:1"><label>Cartão / programa</label><input type="text" id="r-prog" required placeholder="ex: Costco Visa"></div>
-        <div class="field"><label>Retorno (%)</label><input type="number" id="r-rate" step="0.1" min="0" required style="width:90px"></div>
-        <button class="btn" type="submit">Adicionar</button>
+        <div class="field"><label data-i18n="lancCat"></label><select id="r-cat"></select></div>
+        <div class="field" style="flex:1"><label data-i18n="rwProg"></label><input type="text" id="r-prog" required data-i18n-ph="rwProgPh"></div>
+        <div class="field"><label data-i18n="rwRate"></label><input type="number" id="r-rate" inputmode="decimal" step="0.1" min="0" required style="width:90px"></div>
+        <button class="btn" type="submit" data-i18n="btnAdd"></button>
       </form>
       <div id="r-list" style="margin-top:10px"></div>
     </div>
     <div class="card">
-      <h2>Preço de combustível por posto</h2>
+      <h2 data-i18n="fuTitle"></h2>
       <form class="inline" id="f-fuel">
-        <div class="field" style="flex:1"><label>Posto</label><input type="text" id="fu-name" required placeholder="ex: Costco Davenport"></div>
-        <div class="field"><label>US$/galão</label><input type="number" id="fu-price" step="0.001" min="0" required style="width:100px"></div>
-        <button class="btn" type="submit">Atualizar</button>
+        <div class="field" style="flex:1"><label data-i18n="fuName"></label><input type="text" id="fu-name" required data-i18n-ph="fuNamePh"></div>
+        <div class="field"><label data-i18n="fuPrice"></label><input type="number" id="fu-price" inputmode="decimal" step="0.001" min="0" required style="width:100px"></div>
+        <button class="btn" type="submit" data-i18n="fuUpdate"></button>
       </form>
       <div id="fu-list" style="margin-top:10px"></div>
-      <div class="hint">Registrar o mesmo posto de novo atualiza preço e data.</div>
+      <div class="hint" data-i18n="fuHint"></div>
     </div>
   </div>
 </section>
@@ -395,43 +409,43 @@
 <!-- ─────────── IDEIAS ─────────── -->
 <section class="tab" id="tab-ideias">
   <div class="card">
-    <h2>Renda extra — o que pode (e o que não pode) no seu visto</h2>
-    <div class="warnbox">⚠️ <b>Regra de ouro do visto de trabalho:</b> você só pode ter <i>emprego</i> nos EUA com a empresa patrocinadora. Renda <b>ativa</b> por fora (Uber, DoorDash, freelas americanos, revenda habitual) viola o visto e ameaça vistos futuros. O caminho seguro: renda <b>passiva</b> nos EUA + renda gerada no <b>Brasil</b>.</div>
+    <h2 data-i18n="idRendaTitle"></h2>
+    <div class="warnbox" data-i18n-html="idVisa"></div>
     <div id="id-renda"></div>
   </div>
   <div class="card">
-    <h2>Economia — onde soltar menos dinheiro</h2>
+    <h2 data-i18n="idEconTitle"></h2>
     <div id="id-econ-head" style="font-size:13.5px; margin-bottom:6px"></div>
     <div id="id-econ"></div>
-    <div class="hint">Estimativas para o seu perfil (mora só, viaja muito, remete dinheiro ao Brasil). Marque "Adotei" para somar no potencial.</div>
+    <div class="hint" data-i18n="idEconHint"></div>
   </div>
 </section>
 
 <!-- ─────────── RELATÓRIO ─────────── -->
 <section class="tab" id="tab-relatorio">
   <div class="month-nav">
-    <button class="btn ghost" onclick="moveRep(-1)">‹</button>
+    <button class="btn ghost" onclick="moveRep(-1)" aria-label="prev">‹</button>
     <b id="rep-title"></b>
-    <button class="btn ghost" onclick="moveRep(1)">›</button>
+    <button class="btn ghost" onclick="moveRep(1)" aria-label="next">›</button>
     <span style="flex:1"></span>
-    <button class="btn ghost" onclick="window.print()">🖨 Imprimir / PDF</button>
+    <button class="btn ghost" onclick="window.print()" data-i18n="repPrint"></button>
   </div>
   <div class="card">
-    <h2>Resumo do mês</h2>
+    <h2 data-i18n="repSummary"></h2>
     <div id="rep-resumo"></div>
   </div>
   <div class="grid cols-2">
     <div class="card">
-      <h2>Gastos por categoria</h2>
+      <h2 data-i18n="repCats"></h2>
       <div id="rep-cats"></div>
     </div>
     <div class="card">
-      <h2>Patrimônio & meta</h2>
+      <h2 data-i18n="repWealth"></h2>
       <div id="rep-meta"></div>
     </div>
   </div>
   <div class="card">
-    <h2>Ano até aqui</h2>
+    <h2 data-i18n="repYtd"></h2>
     <div id="rep-ytd"></div>
   </div>
 </section>
@@ -439,21 +453,28 @@
 <!-- ─────────── CONFIG ─────────── -->
 <section class="tab" id="tab-config">
   <div class="card">
-    <h2>Conta & sincronização</h2>
+    <h2 data-i18n="cfgAccount"></h2>
     <div id="cfg-account"></div>
   </div>
   <div class="card">
-    <h2>Configurações</h2>
+    <h2 data-i18n="cfgTitle"></h2>
     <form class="inline" onsubmit="return false">
-      <div class="field"><label>Câmbio (R$ por US$)</label><input type="number" id="cfg-fx" step="0.01" style="width:100px"></div>
+      <div class="field"><label data-i18n="cfgFx"></label><input type="number" id="cfg-fx" inputmode="decimal" step="0.01" style="width:100px"></div>
+      <div class="field"><label data-i18n="cfgLang"></label>
+        <select id="cfg-lang" onchange="setLang(this.value)">
+          <option value="pt">Português</option>
+          <option value="en">English</option>
+        </select>
+      </div>
     </form>
-    <h2 style="margin-top:18px">Dados</h2>
+    <h2 style="margin-top:18px" data-i18n="cfgData"></h2>
     <form class="inline" onsubmit="return false">
-      <button class="btn ghost" onclick="exportData()">Exportar backup (JSON)</button>
-      <button class="btn ghost" onclick="document.getElementById('import-file').click()">Importar backup</button>
+      <button class="btn ghost" onclick="exportData()" data-i18n="cfgExport"></button>
+      <button class="btn ghost" onclick="document.getElementById('import-file').click()" data-i18n="cfgImport"></button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
     </form>
-    <div class="hint">Os dados ficam salvos neste navegador. Exporte um backup de vez em quando — especialmente antes de trocar de aparelho.</div>
+    <div class="hint" data-i18n="cfgDataHint"></div>
+    <div class="hint" style="margin-top:12px"><a href="privacy.html" target="_blank" rel="noopener" data-i18n="cfgPrivacy"></a></div>
   </div>
 </section>
 
@@ -462,21 +483,370 @@
 "use strict";
 const KEY = "controle-financeiro-v2";
 const OLD_KEY = "controle-financeiro-v1";
+
+/* ═════════ Idiomas (i18n) ═════════
+   Toda string visível vem daqui. t("chave") ou t("chave", args…) quando a
+   string é uma função. Conteúdo estruturado (categorias, guias, ideias)
+   guarda {pt, en} e passa por L(). */
+const I18N = {
+pt: {
+  docTitle: "Folga — quanto está livre este mês",
+  navHome: "Início", navEntries: "Lançamentos", navInvest: "Investir", navIdeas: "Ideias",
+  navReport: "Relatório", navRewards: "Rewards", navGoals: "Metas", navConfig: "Config",
+  heroLabel: "Livre para gastar este mês",
+  heroClosedNote: "mês fechado — o que sobrou depois de gastar e guardar",
+  heroFutureNote: "projeção para o mês",
+  heroPerDay: (d, rest) => `dá ~${d}/dia até o fim do mês · jantar, passeio, compra — sem culpa e sem furar a meta`,
+  heroOver: v => `você passou ${v} do que estava livre — os próximos gastos saem da poupança`,
+  mCur: "atual", mClosed: "fechado", mFuture: "futuro",
+  tEarned: "Ganhei no mês", tSaved: "Guardei no mês", tSpent: "Gastei no mês",
+  tEarnedExtras: (sal, ex) => `salário ${sal} + extras ${ex}`,
+  tEarnedOnly: "renda principal do mês",
+  tEarnedSplit: "renda principal — a do Brasil fica à parte",
+  tSavedGoal: v => `meta: ${v}/mês`,
+  tSpentCovered: v => `+ ${v} pagos pela empresa (não contam)`,
+  tSpentOnly: "só o que sai do seu bolso",
+  brStrip: v => `🇧🇷 <b>Brasil este mês: ${v}</b> — fora do livre, reservado para investir.`,
+  brStripDone: v => `Aportado: <b class="pos">${v}</b> ✓`,
+  brStripTodo: `<span style="color:var(--muted)">registre o aporte quando transferir — o assistente na aba Investir mostra onde render mais</span>`,
+  whereTitle: "Para onde foi", prevTitle: "Mês passado",
+  noExpMonth: "Nenhum gasto neste mês ainda.",
+  noPrev: m => `Sem lançamentos em ${m}.`,
+  prevEarned: "Ganhou", prevSpent: "Gastou", prevSaved: "Guardou", prevLeft: "Sobrou",
+  goalOk: "meta ✓",
+  prevHint: "Sobra de mês fechado é dinheiro parado — o assistente em Investir mostra onde ele rende.",
+  lancTitle: "Novo lançamento", lancType: "Tipo", lancDate: "Data", lancAmount: "Valor",
+  lancCur: "Moeda", lancCat: "Categoria", lancTrip: "Contexto", lancDesc: "Descrição",
+  lancDescPh: "opcional", btnAdd: "Adicionar", lancHist: "Histórico",
+  typeExpense: "Gasto", typeIncome: "Renda extra", typeInvest: "Investimento (aporte)",
+  tripNone: "Sem viagem", tripWork: "Viagem a trabalho", tripPersonal: "Viagem pessoal",
+  hintCovered: "✓ Coberto pela empresa — <b>não desconta</b> do seu livre.",
+  hintAporte: "Aporte conta como 'guardado' no mês e soma no seu patrimônio investido.",
+  hintRenda: "Renda extra aumenta o livre do mês da data.",
+  noLanc: "Nada registrado ainda. Todo gasto, renda extra e aporte entra por aqui.",
+  thDate: "Data", thType: "Tipo", thDetail: "Detalhe", thValue: "Valor",
+  bdgCovered: "coberto", bdgIncome: "renda", bdgInvest: "aporte", wordExpense: "gasto",
+  incomeFallback: "renda extra", investFallback: "investimento", del: "Excluir",
+  goalWealthTitle: "Meta de patrimônio", goalMonthlyTitle: "Compromisso mensal", goalIncomeTitle: "Minha renda",
+  goalRedo: "↺ Refazer conversa de metas",
+  gInvested: "Investido hoje",
+  gOfGoal: (p, g, until, missing) => `${p}% da meta de ${g}${until ? " até " + until : ""} · faltam ${missing}`,
+  gPace: (v, usd, m) => `Para chegar lá: guardar <b>${v}</b>/mês (≈ ${usd})${m > 0 ? ` por ${m} meses` : ""}`,
+  gAvg: v => `Você tem guardado em média <b>${v}</b>/mês nos últimos 3 meses`,
+  bdgGoalDone: "meta atingida 🎉", bdgOnPace: "no ritmo", bdgOffPace: "abaixo do ritmo",
+  gSaveLabel: "Guardar por mês (US$)",
+  gMath: (inc, sv, rest) => `Renda ${inc} − guardar ${sv} = <b>${rest}</b> para viver o mês. O que você não gastar disso vira livre de verdade.`,
+  gUsLabel: "Renda principal (US$/mês)", gBrLabel: "Segunda renda (R$/mês)", gBaseLabel: "Investido base (R$)",
+  gIncomeHint: br => br
+    ? `A renda principal sustenta o mês e o "livre"; a segunda renda (${br}/mês) fica separada, destinada a aportes.`
+    : `A renda principal sustenta o mês e o número "livre" da tela inicial.`,
+  mkTitle: "Mercado agora", mkRefresh: "↻ Atualizar", mkUpdating: "atualizando…",
+  mkLive: ts => `ao vivo · ${ts} · o câmbio é aplicado automaticamente aos cálculos`,
+  mkSnapshot: "snapshot da pesquisa de 15/08/2026 — toque em Atualizar para dados ao vivo",
+  mkDollar: "Dólar", mkSelic: "Selic", mkCdi: "CDI", mkIpca: "IPCA 12m",
+  apTitle: "Assistente de aporte — onde o dinheiro rende hoje",
+  apBrTitle: "🇧🇷 Brasil — em reais", apUsTitle: "🇺🇸 EUA — em dólares (seu banco: Empeople)",
+  apCtxBr: v => `<b>${v}</b> da renda Brasil deste mês`,
+  apCtxFree: v => `<b>${v}</b> livres que sobraram do mês passado`,
+  apCtx: (parts, cdi, loss) => `Dinheiro procurando destino: ${parts}. Com CDI a ${cdi}% a.a., cada R$ 10.000 parados deixam de render ~${loss}/mês.`,
+  apCtxNone: "Nenhum dinheiro parado detectado agora — quando um mês fechar com sobra ou entrar renda do Brasil, o assistente aponta o destino aqui.",
+  apFoot: (cdi, real, asof) => `Leitura do especialista: em reais o Brasil paga <b>~${cdi}% a.a.</b> (juro real ~${real}%); em dólares o teto está em <b>~4,1%</b> (Empeople 12m). A diferença é o prêmio do risco-câmbio — dividir entre os dois países é a prática comum. Taxas Empeople/Tesouro da pesquisa de ${asof} (confira no dia do aporte); Selic/CDI/IPCA/dólar ao vivo. Informação educacional — não é recomendação individual.`,
+  chkTitle: "Checklist do mês — o caminho certo do dinheiro",
+  chkHint: "Ordem sugerida pela prática de finanças pessoais: sem dívida cara → reserva líquida → compromisso do mês → excedente. Os itens automáticos se marcam sozinhos pelos seus lançamentos.",
+  chkCard: "Fatura do cartão paga integral",
+  chkCardWhy: "juros de cartão nos EUA passam de 25% a.a. — nenhum investimento cobre isso",
+  chkReserve: v => `Reserva de emergência: ~${v} líquidos`,
+  chkReserveWhy: v => `3× seu gasto médio (${v}/mês) na All-In Savings do Empeople (3,10%) — protege o plano de imprevistos`,
+  chkCommit: v => `Compromisso do mês aportado (${v})`,
+  chkCommitWhy: "marca sozinho quando você lançar aportes em US$ somando o compromisso",
+  chkBr: v => `Renda Brasil destinada (${v})`,
+  chkBrWhy: "marca sozinho quando os aportes em R$ do mês somarem o valor — com CDI a ~14%, cada mês parado custa caro",
+  chkIdle: "Sobra do mês passado direcionada",
+  chkIdleWhy: (v, m) => `${v} sobraram em ${m} — transforme em aporte ou deixe combinado que é para a próxima viagem`,
+  chkIdleOk: "nada parado do mês passado 🎉",
+  ivTitle: "Patrimônio",
+  ivLine: (p, g, until, pace, paceUsd) => `${p}% da meta de ${g}${until ? " até " + until : ""} · ritmo necessário: ${pace}/mês (≈ ${paceUsd})`,
+  portTitle: "Composição da carteira", portAsset: "Ativo", portAssetPh: "ex: Tesouro Selic", portValue: "Valor (R$)",
+  portEmpty: "Detalhe sua carteira aqui: Tesouro, renda fixa, Bitcoin…",
+  portHint: "Edite os valores conforme os ativos rendem. O botão abaixo ajusta o total do app para bater com a soma da composição.",
+  portSync: "Usar soma da composição como total", portSum: "Soma",
+  apListTitle: "Todos os aportes", apListEmpty: "Nenhum aporte ainda.",
+  apListHint: "Aportes são lançados na aba Lançamentos (tipo \"Investimento\").",
+  oppTitle: "Oportunidades (investimento / negócio)", oppName: "Oportunidade", oppWhere: "Onde",
+  oppUS: "EUA", oppBR: "Brasil", oppPrio: "Prioridade", oppNotes: "Notas",
+  stEval: "Avaliando", stDrop: "Descartado", stDone: "Investido",
+  prHigh: "Alta", prMed: "Média", prLow: "Baixa",
+  oppEmpty: "Nenhuma oportunidade registrada.",
+  thOpp: "Oportunidade", thWhere: "Onde", thPrio: "Prioridade", thNotes: "Notas",
+  gdTitle: "Guia de benefícios — Bettendorf, IA & viagens",
+  gdTip: "<b>Dica-chave:</b> programas de fidelidade creditam na <b>sua</b> conta pessoal mesmo pagando com o cartão da empresa — escaneie o app ou informe seu telefone antes de pagar. Confirme na política da empresa.",
+  gdMember: "membro", gdEval: "avaliando",
+  rwTitle: "Melhor cartão por categoria", rwProg: "Cartão / programa", rwProgPh: "ex: Costco Visa", rwRate: "Retorno (%)",
+  rwEmpty: "Registre seus cartões e o retorno por categoria.", rwBest: "melhor", thProg: "Programa", thReturn: "Retorno",
+  fuTitle: "Preço de combustível por posto", fuName: "Posto", fuNamePh: "ex: Costco Davenport",
+  fuPrice: "US$/galão", fuUpdate: "Atualizar", fuEmpty: "Nenhum posto registrado.",
+  fuCheapest: "mais barato", thStation: "Posto", thVs: "vs. mais barato", thUpdated: "Atualizado",
+  fuHint: "Registrar o mesmo posto de novo atualiza preço e data.",
+  idRendaTitle: "Renda extra — o que pode (e o que não pode) no seu visto",
+  idVisa: "⚠️ <b>Regra de ouro do visto de trabalho:</b> você só pode ter <i>emprego</i> nos EUA com a empresa patrocinadora. Renda <b>ativa</b> por fora (Uber, DoorDash, freelas americanos, revenda habitual) viola o visto e ameaça vistos futuros. O caminho seguro: renda <b>passiva</b> nos EUA + renda gerada no <b>Brasil</b>.",
+  idEconTitle: "Economia — onde soltar menos dinheiro",
+  idEconHint: "Estimativas para quem mora só, viaja muito e remete dinheiro ao Brasil. Marque \"Adotei\" para somar no potencial.",
+  idAdopted: (n, lo, hi, yr) => `Você adotou <b>${n}</b> ideia${n > 1 ? "s" : ""} — potencial de <b class="pos">~$${lo}–${hi}/mês</b> de volta no bolso (dá ${yr} por ano no ritmo máximo).`,
+  idTotal: (lo, hi) => `Total possível adotando tudo: <b>~$${lo}–${hi}/mês</b>. Comece pela remessa — é a de maior impacto.`,
+  idPerMonth: "/mês",
+  repPrint: "🖨 Imprimir / PDF", repSummary: "Resumo do mês", repCats: "Gastos por categoria",
+  repWealth: "Patrimônio & meta", repYtd: "Ano até aqui",
+  repEarnedUS: "Ganhou (renda principal)", repEarnedBR: "Ganhou (segunda renda, à parte)", repSpentOwn: "Gastou do próprio bolso",
+  repCovered: "Empresa cobriu (viagens a trabalho)", repSavedUS: "Aportou em US$", repSavedBR: "Aportou em R$",
+  repFree: "Livre restante", repRate: "Do que ganhou, não gastou",
+  repNoExp: "Sem gastos registrados no período.", repDeltaHint: "▲▼ comparado com o mês anterior.",
+  repInvested: "Investido hoje", repGoal: "Meta", repMissing: "Falta", repMonthContrib: "Aportes no mês",
+  repProj: (v, m) => `No ritmo real dos últimos 3 meses (${v}/mês), você chega em <b>${m}</b>`,
+  repBefore: "antes do alvo ✓", repAfter: m => `depois do alvo (${m})`,
+  repProjNone: "Registre aportes para o app projetar a data de chegada da meta.",
+  repYEarnedUS: "Ganhos EUA no ano", repYEarnedBR: "Ganhos Brasil no ano", repYSpent: "Gastos do bolso",
+  repYCovered: "Viagens cobertas pela empresa", repYSaved: "Aportado no ano",
+  repYtdHint: (y, m) => `Conta apenas meses de ${y} até ${m} — sem input nenhum seu, tudo vem dos lançamentos.`,
+  cfgAccount: "Conta & sincronização", cfgTitle: "Configurações", cfgFx: "Câmbio (R$ por US$)",
+  cfgLang: "Idioma / Language", cfgData: "Dados", cfgExport: "Exportar backup (JSON)", cfgImport: "Importar backup",
+  cfgDataHint: "Os dados ficam salvos neste navegador e, com conta, na nuvem. Exporte um backup de vez em quando.",
+  cfgPrivacy: "Política de privacidade ↗",
+  cfgConnected: e => `Conectado como <b>${e}</b> — seus lançamentos sincronizam sozinhos entre aparelhos.`,
+  cfgLogout: "Sair da conta",
+  cfgNoAccount: "Sem conta neste aparelho — os dados ficam só aqui até você entrar.",
+  cfgEnter: "Entrar / criar conta",
+  syncOk: ts => `☁ sincronizado ${ts}`, syncOn: "☁ conectado", syncEnter: "☁ Entrar",
+  authSub: "Entre para sincronizar seus dados entre o celular e o computador. Na primeira vez, crie sua conta — o assistente de metas configura tudo em seguida.",
+  authEmail: "seu e-mail", authPass: "senha (mín. 6 caracteres)",
+  authLogin: "Entrar", authSignup: "Criar conta", authSkip: "usar sem conta, só neste aparelho",
+  authFill: "Preencha e-mail e uma senha de 6+ caracteres.", authFillLogin: "Preencha e-mail e senha.",
+  authConfirm: "Conta criada! Confirme pelo link enviado ao seu e-mail e depois toque em Entrar.",
+  errBadLogin: "E-mail ou senha incorretos.", errExists: "Este e-mail já tem conta — use Entrar.",
+  errRate: "Muitas tentativas — aguarde um minuto.", errEmail: "Digite um e-mail válido.",
+  importOk: "Backup importado com sucesso.", importFail: "Não foi possível importar: ",
+  wz1t: "Vamos começar pelo que entra. 💵",
+  wz1s: "Quanto cai na sua conta por mês nos EUA, já líquido? (Recebe por quinzena? Multiplique o pagamento por 26 e divida por 12.)",
+  wz2t: "Você tem renda em outro país também?",
+  wz2s: "A maioria das pessoas não tem — é só seguir. Se tiver (salário, aluguel, dividendos no Brasil), ela fica separada do dia a dia, reservada para investir.",
+  wz2label: "Renda em outro país",
+  wz2no: "Não — só a renda principal", wz2yes: "Sim — tenho renda no Brasil",
+  wz2fx: "Câmbio para converter (R$ por US$)",
+  wz2liveNo: "Fechado — o livre do mês usa só a renda principal.",
+  wz2liveYes: v => `Anotado: <b>${v}/mês</b> ficam à parte, reservados para investir — não entram no seu "livre".`,
+  wz2liveAsk: "Informe o valor líquido mensal dessa segunda renda.",
+  wz3t: "Quanto você já tem investido hoje?",
+  wz3s: "Some tudo: renda fixa, Tesouro, Bitcoin… em reais.",
+  wz4t: "Onde você quer chegar? 🎯",
+  wz4s: "Valor investido que você quer alcançar, e até quando.",
+  wz4until: "Até quando?",
+  wz4future: "Escolha um mês no futuro.",
+  wz4live: (missing, m, pace, paceUsd) => `Faltam ${missing} em ${m} meses → guardar <b>${pace}/mês</b> (≈ <b>${paceUsd}</b>)`,
+  wz5t: "Quanto vai guardar por mês?",
+  wz5s: "Esse é o combinado entre você e a meta. O que passar disso no mês é seu, livre, sem culpa.",
+  wz5sugg: v => `Usar o ritmo da meta: ${v}/mês`,
+  wz5live: v => `Sobram <b class="pos">${v}/mês</b> para viver + extras.`,
+  wz5below: v => ` <br>Abaixo do ritmo da meta (${v}) — a meta vai atrasar, e tudo bem se for uma escolha.`,
+  wz6t: "Fechado. Esse é o seu mapa. 🗺️",
+  wz6s: "Você pode mudar tudo depois na aba Metas.",
+  wz6in: "Entra por mês (EUA)", wz6br: "Brasil — à parte, para investir", wz6save: "Vai guardar",
+  wz6goal: "Meta", wz6until: " até ", wz6free: "Livre para viver o mês",
+  wz6note: "Cada gasto que você lançar desconta desse livre. O número grande da tela inicial é sua liberdade em tempo real.",
+  wzBack: "‹ Voltar", wzNext: "Continuar ›", wzDone: "Começar a usar ✓",
+  wzNeedIncome: "Informe quanto você recebe por mês — é a base de todo o resto.",
+  otherLang: "English",
+},
+en: {
+  docTitle: "Folga — how much is free this month",
+  navHome: "Home", navEntries: "Entries", navInvest: "Invest", navIdeas: "Ideas",
+  navReport: "Report", navRewards: "Rewards", navGoals: "Goals", navConfig: "Settings",
+  heroLabel: "Free to spend this month",
+  heroClosedNote: "closed month — what was left after spending and saving",
+  heroFutureNote: "projection for this month",
+  heroPerDay: (d) => `~${d}/day until month's end · dinner, trip, treat — guilt-free, goal intact`,
+  heroOver: v => `you went ${v} past your free amount — further spending eats into savings`,
+  mCur: "current", mClosed: "closed", mFuture: "future",
+  tEarned: "Earned this month", tSaved: "Saved this month", tSpent: "Spent this month",
+  tEarnedExtras: (sal, ex) => `salary ${sal} + extras ${ex}`,
+  tEarnedOnly: "your main income this month",
+  tEarnedSplit: "main income — the Brazil one is kept separate",
+  tSavedGoal: v => `goal: ${v}/mo`,
+  tSpentCovered: v => `+ ${v} covered by the company (don't count)`,
+  tSpentOnly: "only what leaves your pocket",
+  brStrip: v => `🇧🇷 <b>Brazil this month: ${v}</b> — outside your free amount, earmarked for investing.`,
+  brStripDone: v => `Invested: <b class="pos">${v}</b> ✓`,
+  brStripTodo: `<span style="color:var(--muted)">log the contribution when you transfer it — the assistant in Invest shows where it earns most</span>`,
+  whereTitle: "Where it went", prevTitle: "Last month",
+  noExpMonth: "No expenses this month yet.",
+  noPrev: m => `No entries in ${m}.`,
+  prevEarned: "Earned", prevSpent: "Spent", prevSaved: "Saved", prevLeft: "Left over",
+  goalOk: "goal ✓",
+  prevHint: "Leftover from a closed month is idle money — the assistant in Invest shows where it earns.",
+  lancTitle: "New entry", lancType: "Type", lancDate: "Date", lancAmount: "Amount",
+  lancCur: "Currency", lancCat: "Category", lancTrip: "Context", lancDesc: "Description",
+  lancDescPh: "optional", btnAdd: "Add", lancHist: "History",
+  typeExpense: "Expense", typeIncome: "Extra income", typeInvest: "Investment (contribution)",
+  tripNone: "No trip", tripWork: "Work trip", tripPersonal: "Personal trip",
+  hintCovered: "✓ Covered by the company — <b>doesn't reduce</b> your free amount.",
+  hintAporte: "A contribution counts as 'saved' this month and adds to your invested wealth.",
+  hintRenda: "Extra income increases that month's free amount.",
+  noLanc: "Nothing yet. Every expense, extra income and contribution goes here.",
+  thDate: "Date", thType: "Type", thDetail: "Detail", thValue: "Amount",
+  bdgCovered: "covered", bdgIncome: "income", bdgInvest: "invested", wordExpense: "expense",
+  incomeFallback: "extra income", investFallback: "investment", del: "Delete",
+  goalWealthTitle: "Wealth goal", goalMonthlyTitle: "Monthly commitment", goalIncomeTitle: "My income",
+  goalRedo: "↺ Redo the goals conversation",
+  gInvested: "Invested today",
+  gOfGoal: (p, g, until, missing) => `${p}% of the ${g} goal${until ? " by " + until : ""} · ${missing} to go`,
+  gPace: (v, usd, m) => `To get there: save <b>${v}</b>/mo (≈ ${usd})${m > 0 ? ` for ${m} months` : ""}`,
+  gAvg: v => `You've saved an average of <b>${v}</b>/mo over the last 3 months`,
+  bdgGoalDone: "goal reached 🎉", bdgOnPace: "on pace", bdgOffPace: "behind pace",
+  gSaveLabel: "Save per month (US$)",
+  gMath: (inc, sv, rest) => `Income ${inc} − save ${sv} = <b>${rest}</b> to live the month. Whatever you don't spend becomes truly free.`,
+  gUsLabel: "Main income (US$/mo)", gBrLabel: "Second income (R$/mo)", gBaseLabel: "Starting invested (R$)",
+  gIncomeHint: br => br
+    ? `Your main income funds the month and the "free" number; the second income (${br}/mo) stays separate, earmarked for contributions.`
+    : `Your main income funds the month and the "free" number on the home screen.`,
+  mkTitle: "Market now", mkRefresh: "↻ Refresh", mkUpdating: "updating…",
+  mkLive: ts => `live · ${ts} · the exchange rate is applied to all calculations automatically`,
+  mkSnapshot: "research snapshot of Aug 15, 2026 — tap Refresh for live data",
+  mkDollar: "USD/BRL", mkSelic: "Selic", mkCdi: "CDI", mkIpca: "IPCA 12m",
+  apTitle: "Contribution assistant — where money earns today",
+  apBrTitle: "🇧🇷 Brazil — in reais", apUsTitle: "🇺🇸 US — in dollars (your bank: Empeople)",
+  apCtxBr: v => `<b>${v}</b> from this month's Brazil income`,
+  apCtxFree: v => `<b>${v}</b> free left over from last month`,
+  apCtx: (parts, cdi, loss) => `Money looking for a destination: ${parts}. With CDI at ${cdi}%/yr, every R$ 10,000 sitting idle misses ~${loss}/mo.`,
+  apCtxNone: "No idle money detected right now — when a month closes with a surplus or Brazil income arrives, the assistant points the way here.",
+  apFoot: (cdi, real, asof) => `Expert read: in reais Brazil pays <b>~${cdi}%/yr</b> (~${real}% real yield); in dollars the ceiling is <b>~4.1%</b> (Empeople 12m). The gap is the currency-risk premium — splitting between both countries is common practice. Empeople/Tesouro rates from the ${asof} research (check on the day you invest); Selic/CDI/IPCA/USD live. Educational information — not individual investment advice.`,
+  chkTitle: "Monthly checklist — money's right path",
+  chkHint: "Order suggested by personal-finance practice: no expensive debt → liquid reserve → monthly commitment → surplus. Automatic items check themselves off from your entries.",
+  chkCard: "Credit card paid in full",
+  chkCardWhy: "US card interest runs past 25%/yr — no investment beats that",
+  chkReserve: v => `Emergency fund: ~${v} liquid`,
+  chkReserveWhy: v => `3× your average spending (${v}/mo) in Empeople's All-In Savings (3.10%) — protects the plan from surprises`,
+  chkCommit: v => `Monthly commitment invested (${v})`,
+  chkCommitWhy: "checks itself when your US$ contributions add up to the commitment",
+  chkBr: v => `Brazil income allocated (${v})`,
+  chkBrWhy: "checks itself when the month's R$ contributions add up — with CDI near 14%, every idle month is costly",
+  chkIdle: "Last month's leftover allocated",
+  chkIdleWhy: (v, m) => `${v} was left in ${m} — turn it into a contribution, or earmark it for the next trip on purpose`,
+  chkIdleOk: "nothing idle from last month 🎉",
+  ivTitle: "Wealth",
+  ivLine: (p, g, until, pace, paceUsd) => `${p}% of the ${g} goal${until ? " by " + until : ""} · required pace: ${pace}/mo (≈ ${paceUsd})`,
+  portTitle: "Portfolio breakdown", portAsset: "Asset", portAssetPh: "e.g. Treasury bond", portValue: "Value (R$)",
+  portEmpty: "Detail your portfolio here: bonds, fixed income, Bitcoin…",
+  portHint: "Edit values as assets grow. The button below adjusts the app total to match the breakdown sum.",
+  portSync: "Use breakdown sum as total", portSum: "Sum",
+  apListTitle: "All contributions", apListEmpty: "No contributions yet.",
+  apListHint: "Contributions are logged in the Entries tab (type \"Investment\").",
+  oppTitle: "Opportunities (investment / business)", oppName: "Opportunity", oppWhere: "Where",
+  oppUS: "US", oppBR: "Brazil", oppPrio: "Priority", oppNotes: "Notes",
+  stEval: "Evaluating", stDrop: "Dropped", stDone: "Invested",
+  prHigh: "High", prMed: "Medium", prLow: "Low",
+  oppEmpty: "No opportunities logged.",
+  thOpp: "Opportunity", thWhere: "Where", thPrio: "Priority", thNotes: "Notes",
+  gdTitle: "Perks guide — Bettendorf, IA & road trips",
+  gdTip: "<b>Key tip:</b> loyalty programs credit <b>your</b> personal account even when you pay with the company card — scan the app or give your phone number before paying. Check company policy.",
+  gdMember: "member", gdEval: "evaluating",
+  rwTitle: "Best card per category", rwProg: "Card / program", rwProgPh: "e.g. Costco Visa", rwRate: "Return (%)",
+  rwEmpty: "Log your cards and the return per category.", rwBest: "best", thProg: "Program", thReturn: "Return",
+  fuTitle: "Gas price by station", fuName: "Station", fuNamePh: "e.g. Costco Davenport",
+  fuPrice: "US$/gallon", fuUpdate: "Update", fuEmpty: "No stations logged.",
+  fuCheapest: "cheapest", thStation: "Station", thVs: "vs. cheapest", thUpdated: "Updated",
+  fuHint: "Logging the same station again updates its price and date.",
+  idRendaTitle: "Extra income — what your visa allows (and what it doesn't)",
+  idVisa: "⚠️ <b>Work-visa golden rule:</b> you may only be <i>employed</i> in the US by your sponsoring company. <b>Active</b> side income (Uber, DoorDash, US freelancing, habitual reselling) violates the visa and threatens future ones. The safe path: <b>passive</b> income in the US + income generated in <b>Brazil</b>.",
+  idEconTitle: "Savings — where to stop leaking money",
+  idEconHint: "Estimates for someone living alone, traveling a lot and sending money to Brazil. Mark \"Adopted\" to add to your potential.",
+  idAdopted: (n, lo, hi, yr) => `You adopted <b>${n}</b> idea${n > 1 ? "s" : ""} — potential of <b class="pos">~$${lo}–${hi}/mo</b> back in your pocket (${yr} a year at full pace).`,
+  idTotal: (lo, hi) => `Adopting everything: <b>~$${lo}–${hi}/mo</b>. Start with remittances — the biggest impact.`,
+  idPerMonth: "/mo",
+  repPrint: "🖨 Print / PDF", repSummary: "Month summary", repCats: "Spending by category",
+  repWealth: "Wealth & goal", repYtd: "Year so far",
+  repEarnedUS: "Earned (main income)", repEarnedBR: "Earned (second income, separate)", repSpentOwn: "Spent out of pocket",
+  repCovered: "Company covered (work trips)", repSavedUS: "Invested in US$", repSavedBR: "Invested in R$",
+  repFree: "Free remaining", repRate: "Of earnings, not spent",
+  repNoExp: "No expenses in this period.", repDeltaHint: "▲▼ vs. previous month.",
+  repInvested: "Invested today", repGoal: "Goal", repMissing: "To go", repMonthContrib: "Contributions this month",
+  repProj: (v, m) => `At your real pace of the last 3 months (${v}/mo), you arrive in <b>${m}</b>`,
+  repBefore: "before target ✓", repAfter: m => `after target (${m})`,
+  repProjNone: "Log contributions so the app can project your goal arrival date.",
+  repYEarnedUS: "US earnings this year", repYEarnedBR: "Brazil earnings this year", repYSpent: "Out-of-pocket spending",
+  repYCovered: "Company-covered travel", repYSaved: "Invested this year",
+  repYtdHint: (y, m) => `Counts only ${y} months through ${m} — zero input from you, all from your entries.`,
+  cfgAccount: "Account & sync", cfgTitle: "Settings", cfgFx: "Exchange rate (R$ per US$)",
+  cfgLang: "Idioma / Language", cfgData: "Data", cfgExport: "Export backup (JSON)", cfgImport: "Import backup",
+  cfgDataHint: "Data lives in this browser and, with an account, in the cloud. Export a backup now and then.",
+  cfgPrivacy: "Privacy policy ↗",
+  cfgConnected: e => `Signed in as <b>${e}</b> — your entries sync across devices automatically.`,
+  cfgLogout: "Sign out",
+  cfgNoAccount: "No account on this device — data stays here until you sign in.",
+  cfgEnter: "Sign in / create account",
+  syncOk: ts => `☁ synced ${ts}`, syncOn: "☁ connected", syncEnter: "☁ Sign in",
+  authSub: "Sign in to sync your data between phone and computer. First time? Create your account — the goals assistant sets everything up next.",
+  authEmail: "your email", authPass: "password (min. 6 characters)",
+  authLogin: "Sign in", authSignup: "Create account", authSkip: "use without an account, this device only",
+  authFill: "Enter an email and a 6+ character password.", authFillLogin: "Enter email and password.",
+  authConfirm: "Account created! Confirm via the link sent to your email, then tap Sign in.",
+  errBadLogin: "Wrong email or password.", errExists: "This email already has an account — use Sign in.",
+  errRate: "Too many attempts — wait a minute.", errEmail: "Enter a valid email.",
+  importOk: "Backup imported successfully.", importFail: "Could not import: ",
+  wz1t: "Let's start with what comes in. 💵",
+  wz1s: "How much lands in your US account per month, after tax? (Paid biweekly? Multiply a paycheck by 26 and divide by 12.)",
+  wz2t: "Do you also have income in another country?",
+  wz2s: "Most people don't — just continue. If you do (salary, rent, dividends in Brazil), it stays separate from daily life, earmarked for investing.",
+  wz2label: "Income in another country",
+  wz2no: "No — just my main income", wz2yes: "Yes — I have income in Brazil",
+  wz2fx: "Exchange rate to convert (R$ per US$)",
+  wz2liveNo: "Done — your monthly free amount uses only your main income.",
+  wz2liveYes: v => `Noted: <b>${v}/mo</b> stays separate, earmarked for investing — it doesn't enter your "free" number.`,
+  wz2liveAsk: "Enter the monthly net amount of that second income.",
+  wz3t: "How much do you have invested today?",
+  wz3s: "Add it all up: fixed income, bonds, Bitcoin… in reais.",
+  wz4t: "Where do you want to get? 🎯",
+  wz4s: "The invested amount you want to reach, and by when.",
+  wz4until: "By when?",
+  wz4future: "Pick a month in the future.",
+  wz4live: (missing, m, pace, paceUsd) => `${missing} to go in ${m} months → save <b>${pace}/mo</b> (≈ <b>${paceUsd}</b>)`,
+  wz5t: "How much will you save per month?",
+  wz5s: "This is the deal between you and your goal. Anything beyond it each month is yours, free, guilt-free.",
+  wz5sugg: v => `Use the goal's pace: ${v}/mo`,
+  wz5live: v => `That leaves <b class="pos">${v}/mo</b> to live + extras.`,
+  wz5below: v => ` <br>Below the goal's pace (${v}) — the goal will slip, and that's fine if it's a choice.`,
+  wz6t: "Done. This is your map. 🗺️",
+  wz6s: "You can change everything later in the Goals tab.",
+  wz6in: "Comes in per month (US)", wz6br: "Brazil — separate, to invest", wz6save: "Will save",
+  wz6goal: "Goal", wz6until: " by ", wz6free: "Free to live the month",
+  wz6note: "Every expense you log subtracts from this free amount. The big number on the home screen is your freedom in real time.",
+  wzBack: "‹ Back", wzNext: "Continue ›", wzDone: "Start using ✓",
+  wzNeedIncome: "Enter how much you receive per month — everything else builds on it.",
+  otherLang: "Português",
+},
+};
+let lang = "pt";
+function t(key, ...args) {
+  const v = I18N[lang][key] ?? I18N.pt[key] ?? key;
+  return typeof v === "function" ? v(...args) : v;
+}
+const L = o => (o && typeof o === "object" && !Array.isArray(o)) ? (o[lang] ?? o.pt) : o;
+const dloc = () => lang === "pt" ? "pt-BR" : "en-US";
+
+/* ═════════ Conteúdo bilíngue ═════════ */
 const CATS = [
-  { id:"combustivel", label:"Combustível",  color:"--s1" },
-  { id:"alimentacao", label:"Comida",       color:"--s2" },
-  { id:"compras",     label:"Compras",      color:"--s3" },
-  { id:"passagens",   label:"Passagens",    color:"--s4" },
-  { id:"hoteis",      label:"Hotéis",       color:"--s5" },
-  { id:"carro",       label:"Carro alugado",color:"--s6" },
-  { id:"outros",      label:"Outros",       color:"--s7" },
+  { id:"combustivel", label:{pt:"Combustível", en:"Fuel"},        color:"--s1" },
+  { id:"alimentacao", label:{pt:"Comida", en:"Food"},             color:"--s2" },
+  { id:"compras",     label:{pt:"Compras", en:"Shopping"},        color:"--s3" },
+  { id:"passagens",   label:{pt:"Passagens", en:"Flights"},       color:"--s4" },
+  { id:"hoteis",      label:{pt:"Hotéis", en:"Hotels"},           color:"--s5" },
+  { id:"carro",       label:{pt:"Carro alugado", en:"Rental car"},color:"--s6" },
+  { id:"outros",      label:{pt:"Outros", en:"Other"},            color:"--s7" },
 ];
 const COVERED_ON_WORK = ["combustivel","alimentacao","carro"];
-const TRIPS = { none:"—", work:"Trabalho", personal:"Pessoal" };
+const TRIPS = { none:{pt:"—",en:"—"}, work:{pt:"Trabalho",en:"Work"}, personal:{pt:"Pessoal",en:"Personal"} };
 
 const DEFAULTS = {
   settings: {
     onboarded: false,
+    lang: "",            // "" = detectar do navegador
     usMonthly: 0,        // US$ líquido/mês — definido no assistente de metas
     brMonthly: 0,        // R$ líquido/mês
     fx: 5.24,
@@ -514,7 +884,7 @@ function load() {
       if (o.settings) {
         s.settings.fx = o.settings.fx || s.settings.fx;
         if (o.settings.paycheck) s.settings.usMonthly = Math.round(o.settings.paycheck * 26 / 12);
-        if (Array.isArray(o.portfolio)) s.settings.investedBase = o.portfolio.reduce((t,p) => t + (p.value||0), 0) || s.settings.investedBase;
+        if (Array.isArray(o.portfolio)) s.settings.investedBase = o.portfolio.reduce((t2,p) => t2 + (p.value||0), 0) || s.settings.investedBase;
         if (o.settings.goal) s.settings.goalAmount = o.settings.goal;
       }
     }
@@ -524,19 +894,46 @@ function load() {
 function save() { S._ts = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); sbQueuePush(); }
 function uid() { return Date.now() + Math.random().toString(16).slice(2, 6); }
 
+/* Idioma: detecta do navegador na primeira vez; persiste (e sincroniza) depois */
+lang = S.settings.lang || ((navigator.language || "en").toLowerCase().startsWith("pt") ? "pt" : "en");
+function setLang(l) {
+  lang = l === "en" ? "en" : "pt";
+  S.settings.lang = lang;
+  save();
+  applyLang();
+}
+function toggleLang() { setLang(lang === "pt" ? "en" : "pt"); }
+function applyLang() {
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  const other = t("otherLang");
+  document.getElementById("hdr-lang-btn").textContent = lang === "pt" ? "EN" : "PT";
+  document.getElementById("wz-lang-btn").textContent = other;
+  document.getElementById("au-lang-btn").textContent = other;
+  const sel = document.getElementById("cfg-lang");
+  if (sel) sel.value = lang;
+  fillCatSelects();
+  renderAll();
+  renderAuthUI();
+  if (document.getElementById("wizard").classList.contains("on")) renderWizard();
+}
+
 /* ───────── Utilitários ───────── */
 const fmtUS = n => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtUS0 = n => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
-const fmtBR = n => "R$ " + n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+const fmtBR = n => "R$ " + n.toLocaleString(lang === "pt" ? "pt-BR" : "en-US", { maximumFractionDigits: 0 });
 const parseDate = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
-const fmtD = d => d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
+const fmtD = d => d.toLocaleDateString(dloc(), { day:"2-digit", month:"short" });
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const monthKey = s => s.slice(0, 7);
 const thisMonth = () => todayStr().slice(0, 7);
 function monthLabel(mk) {
   const [y, m] = mk.split("-").map(Number);
-  return new Date(y, m-1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return new Date(y, m-1, 1).toLocaleDateString(dloc(), { month: "long", year: "numeric" });
 }
 function shiftMonth(mk, n) {
   const [y, m] = mk.split("-").map(Number);
@@ -546,6 +943,7 @@ function shiftMonth(mk, n) {
 function counts(e) { return !(e.trip === "work" && COVERED_ON_WORK.includes(e.cat)); }
 const toUSD = (amount, cur) => cur === "BRL" ? amount / S.settings.fx : amount;
 const toBRL = (amount, cur) => cur === "USD" ? amount * S.settings.fx : amount;
+const ptn = n => lang === "pt" ? n.toFixed(2).replace(".", ",") : n.toFixed(2);
 
 /* ───────── Números do mês ───────── */
 function monthStats(mk) {
@@ -601,39 +999,38 @@ function renderInicio() {
   const st = monthStats(mk);
   document.getElementById("m-title").textContent = monthLabel(mk);
   document.getElementById("m-badge").innerHTML =
-    mk === cur ? '<span class="badge counts">atual</span>' :
-    mk < cur ? '<span class="badge covered">fechado</span>' : '<span class="badge warn">futuro</span>';
+    mk === cur ? `<span class="badge counts">${t("mCur")}</span>` :
+    mk < cur ? `<span class="badge covered">${t("mClosed")}</span>` : `<span class="badge warn">${t("mFuture")}</span>`;
 
   const livreEl = document.getElementById("h-livre");
   livreEl.textContent = fmtUS(st.livre);
   livreEl.className = "value " + (st.livre < 0 ? "neg" : "");
   const dias = mk === cur ? Math.max(1, new Date(+mk.split("-")[0], +mk.split("-")[1], 0).getDate() - new Date().getDate() + 1) : 0;
   document.getElementById("h-note").textContent =
-    mk < cur ? "mês fechado — o que sobrou depois de gastar e guardar" :
-    mk > cur ? "projeção para o mês" :
-    st.livre >= 0
-      ? `dá ~${fmtUS0(st.livre / dias)}/dia até o fim do mês · jantar, passeio, compra — sem culpa e sem furar a meta`
-      : `você passou ${fmtUS0(-st.livre)} do que estava livre — os próximos gastos saem da poupança`;
+    mk < cur ? t("heroClosedNote") :
+    mk > cur ? t("heroFutureNote") :
+    st.livre >= 0 ? t("heroPerDay", fmtUS0(st.livre / dias)) : t("heroOver", fmtUS0(-st.livre));
 
   document.getElementById("t-ganho").textContent = fmtUS0(st.ganho);
   document.getElementById("t-ganho-n").textContent =
-    st.extrasUS > 0 ? `salário ${fmtUS0(S.settings.usMonthly)} + extras ${fmtUS0(st.extrasUS)}` : "só EUA — Brasil fica à parte";
+    st.extrasUS > 0 ? t("tEarnedExtras", fmtUS0(S.settings.usMonthly), fmtUS0(st.extrasUS))
+      : S.settings.brMonthly > 0 ? t("tEarnedSplit") : t("tEarnedOnly");
 
   const brStrip = document.getElementById("br-strip");
   if (st.brGanho > 0) {
     brStrip.style.display = "";
-    brStrip.innerHTML = `🇧🇷 <b>Brasil este mês: ${fmtBR(st.brGanho)}</b> — fora do livre, reservado para investir.
-      ${st.savedBRL > 0 ? `Aportado: <b class="pos">${fmtBR(st.savedBRL)}</b> ✓` : `<span style="color:var(--muted)">registre o aporte quando transferir — o assistente na aba Investir mostra onde render mais</span>`}`;
+    brStrip.innerHTML = t("brStrip", fmtBR(st.brGanho)) + " " +
+      (st.savedBRL > 0 ? t("brStripDone", fmtBR(st.savedBRL)) : t("brStripTodo"));
   } else brStrip.style.display = "none";
 
   document.getElementById("t-guardado").textContent = fmtUS0(st.saved);
-  document.getElementById("t-guardado-n").textContent = `meta: ${fmtUS0(S.settings.saveMonthly)}/mês`;
+  document.getElementById("t-guardado-n").textContent = t("tSavedGoal", fmtUS0(S.settings.saveMonthly));
   const pctSave = S.settings.saveMonthly > 0 ? Math.min(100, st.saved / S.settings.saveMonthly * 100) : 0;
   document.getElementById("t-guardado-m").firstElementChild.style.width = pctSave + "%";
 
   document.getElementById("t-gasto").textContent = fmtUS0(st.spent);
   document.getElementById("t-gasto-n").textContent =
-    st.covered > 0 ? `+ ${fmtUS0(st.covered)} pagos pela empresa (não contam)` : "só o que sai do seu bolso";
+    st.covered > 0 ? t("tSpentCovered", fmtUS0(st.covered)) : t("tSpentOnly");
 
   /* Categorias */
   const byCat = {};
@@ -641,10 +1038,10 @@ function renderInicio() {
   const rows = CATS.filter(c => byCat[c.id]).sort((a,b) => byCat[b.id] - byCat[a.id]);
   const max = rows.length ? byCat[rows[0].id] : 0;
   document.getElementById("m-cats").innerHTML = rows.length === 0
-    ? '<div class="empty">Nenhum gasto neste mês ainda.</div>'
+    ? `<div class="empty">${t("noExpMonth")}</div>`
     : rows.map(c => `
-      <div class="hbar-row" title="${esc(c.label)}: ${fmtUS(byCat[c.id])}">
-        <span class="cat"><span class="dot" style="background:var(${c.color})"></span>${c.label}</span>
+      <div class="hbar-row" title="${esc(L(c.label))}: ${fmtUS(byCat[c.id])}">
+        <span class="cat"><span class="dot" style="background:var(${c.color})"></span>${L(c.label)}</span>
         <div><div class="hbar" style="width:${max ? byCat[c.id]/max*100 : 0}%; background:var(${c.color})"></div></div>
         <span class="val">${fmtUS0(byCat[c.id])}</span>
       </div>`).join("");
@@ -652,35 +1049,34 @@ function renderInicio() {
   /* Mês passado */
   const pmk = shiftMonth(mk, -1);
   const p = monthStats(pmk);
-  const temDados = S.expenses.some(e => monthKey(e.date) === pmk) || S.contributions.some(c => monthKey(c.date) === pmk) || S.incomes.some(i => monthKey(i.date) === pmk);
-  document.getElementById("m-prev").innerHTML = !temDados
-    ? `<div class="empty">Sem lançamentos em ${monthLabel(pmk)}.</div>`
+  document.getElementById("m-prev").innerHTML = !monthHasData(pmk)
+    ? `<div class="empty">${t("noPrev", monthLabel(pmk))}</div>`
     : `<table><tbody>
-      <tr><td>Ganhou (EUA)</td><td class="num">${fmtUS(p.ganho)}</td></tr>
-      <tr><td>Gastou</td><td class="num">${fmtUS(p.spent)}</td></tr>
-      <tr><td>Guardou</td><td class="num">${fmtUS(p.saved)} ${p.saved >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? '<span class="badge covered">meta ✓</span>' : ""}</td></tr>
-      <tr><td><b>Sobrou</b></td><td class="num"><b class="${p.ganho - p.spent - p.savedUSD >= 0 ? "pos" : "neg"}">${fmtUS(p.ganho - p.spent - p.savedUSD)}</b></td></tr>
+      <tr><td>${t("prevEarned")}</td><td class="num">${fmtUS(p.ganho)}</td></tr>
+      <tr><td>${t("prevSpent")}</td><td class="num">${fmtUS(p.spent)}</td></tr>
+      <tr><td>${t("prevSaved")}</td><td class="num">${fmtUS(p.saved)} ${p.saved >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? `<span class="badge covered">${t("goalOk")}</span>` : ""}</td></tr>
+      <tr><td><b>${t("prevLeft")}</b></td><td class="num"><b class="${p.ganho - p.spent - p.savedUSD >= 0 ? "pos" : "neg"}">${fmtUS(p.ganho - p.spent - p.savedUSD)}</b></td></tr>
     </tbody></table>
-    <div class="hint">Sobra de mês fechado é dinheiro parado — o assistente em Investir mostra onde ele rende.</div>`;
+    <div class="hint">${t("prevHint")}</div>`;
 }
 
 /* ───────── Lançamentos ───────── */
 function updateLancForm() {
-  const t = document.getElementById("l-type").value;
-  document.getElementById("l-cat-f").style.display = t === "gasto" ? "" : "none";
-  document.getElementById("l-trip-f").style.display = t === "gasto" ? "" : "none";
-  document.getElementById("l-cur-f").style.display = t === "gasto" ? "none" : "";
+  const tp = document.getElementById("l-type").value;
+  document.getElementById("l-cat-f").style.display = tp === "gasto" ? "" : "none";
+  document.getElementById("l-trip-f").style.display = tp === "gasto" ? "" : "none";
+  document.getElementById("l-cur-f").style.display = tp === "gasto" ? "none" : "";
   updateLancHint();
 }
 function updateLancHint() {
-  const t = document.getElementById("l-type").value;
+  const tp = document.getElementById("l-type").value;
   const el = document.getElementById("l-hint");
-  if (t === "gasto" && document.getElementById("l-trip").value === "work" && COVERED_ON_WORK.includes(document.getElementById("l-cat").value)) {
-    el.innerHTML = "✓ Coberto pela empresa — <b>não desconta</b> do seu livre.";
-  } else if (t === "aporte") {
-    el.textContent = "Aporte conta como 'guardado' no mês e soma no seu patrimônio investido.";
-  } else if (t === "renda") {
-    el.textContent = "Renda extra aumenta o livre do mês da data.";
+  if (tp === "gasto" && document.getElementById("l-trip").value === "work" && COVERED_ON_WORK.includes(document.getElementById("l-cat").value)) {
+    el.innerHTML = t("hintCovered");
+  } else if (tp === "aporte") {
+    el.textContent = t("hintAporte");
+  } else if (tp === "renda") {
+    el.textContent = t("hintRenda");
   } else el.textContent = "";
 }
 function renderLanc() {
@@ -690,33 +1086,33 @@ function renderLanc() {
     ...S.contributions.map(c => ({ ...c, _t: "aporte" })),
   ].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 60);
   document.getElementById("l-list").innerHTML = all.length === 0
-    ? '<div class="empty">Nada registrado ainda. Todo gasto, renda extra e aporte entra por aqui.</div>'
-    : `<table><thead><tr><th>Data</th><th>Tipo</th><th>Detalhe</th><th class="num">Valor</th><th></th><th></th></tr></thead><tbody>` +
+    ? `<div class="empty">${t("noLanc")}</div>`
+    : `<table><thead><tr><th>${t("thDate")}</th><th>${t("thType")}</th><th>${t("thDetail")}</th><th class="num">${t("thValue")}</th><th></th><th></th></tr></thead><tbody>` +
       all.map(x => {
-        let det = "", badge = "", val = "";
+        let det = "", badge = "", v = "";
         if (x._t === "gasto") {
           const c = CATS.find(k => k.id === x.cat) || CATS[6];
-          det = `<span class="dot" style="background:var(${c.color})"></span>${c.label}${x.trip !== "none" ? " · " + TRIPS[x.trip] : ""}${x.desc ? " · " + esc(x.desc) : ""}`;
-          badge = counts(x) ? "" : '<span class="badge covered">coberto</span>';
-          val = "− " + fmtUS(x.amount);
+          det = `<span class="dot" style="background:var(${c.color})"></span>${L(c.label)}${x.trip !== "none" ? " · " + L(TRIPS[x.trip]) : ""}${x.desc ? " · " + esc(x.desc) : ""}`;
+          badge = counts(x) ? "" : `<span class="badge covered">${t("bdgCovered")}</span>`;
+          v = "− " + fmtUS(x.amount);
         } else if (x._t === "renda") {
-          det = esc(x.source || "renda extra");
-          badge = '<span class="badge counts">renda</span>';
-          val = "+ " + (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
+          det = esc(x.source || t("incomeFallback"));
+          badge = `<span class="badge counts">${t("bdgIncome")}</span>`;
+          v = "+ " + (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
         } else {
-          det = esc(x.dest || "investimento");
-          badge = '<span class="badge covered">aporte</span>';
-          val = (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
+          det = esc(x.dest || t("investFallback"));
+          badge = `<span class="badge covered">${t("bdgInvest")}</span>`;
+          v = (x.cur === "BRL" ? fmtBR(x.amount) : fmtUS(x.amount));
         }
-        return `<tr><td>${fmtD(parseDate(x.date))}</td><td>${badge || "gasto"}</td><td>${det}</td>
-          <td class="num">${val}</td><td></td>
-          <td style="width:30px"><button class="mini" onclick="delLanc('${x._t}','${x.id}')">✕</button></td></tr>`;
+        return `<tr><td>${fmtD(parseDate(x.date))}</td><td>${badge || t("wordExpense")}</td><td>${det}</td>
+          <td class="num">${v}</td><td></td>
+          <td style="width:30px"><button class="mini" title="${t("del")}" aria-label="${t("del")}" onclick="delLanc('${x._t}','${x.id}')">✕</button></td></tr>`;
       }).join("") + "</tbody></table>";
 }
-function delLanc(t, id) {
-  if (t === "gasto") S.expenses = S.expenses.filter(x => String(x.id) !== String(id));
-  if (t === "renda") S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
-  if (t === "aporte") S.contributions = S.contributions.filter(x => String(x.id) !== String(id));
+function delLanc(tp, id) {
+  if (tp === "gasto") S.expenses = S.expenses.filter(x => String(x.id) !== String(id));
+  if (tp === "renda") S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
+  if (tp === "aporte") S.contributions = S.contributions.filter(x => String(x.id) !== String(id));
   save(); renderAll();
 }
 
@@ -734,38 +1130,34 @@ function renderMetas() {
 
   document.getElementById("g-patrimonio").innerHTML = `
     <div class="tile">
-      <div class="label">Investido hoje</div>
+      <div class="label">${t("gInvested")}</div>
       <div class="value">${fmtBR(inv)}</div>
       <div class="meter"><div style="width:${pct}%"></div></div>
-      <div class="hint">${pct.toFixed(0)}% da meta de ${fmtBR(st.goalAmount)}${st.goalMonth ? " até " + monthLabel(st.goalMonth) : ""} · faltam ${fmtBR(Math.max(0, st.goalAmount - inv))}</div>
+      <div class="hint">${t("gOfGoal", pct.toFixed(0), fmtBR(st.goalAmount), st.goalMonth ? monthLabel(st.goalMonth) : "", fmtBR(Math.max(0, st.goalAmount - inv)))}</div>
     </div>
     <div style="margin-top:12px; font-size:14px">
-      Para chegar lá: guardar <b>${fmtBR(pace)}</b>/mês (≈ ${fmtUS0(paceUSD)})${mLeft > 0 ? ` por ${mLeft} meses` : ""}<br>
-      Você tem guardado em média <b>${fmtUS0(media)}</b>/mês nos últimos 3 meses
-      ${inv >= st.goalAmount ? '<span class="badge covered">meta atingida 🎉</span>' : ritmoOk ? '<span class="badge covered">no ritmo</span>' : '<span class="badge warn">abaixo do ritmo</span>'}
+      ${t("gPace", fmtBR(pace), fmtUS0(paceUSD), mLeft)}<br>
+      ${t("gAvg", fmtUS0(media))}
+      ${inv >= st.goalAmount ? `<span class="badge covered">${t("bdgGoalDone")}</span>` : ritmoOk ? `<span class="badge covered">${t("bdgOnPace")}</span>` : `<span class="badge warn">${t("bdgOffPace")}</span>`}
     </div>`;
 
   document.getElementById("g-mensal").innerHTML = `
     <form class="inline" onsubmit="return false">
-      <div class="field"><label>Guardar por mês (US$)</label>
-        <input type="number" step="10" value="${st.saveMonthly}" style="width:110px" onchange="setS('saveMonthly', this.value)"></div>
+      <div class="field"><label>${t("gSaveLabel")}</label>
+        <input type="number" inputmode="decimal" step="10" value="${st.saveMonthly}" style="width:110px" onchange="setS('saveMonthly', this.value)"></div>
     </form>
-    <div class="hint" style="margin-top:10px">
-      Renda EUA ${fmtUS0(st.usMonthly)} − guardar ${fmtUS0(st.saveMonthly)} =
-      <b>${fmtUS0(st.usMonthly - st.saveMonthly)}</b> para viver o mês.
-      O que você não gastar disso vira livre de verdade. O Brasil fica à parte, direto para investimentos.
-    </div>`;
+    <div class="hint" style="margin-top:10px">${t("gMath", fmtUS0(st.usMonthly), fmtUS0(st.saveMonthly), fmtUS0(st.usMonthly - st.saveMonthly))}</div>`;
 
   document.getElementById("g-renda").innerHTML = `
     <form class="inline" onsubmit="return false">
-      <div class="field"><label>EUA (US$/mês)</label>
-        <input type="number" step="10" value="${st.usMonthly}" style="width:100px" onchange="setS('usMonthly', this.value)"></div>
-      <div class="field"><label>Brasil (R$/mês)</label>
-        <input type="number" step="100" value="${st.brMonthly}" style="width:100px" onchange="setS('brMonthly', this.value)"></div>
-      <div class="field"><label>Investido base (R$)</label>
-        <input type="number" step="1000" value="${st.investedBase}" style="width:110px" onchange="setS('investedBase', this.value)"></div>
+      <div class="field"><label>${t("gUsLabel")}</label>
+        <input type="number" inputmode="decimal" step="10" value="${st.usMonthly}" style="width:100px" onchange="setS('usMonthly', this.value)"></div>
+      <div class="field"><label>${t("gBrLabel")}</label>
+        <input type="number" inputmode="decimal" step="100" value="${st.brMonthly}" style="width:100px" onchange="setS('brMonthly', this.value)"></div>
+      <div class="field"><label>${t("gBaseLabel")}</label>
+        <input type="number" inputmode="decimal" step="1000" value="${st.investedBase}" style="width:110px" onchange="setS('investedBase', this.value)"></div>
     </form>
-    <div class="hint" style="margin-top:10px">EUA sustenta o mês e o "livre"; o Brasil${st.brMonthly > 0 ? ` (${fmtBR(st.brMonthly)}/mês)` : ""} fica separado, destinado a aportes.</div>`;
+    <div class="hint" style="margin-top:10px">${t("gIncomeHint", st.brMonthly > 0 ? fmtBR(st.brMonthly) : "")}</div>`;
 }
 function setS(key, v) { S.settings[key] = Number(v) || 0; save(); renderAll(); }
 
@@ -779,42 +1171,43 @@ function renderInvest() {
     <div class="tile">
       <div class="value" style="font-size:32px">${fmtBR(inv)}</div>
       <div class="meter"><div style="width:${pct}%"></div></div>
-      <div class="hint">${pct.toFixed(0)}% da meta de ${fmtBR(st.goalAmount)}${st.goalMonth ? " até " + monthLabel(st.goalMonth) : ""} · ritmo necessário: ${fmtBR(pace)}/mês (≈ ${fmtUS0(pace / st.fx)})</div>
+      <div class="hint">${t("ivLine", pct.toFixed(0), fmtBR(st.goalAmount), st.goalMonth ? monthLabel(st.goalMonth) : "", fmtBR(pace), fmtUS0(pace / st.fx))}</div>
     </div>`;
 
   const totalPort = S.portfolio.reduce((s,p) => s + p.value, 0);
   document.getElementById("p-list").innerHTML = S.portfolio.length === 0
-    ? '<div class="empty">Detalhe sua carteira aqui: Tesouro, renda fixa, Bitcoin…</div>'
+    ? `<div class="empty">${t("portEmpty")}</div>`
     : `<table><tbody>` + S.portfolio.map(p => `
       <tr><td>${esc(p.name)}</td>
         <td class="num"><input type="number" class="cellnum" value="${p.value}" step="100" onchange="setPortValue('${p.id}', this.value)"></td>
-        <td style="width:30px"><button class="mini" onclick="delPort('${p.id}')">✕</button></td></tr>`).join("") +
-      `<tr><td><b>Soma</b></td><td class="num"><b>${fmtBR(totalPort)}</b></td><td></td></tr></tbody></table>`;
+        <td style="width:30px"><button class="mini" title="${t("del")}" onclick="delPort('${p.id}')">✕</button></td></tr>`).join("") +
+      `<tr><td><b>${t("portSum")}</b></td><td class="num"><b>${fmtBR(totalPort)}</b></td><td></td></tr></tbody></table>`;
 
   const cs = [...S.contributions].sort((a,b) => b.date.localeCompare(a.date));
   document.getElementById("iv-aportes").innerHTML = cs.length === 0
-    ? '<div class="empty">Nenhum aporte ainda.</div>'
+    ? `<div class="empty">${t("apListEmpty")}</div>`
     : `<table><tbody>` + cs.map(c => `
       <tr><td>${fmtD(parseDate(c.date))}</td><td>${esc(c.dest || "")}</td>
         <td class="num">${c.cur === "BRL" ? fmtBR(c.amount) : fmtUS(c.amount)}</td>
-        <td style="width:30px"><button class="mini" onclick="delLanc('aporte','${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
+        <td style="width:30px"><button class="mini" title="${t("del")}" onclick="delLanc('aporte','${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
 
   const prioOrder = { alta: 0, media: 1, baixa: 2 };
   const statusBadge = { avaliando: "warn", investido: "covered", descartado: "crit" };
+  const stLabel = { avaliando: t("stEval"), investido: t("stDone"), descartado: t("stDrop") };
   const os = [...S.opportunities].sort((a,b) =>
     (a.status === "descartado") - (b.status === "descartado") || prioOrder[a.prio] - prioOrder[b.prio]);
   document.getElementById("o-list").innerHTML = os.length === 0
-    ? '<div class="empty">Nenhuma oportunidade registrada.</div>'
-    : `<table><thead><tr><th>Oportunidade</th><th>Onde</th><th>Prioridade</th><th>Status</th><th>Notas</th><th></th></tr></thead><tbody>` +
+    ? `<div class="empty">${t("oppEmpty")}</div>`
+    : `<table><thead><tr><th>${t("thOpp")}</th><th>${t("thWhere")}</th><th>${t("thPrio")}</th><th>Status</th><th>${t("thNotes")}</th><th></th></tr></thead><tbody>` +
       os.map(o => `<tr ${o.status === "descartado" ? 'style="opacity:.55"' : ""}>
-        <td>${esc(o.name)}</td><td>${esc(o.where)}</td>
-        <td>${o.prio === "alta" ? "🔺 Alta" : o.prio === "media" ? "Média" : "Baixa"}</td>
-        <td><span class="badge ${statusBadge[o.status]}">${o.status}</span>
+        <td>${esc(o.name)}</td><td>${o.where === "EUA" ? t("oppUS") : o.where === "Brasil" ? t("oppBR") : esc(o.where)}</td>
+        <td>${o.prio === "alta" ? "🔺 " + t("prHigh") : o.prio === "media" ? t("prMed") : t("prLow")}</td>
+        <td><span class="badge ${statusBadge[o.status]}">${stLabel[o.status]}</span>
           <select onchange="setOppStatus('${o.id}', this.value)" style="font-size:11px; padding:1px 2px; margin-left:4px">
-            ${["avaliando","investido","descartado"].map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
+            ${["avaliando","investido","descartado"].map(s2 => `<option value="${s2}" ${s2 === o.status ? "selected" : ""}>${stLabel[s2]}</option>`).join("")}
           </select></td>
         <td>${esc(o.notes || "")}</td>
-        <td><button class="mini" onclick="delOpp('${o.id}')">✕</button></td>
+        <td><button class="mini" title="${t("del")}" onclick="delOpp('${o.id}')">✕</button></td>
       </tr>`).join("") + "</tbody></table>";
 }
 function setPortValue(id, v) { const p = S.portfolio.find(p => String(p.id) === String(id)); if (p) { p.value = Math.max(0, Number(v) || 0); save(); renderInvest(); } }
@@ -831,42 +1224,71 @@ function syncPortfolio() {
 
 /* ───────── Rewards (visão completa) ───────── */
 const GUIDE = [
-  { group: "Clubes & mercados — Quad Cities", items: [
-    { id:"costco",   name:"Costco (Davenport)", why:"Gasolina normalmente a mais barata da região + atacado. Anuidade ~US$65; tier Executive (~US$130) devolve 2% do gasto anual." },
-    { id:"samsclub", name:"Sam's Club (Davenport / Moline)", why:"Alternativa mais barata (~US$50/ano), gasolina barata e Scan & Go." },
-    { id:"hyvee",    name:"Hy-Vee Perks + Fuel Saver", why:"Maior mercado de Iowa; compras acumulam desconto por galão (vale nos Casey's participantes). Grátis." },
-    { id:"kwikstar", name:"Kwik Rewards (Kwik Star)", why:"Forte em Iowa/Wisconsin/Minnesota; desconto por galão e pontos. Grátis." },
+  { group: {pt:"Clubes & mercados — Quad Cities", en:"Clubs & groceries — Quad Cities"}, items: [
+    { id:"costco",   name:"Costco (Davenport)",
+      why:{pt:"Gasolina normalmente a mais barata da região + atacado. Anuidade ~US$65; tier Executive (~US$130) devolve 2% do gasto anual.",
+           en:"Usually the cheapest gas in the region + wholesale. ~US$65/yr; Executive tier (~US$130) returns 2% of annual spending."} },
+    { id:"samsclub", name:"Sam's Club (Davenport / Moline)",
+      why:{pt:"Alternativa mais barata (~US$50/ano), gasolina barata e Scan & Go.",
+           en:"Cheaper alternative (~US$50/yr), cheap gas and Scan & Go."} },
+    { id:"hyvee",    name:"Hy-Vee Perks + Fuel Saver",
+      why:{pt:"Maior mercado de Iowa; compras acumulam desconto por galão (vale nos Casey's participantes). Grátis.",
+           en:"Iowa's biggest grocer; purchases earn per-gallon discounts (works at participating Casey's). Free."} },
+    { id:"kwikstar", name:"Kwik Rewards (Kwik Star)",
+      why:{pt:"Forte em Iowa/Wisconsin/Minnesota; desconto por galão e pontos. Grátis.",
+           en:"Strong in Iowa/Wisconsin/Minnesota; per-gallon discounts and points. Free."} },
   ]},
-  { group: "Combustível — redes nacionais (viagens de carro)", items: [
-    { id:"caseys",  name:"Casey's Rewards", why:"Onipresente no Meio-Oeste; pontos viram desconto em combustível — mesmo pagando com o cartão da empresa, os pontos são seus." },
-    { id:"shell",   name:"Shell Fuel Rewards", why:"Rede nacional — padrão para rotas longas. Grátis." },
-    { id:"exxon",   name:"Exxon Mobil Rewards+", why:"Nacional; pontos por galão e na loja. Grátis." },
-    { id:"bpme",    name:"BPme Rewards (BP/Amoco)", why:"Nacional; desconto por galão. Grátis." },
-    { id:"pilot",   name:"Pilot Flying J — myRewards", why:"Postos de rodovia interestadual. Grátis." },
-    { id:"gasbuddy",name:"GasBuddy (app)", why:"Comparar preços de postos em qualquer cidade. Use só o app grátis." },
-    { id:"upside",  name:"Upside (app)", why:"Cashback real em postos e restaurantes; exige cartão vinculado — confirme se funciona com o cartão da empresa." },
+  { group: {pt:"Combustível — redes nacionais (viagens de carro)", en:"Fuel — national networks (road trips)"}, items: [
+    { id:"caseys",  name:"Casey's Rewards",
+      why:{pt:"Onipresente no Meio-Oeste; pontos viram desconto em combustível — mesmo pagando com o cartão da empresa, os pontos são seus.",
+           en:"Everywhere in the Midwest; points become fuel discounts — even paying with the company card, the points are yours."} },
+    { id:"shell",   name:"Shell Fuel Rewards",
+      why:{pt:"Rede nacional — padrão para rotas longas. Grátis.", en:"National network — a staple for long routes. Free."} },
+    { id:"exxon",   name:"Exxon Mobil Rewards+",
+      why:{pt:"Nacional; pontos por galão e na loja. Grátis.", en:"National; points per gallon and in-store. Free."} },
+    { id:"bpme",    name:"BPme Rewards (BP/Amoco)",
+      why:{pt:"Nacional; desconto por galão. Grátis.", en:"National; per-gallon discount. Free."} },
+    { id:"pilot",   name:"Pilot Flying J — myRewards",
+      why:{pt:"Postos de rodovia interestadual. Grátis.", en:"Interstate highway stations. Free."} },
+    { id:"gasbuddy",name:"GasBuddy (app)",
+      why:{pt:"Comparar preços de postos em qualquer cidade. Use só o app grátis.", en:"Compare station prices in any city. Stick to the free app."} },
+    { id:"upside",  name:"Upside (app)",
+      why:{pt:"Cashback real em postos e restaurantes; exige cartão vinculado — confirme se funciona com o cartão da empresa.",
+           en:"Real cashback at stations and restaurants; needs a linked card — check whether it works with the company card."} },
   ]},
-  { group: "Voos — MLI (Moline), CID, ORD", items: [
-    { id:"airline", name:"Escolher 1 programa de milhas principal", why:"American, Delta e United atendem MLI. Concentre na companhia que a empresa mais usa e SEMPRE informe seu número: as milhas de voos de trabalho são suas." },
-    { id:"precheck",name:"TSA PreCheck", why:"~US$78 por 5 anos, fila rápida. Quem voa toda semana recupera em tempo; vários cartões reembolsam." },
+  { group: {pt:"Voos — MLI (Moline), CID, ORD", en:"Flights — MLI (Moline), CID, ORD"}, items: [
+    { id:"airline", name:{pt:"Escolher 1 programa de milhas principal", en:"Pick 1 main airline loyalty program"},
+      why:{pt:"American, Delta e United atendem MLI. Concentre na companhia que a empresa mais usa e SEMPRE informe seu número: as milhas de voos de trabalho são suas.",
+           en:"American, Delta and United serve MLI. Focus on the airline your company books most and ALWAYS enter your number: miles from work flights are yours."} },
+    { id:"precheck",name:"TSA PreCheck",
+      why:{pt:"~US$78 por 5 anos, fila rápida. Quem voa toda semana recupera em tempo; vários cartões reembolsam.",
+           en:"~US$78 for 5 years, fast lane. Weekly flyers earn it back in time; several cards reimburse it."} },
   ]},
-  { group: "Alimentação fora & delivery", items: [
-    { id:"dashpass", name:"DoorDash DashPass", why:"~US$10/mês, entrega grátis — só compensa com 3+ pedidos pessoais/mês (em viagem a trabalho a comida é coberta)." },
-    { id:"uberone",  name:"Uber One", why:"~US$10/mês: Uber Eats + desconto em corridas — pode valer mais que o DashPass se usa Uber nas viagens." },
-    { id:"chainapps",name:"Apps de redes (McDonald's, Chipotle, Starbucks…)", why:"Grátis; descontos agressivos e pontos que viram refeição." },
+  { group: {pt:"Alimentação fora & delivery", en:"Eating out & delivery"}, items: [
+    { id:"dashpass", name:"DoorDash DashPass",
+      why:{pt:"~US$10/mês, entrega grátis — só compensa com 3+ pedidos pessoais/mês (em viagem a trabalho a comida é coberta).",
+           en:"~US$10/mo, free delivery — only worth it with 3+ personal orders/mo (work-trip meals are covered)."} },
+    { id:"uberone",  name:"Uber One",
+      why:{pt:"~US$10/mês: Uber Eats + desconto em corridas — pode valer mais que o DashPass se usa Uber nas viagens.",
+           en:"~US$10/mo: Uber Eats + ride discounts — may beat DashPass if you use Uber when traveling."} },
+    { id:"chainapps",name:{pt:"Apps de redes (McDonald's, Chipotle, Starbucks…)", en:"Chain apps (McDonald's, Chipotle, Starbucks…)"},
+      why:{pt:"Grátis; descontos agressivos e pontos que viram refeição.", en:"Free; aggressive deals and points that become meals."} },
   ]},
 ];
-const GUIDE_STATUS = { pendente:"Pendente", avaliando:"Avaliando", membro:"Sou membro", descartado:"Descartado" };
+const GUIDE_STATUS = {
+  pendente:{pt:"Pendente",en:"Pending"}, avaliando:{pt:"Avaliando",en:"Evaluating"},
+  membro:{pt:"Sou membro",en:"I'm a member"}, descartado:{pt:"Descartado",en:"Not for me"},
+};
 function renderGuide() {
   document.getElementById("guide").innerHTML = GUIDE.map(g =>
-    `<h3>${g.group}</h3>` + g.items.map(it => {
+    `<h3>${L(g.group)}</h3>` + g.items.map(it => {
       const st = S.guide[it.id] || "pendente";
-      const badge = st === "membro" ? '<span class="badge covered">membro</span>'
-        : st === "avaliando" ? '<span class="badge warn">avaliando</span>' : "";
+      const badge = st === "membro" ? `<span class="badge covered">${t("gdMember")}</span>`
+        : st === "avaliando" ? `<span class="badge warn">${t("gdEval")}</span>` : "";
       return `<div class="gitem ${st === "descartado" ? "off" : ""}">
-        <div><b>${it.name}</b> ${badge}<div class="why">${it.why}</div></div>
+        <div><b>${L(it.name)}</b> ${badge}<div class="why">${L(it.why)}</div></div>
         <select onchange="setGuide('${it.id}', this.value)">
-          ${Object.entries(GUIDE_STATUS).map(([k,v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${v}</option>`).join("")}
+          ${Object.entries(GUIDE_STATUS).map(([k,v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${L(v)}</option>`).join("")}
         </select>
       </div>`;
     }).join("")).join("");
@@ -877,27 +1299,27 @@ function renderRewards() {
   const bestByCat = {};
   rs.forEach(r => { if (!bestByCat[r.cat] || r.rate > bestByCat[r.cat]) bestByCat[r.cat] = r.rate; });
   document.getElementById("r-list").innerHTML = rs.length === 0
-    ? '<div class="empty">Registre seus cartões e o retorno por categoria.</div>'
-    : `<table><thead><tr><th>Categoria</th><th>Programa</th><th class="num">Retorno</th><th></th></tr></thead><tbody>` +
+    ? `<div class="empty">${t("rwEmpty")}</div>`
+    : `<table><thead><tr><th>${t("lancCat")}</th><th>${t("thProg")}</th><th class="num">${t("thReturn")}</th><th></th></tr></thead><tbody>` +
       rs.map(r => {
         const c = CATS.find(x => x.id === r.cat) || CATS[6];
-        return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${c.label}</td>
-          <td>${esc(r.prog)} ${bestByCat[r.cat] === r.rate ? '<span class="badge covered">melhor</span>' : ""}</td>
+        return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${L(c.label)}</td>
+          <td>${esc(r.prog)} ${bestByCat[r.cat] === r.rate ? `<span class="badge covered">${t("rwBest")}</span>` : ""}</td>
           <td class="num">${r.rate}%</td>
-          <td><button class="mini" onclick="delReward('${r.id}')">✕</button></td></tr>`;
+          <td><button class="mini" title="${t("del")}" onclick="delReward('${r.id}')">✕</button></td></tr>`;
       }).join("") + "</tbody></table>";
 
   const fs = [...S.fuel].sort((a,b) => a.price - b.price);
   const min = fs.length ? fs[0].price : 0;
   document.getElementById("fu-list").innerHTML = fs.length === 0
-    ? '<div class="empty">Nenhum posto registrado.</div>'
-    : `<table><thead><tr><th>Posto</th><th class="num">US$/gal</th><th class="num">vs. mais barato</th><th>Atualizado</th><th></th></tr></thead><tbody>` +
+    ? `<div class="empty">${t("fuEmpty")}</div>`
+    : `<table><thead><tr><th>${t("thStation")}</th><th class="num">US$/gal</th><th class="num">${t("thVs")}</th><th>${t("thUpdated")}</th><th></th></tr></thead><tbody>` +
       fs.map(f => `<tr>
-        <td>${esc(f.name)} ${f.price === min ? '<span class="badge covered">mais barato</span>' : ""}</td>
+        <td>${esc(f.name)} ${f.price === min ? `<span class="badge covered">${t("fuCheapest")}</span>` : ""}</td>
         <td class="num">$${f.price.toFixed(3)}</td>
         <td class="num">${f.price === min ? "—" : "+" + ((f.price - min) / min * 100).toFixed(1) + "%"}</td>
         <td>${fmtD(parseDate(f.date))}</td>
-        <td><button class="mini" onclick="delFuel('${f.id}')">✕</button></td>
+        <td><button class="mini" title="${t("del")}" onclick="delFuel('${f.id}')">✕</button></td>
       </tr>`).join("") + "</tbody></table>";
 }
 function delReward(id) { S.rewards = S.rewards.filter(r => String(r.id) !== String(id)); save(); renderRewards(); }
@@ -907,32 +1329,29 @@ function delFuel(id) { S.fuel = S.fuel.filter(f => String(f.id) !== String(id));
 let wzStep = 0, wzData = {};
 const WZ_STEPS = [
   {
-    title: "Vamos começar pelo que entra. 💵",
-    sub: "Quanto cai na sua conta por mês nos EUA, já líquido? (Recebe por quinzena? Multiplique o pagamento por 26 e divida por 12.)",
-    render: () => `<div class="biginput"><span class="cur">$</span><input type="number" id="wz-in" value="${wzData.usMonthly}" step="10" min="0"></div>`,
+    title: () => t("wz1t"), sub: () => t("wz1s"),
+    render: () => `<div class="biginput"><span class="cur">$</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.usMonthly || ""}" step="10" min="0" placeholder="0"></div>`,
     live: () => "",
+    valid: () => num("wz-in") > 0 || t("wzNeedIncome"),
     saveStep: () => wzData.usMonthly = num("wz-in"),
   },
   {
-    title: "Você tem renda em outro país também?",
-    sub: "A maioria das pessoas não tem — é só seguir. Se tiver (salário, aluguel, dividendos no Brasil), ela fica separada do dia a dia, reservada para investir.",
+    title: () => t("wz2t"), sub: () => t("wz2s"),
     render: () => `
-      <div class="field"><label>Renda em outro país</label>
+      <div class="field"><label>${t("wz2label")}</label>
         <select id="wz-has2" style="font-size:16px" onchange="document.getElementById('wz-br-fields').style.display = this.value === 'sim' ? '' : 'none'; wzLive()">
-          <option value="nao" ${wzData.brMonthly > 0 ? "" : "selected"}>Não — só a renda principal</option>
-          <option value="sim" ${wzData.brMonthly > 0 ? "selected" : ""}>Sim — tenho renda no Brasil</option>
+          <option value="nao" ${wzData.brMonthly > 0 ? "" : "selected"}>${t("wz2no")}</option>
+          <option value="sim" ${wzData.brMonthly > 0 ? "selected" : ""}>${t("wz2yes")}</option>
         </select></div>
       <div id="wz-br-fields" style="display:${wzData.brMonthly > 0 ? "" : "none"}; margin-top:14px">
-        <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.brMonthly}" step="100" min="0"></div>
-        <div class="field" style="margin-top:10px"><label>Câmbio para converter (R$ por US$)</label>
-        <input type="number" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>
+        <div class="biginput"><span class="cur">R$</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.brMonthly}" step="100" min="0"></div>
+        <div class="field" style="margin-top:10px"><label>${t("wz2fx")}</label>
+        <input type="number" inputmode="decimal" id="wz-fx" value="${wzData.fx}" step="0.01" style="font-size:16px; width:120px"></div>
       </div>`,
     live: () => {
-      if (val("wz-has2") !== "sim") return "Fechado — o livre do mês usa só a renda principal.";
+      if (val("wz-has2") !== "sim") return t("wz2liveNo");
       const br = num("wz-in");
-      return br > 0
-        ? `Anotado: <b>${fmtBR(br)}/mês</b> ficam à parte, reservados para investir — não entram no seu "livre".`
-        : "Informe o valor líquido mensal dessa segunda renda.";
+      return br > 0 ? t("wz2liveYes", fmtBR(br)) : t("wz2liveAsk");
     },
     saveStep: () => {
       wzData.brMonthly = val("wz-has2") === "sim" ? num("wz-in") : 0;
@@ -940,18 +1359,16 @@ const WZ_STEPS = [
     },
   },
   {
-    title: "Quanto você já tem investido hoje?",
-    sub: "Some tudo: renda fixa, Tesouro, Bitcoin… em reais.",
-    render: () => `<div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.investedBase}" step="1000" min="0"></div>`,
+    title: () => t("wz3t"), sub: () => t("wz3s"),
+    render: () => `<div class="biginput"><span class="cur">R$</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.investedBase}" step="1000" min="0"></div>`,
     live: () => "",
     saveStep: () => wzData.investedBase = num("wz-in"),
   },
   {
-    title: "Onde você quer chegar? 🎯",
-    sub: "Valor investido que você quer alcançar, e até quando.",
+    title: () => t("wz4t"), sub: () => t("wz4s"),
     render: () => `
-      <div class="biginput"><span class="cur">R$</span><input type="number" id="wz-in" value="${wzData.goalAmount}" step="5000" min="0"></div>
-      <div class="field" style="margin-top:10px"><label>Até quando?</label>
+      <div class="biginput"><span class="cur">R$</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.goalAmount}" step="5000" min="0"></div>
+      <div class="field" style="margin-top:10px"><label>${t("wz4until")}</label>
       <input type="month" id="wz-month" value="${wzData.goalMonth}"></div>`,
     live: () => {
       const goal = num("wz-in"), mm = val("wz-month");
@@ -959,43 +1376,39 @@ const WZ_STEPS = [
       const [gy, gm] = mm.split("-").map(Number);
       const [cy, cmo] = thisMonth().split("-").map(Number);
       const m = (gy - cy) * 12 + (gm - cmo);
-      if (m <= 0) return "Escolha um mês no futuro.";
+      if (m <= 0) return t("wz4future");
       const pace = Math.max(0, goal - wzData.investedBase) / m;
-      return `Faltam ${fmtBR(Math.max(0, goal - wzData.investedBase))} em ${m} meses → guardar <b>${fmtBR(pace)}/mês</b> (≈ <b>${fmtUS0(pace / wzData.fx)}</b>)`;
+      return t("wz4live", fmtBR(Math.max(0, goal - wzData.investedBase)), m, fmtBR(pace), fmtUS0(pace / wzData.fx));
     },
     saveStep: () => { wzData.goalAmount = num("wz-in"); wzData.goalMonth = val("wz-month"); },
   },
   {
-    title: "Quanto vai guardar por mês?",
-    sub: "Esse é o combinado entre você e a meta. O que passar disso no mês é seu, livre, sem culpa.",
+    title: () => t("wz5t"), sub: () => t("wz5s"),
     render: () => {
       const pace = suggestedPace();
-      return `<button class="sugg" onclick="document.getElementById('wz-in').value=${Math.ceil(pace)}; wzLive()">Usar o ritmo da meta: ${fmtUS0(pace)}/mês</button>
-        <div class="biginput"><span class="cur">$</span><input type="number" id="wz-in" value="${wzData.saveMonthly || Math.ceil(pace)}" step="10" min="0"></div>`;
+      return `<button class="sugg" onclick="document.getElementById('wz-in').value=${Math.ceil(pace)}; wzLive()">${t("wz5sugg", fmtUS0(pace))}</button>
+        <div class="biginput"><span class="cur">$</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.saveMonthly || Math.ceil(pace)}" step="10" min="0"></div>`;
     },
     live: () => {
       const sv = num("wz-in");
-      const total = wzData.usMonthly;
       const pace = suggestedPace();
-      const viver = total - sv;
-      let msg = `Sobram <b class="pos">${fmtUS0(viver)}/mês</b> para viver + extras.`;
-      if (sv < pace) msg += ` <br>Abaixo do ritmo da meta (${fmtUS0(pace)}) — a meta vai atrasar, e tudo bem se for uma escolha.`;
+      let msg = t("wz5live", fmtUS0(wzData.usMonthly - sv));
+      if (sv < pace) msg += t("wz5below", fmtUS0(pace));
       return msg;
     },
     saveStep: () => wzData.saveMonthly = num("wz-in"),
   },
   {
-    title: "Fechado. Esse é o seu mapa. 🗺️",
-    sub: "Você pode mudar tudo depois na aba Metas.",
+    title: () => t("wz6t"), sub: () => t("wz6s"),
     render: () => {
       return `<div class="resumo">
-        <div><span>Entra por mês (EUA)</span><b>${fmtUS0(wzData.usMonthly)}</b></div>
-        ${wzData.brMonthly > 0 ? `<div><span>Brasil — à parte, para investir</span><b>${fmtBR(wzData.brMonthly)}</b></div>` : ""}
-        <div><span>Vai guardar</span><b>${fmtUS0(wzData.saveMonthly)}</b></div>
-        <div><span>Meta</span><b>${fmtBR(wzData.goalAmount)}${wzData.goalMonth ? " até " + monthLabel(wzData.goalMonth) : ""}</b></div>
-        <div class="total"><span>Livre para viver o mês</span><b class="pos">${fmtUS0(wzData.usMonthly - wzData.saveMonthly)}</b></div>
+        <div><span>${t("wz6in")}</span><b>${fmtUS0(wzData.usMonthly)}</b></div>
+        ${wzData.brMonthly > 0 ? `<div><span>${t("wz6br")}</span><b>${fmtBR(wzData.brMonthly)}</b></div>` : ""}
+        <div><span>${t("wz6save")}</span><b>${fmtUS0(wzData.saveMonthly)}</b></div>
+        <div><span>${t("wz6goal")}</span><b>${fmtBR(wzData.goalAmount)}${wzData.goalMonth ? t("wz6until") + monthLabel(wzData.goalMonth) : ""}</b></div>
+        <div class="total"><span>${t("wz6free")}</span><b class="pos">${fmtUS0(wzData.usMonthly - wzData.saveMonthly)}</b></div>
       </div>
-      <p class="sub">Cada gasto que você lançar desconta desse livre. O número grande da tela inicial é sua liberdade em tempo real.</p>`;
+      <p class="sub">${t("wz6note")}</p>`;
     },
     live: () => "",
     saveStep: () => {},
@@ -1027,12 +1440,12 @@ function renderWizard() {
   document.getElementById("wz-dots").innerHTML =
     WZ_STEPS.map((_, i) => `<span class="${i <= wzStep ? "done" : ""}"></span>`).join("");
   document.getElementById("wz-body").innerHTML = `
-    <h2>${s.title}</h2><p class="sub">${s.sub}</p>
+    <h2>${s.title()}</h2><p class="sub">${s.sub()}</p>
     ${s.render()}
     <div class="live" id="wz-live"></div>
     <div class="actions">
-      ${wzStep > 0 ? '<button class="btn ghost" onclick="wzBack()">‹ Voltar</button>' : "<span></span>"}
-      <button class="btn" onclick="wzNext()">${wzStep === WZ_STEPS.length - 1 ? "Começar a usar ✓" : "Continuar ›"}</button>
+      ${wzStep > 0 ? `<button class="btn ghost" onclick="wzBack()">${t("wzBack")}</button>` : "<span></span>"}
+      <button class="btn" onclick="wzNext()">${wzStep === WZ_STEPS.length - 1 ? t("wzDone") : t("wzNext")}</button>
     </div>`;
   const inp = document.getElementById("wz-in");
   if (inp) { inp.focus(); inp.select?.(); }
@@ -1044,6 +1457,12 @@ function wzLive() {
 }
 function wzBack() { WZ_STEPS[wzStep].saveStep(); wzStep--; renderWizard(); }
 function wzNext() {
+  const check = WZ_STEPS[wzStep].valid?.();
+  if (check !== undefined && check !== true) {
+    document.getElementById("wz-live").innerHTML = `<span class="neg">${check}</span>`;
+    document.getElementById("wz-in")?.focus();
+    return;
+  }
   WZ_STEPS[wzStep].saveStep();
   if (wzStep < WZ_STEPS.length - 1) { wzStep++; renderWizard(); return; }
   Object.assign(S.settings, wzData, { onboarded: true });
@@ -1062,7 +1481,7 @@ async function fetchMarket(force = false) {
   if (!navigator.onLine) { renderMarket(); return; }
   if (!force && S.market?.ts && Date.now() - S.market.ts < 30 * 60 * 1000) { renderMarket(); return; }
   const stEl = document.getElementById("mk-status");
-  if (stEl) stEl.textContent = "atualizando…";
+  if (stEl) stEl.textContent = t("mkUpdating");
   const j = u => fetch(u).then(r => r.json());
   const bcbNum = v => Number(String(v?.[0]?.valor ?? "").replace(",", ".")) || null;
   const [fx, btc, selic, cdi, ipca] = await Promise.allSettled([
@@ -1091,21 +1510,49 @@ function renderMarket() {
   const el = document.getElementById("mk-chips");
   if (!el) return;
   const m = marketData();
-  const pt = n => n.toFixed(2).replace(".", ",");
   el.innerHTML = `
-    <span class="mchip">Dólar <b>R$ ${pt(m.fx)}</b></span>
+    <span class="mchip">${t("mkDollar")} <b>R$ ${ptn(m.fx)}</b></span>
     ${m.btcusd ? `<span class="mchip">Bitcoin <b>$${Math.round(m.btcusd).toLocaleString("en-US")}</b></span>` : ""}
-    <span class="mchip">Selic <b>${pt(m.selic)}%</b></span>
-    <span class="mchip">CDI <b>${pt(m.cdi)}%</b></span>
-    <span class="mchip">IPCA 12m <b>${pt(m.ipca12)}%</b></span>`;
+    <span class="mchip">${t("mkSelic")} <b>${ptn(m.selic)}%</b></span>
+    <span class="mchip">${t("mkCdi")} <b>${ptn(m.cdi)}%</b></span>
+    <span class="mchip">${t("mkIpca")} <b>${ptn(m.ipca12)}%</b></span>`;
   document.getElementById("mk-status").textContent = S.market?.ts
-    ? `ao vivo · ${new Date(S.market.ts).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} · o câmbio é aplicado automaticamente aos cálculos`
-    : "snapshot da pesquisa de 15/08/2026 — toque em Atualizar para dados ao vivo";
+    ? t("mkLive", new Date(S.market.ts).toLocaleString(dloc(), { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }))
+    : t("mkSnapshot");
 }
 
 /* ───────── Assistente de aporte (pesquisa 15/08/2026) ─────────
    Empeople: taxas oficiais empeople.com. Tesouro: tesourodireto.com.br. Ao atualizar a pesquisa, mude RATES_ASOF. */
 const RATES_ASOF = "15/08/2026";
+const AP_BR = [
+  { n:"Tesouro Selic 2029", r: m => `${ptn(m.selic)}%`,
+    w:{pt:"liquidez diária, risco soberano — a 'reserva' em reais", en:"daily liquidity, sovereign risk — the 'reserve' in reais"},
+    l:"https://www.tesourodireto.com.br" },
+  { n:"CDB 100%+ CDI", r: m => `≥ ${ptn(m.cdi)}%`,
+    w:{pt:"via corretora; garantia FGC até R$ 250 mil por instituição", en:"via broker; FGC-insured up to R$ 250k per institution"}, l:"" },
+  { n:"LCI / LCA (≥90% CDI)", r: () => lang === "pt" ? "isento IR" : "tax-free",
+    w:{pt:"rende líquido perto do CDI cheio; carência típica de 9+ meses", en:"nets close to full CDI; typical 9+ month lock-up"}, l:"" },
+  { n:"Tesouro IPCA+ 2035", r: () => "IPCA + 6,65%",
+    w:{pt:"taxa recorde em 14/08 — juro real altíssimo; oscila antes do vencimento", en:"record rate on Aug 14 — very high real yield; fluctuates before maturity"},
+    l:"https://www.tesourodireto.com.br" },
+  { n:"Tesouro Prefixado 2029/31", r: () => "≈ 14,2%",
+    w:{pt:"trava a taxa de hoje — ganha mais se os juros caírem", en:"locks today's rate — wins if rates fall"}, l:"" },
+];
+const AP_US = [
+  { n:"Empeople · Share Certificate 12m", r: () => "4.10% APY",
+    w:{pt:"a melhor taxa da casa (mín. $500) — bate T-bills e empata com as melhores HYSAs do país", en:"the bank's best rate (min. $500) — beats T-bills, matches top national HYSAs"},
+    l:"https://empeople.com/tools-resources/rates/" },
+  { n:"Empeople · Certificates 6m / 24m", r: () => "4.00% APY",
+    w:{pt:"escada de prazos: parte em 6m, parte em 12m, parte em 24m = liquidez escalonada", en:"CD ladder: some in 6m, 12m, 24m = staggered liquidity"}, l:"" },
+  { n:"Empeople · All-In Savings", r: () => "3.10% APY",
+    w:{pt:"acima de $5.000, exigindo 21+ compras no cartão/mês e $1.500 em depósitos — lugar da reserva de emergência", en:"above $5,000, requires 21+ card purchases/mo and $1,500 deposits — the emergency fund's home"},
+    l:"https://empeople.com/bank/savings/" },
+  { n:"T-bills (TreasuryDirect)", r: () => "3.8–4.0%",
+    w:{pt:"3m ~3,80% / 12m ~3,97% — isentos de imposto estadual de Iowa", en:"3m ~3.80% / 12m ~3.97% — exempt from Iowa state tax"},
+    l:"https://treasurydirect.gov" },
+  { n:"Empeople · Money Market", r: () => "0.25–1.35%",
+    w:{pt:"só melhora acima de $100 mil — evite como reserva principal", en:"only improves above $100k — avoid as your main reserve"}, l:"" },
+];
 function renderAporte() {
   const el = document.getElementById("ap-br");
   if (!el) return;
@@ -1113,36 +1560,23 @@ function renderAporte() {
   const ms = monthStats(thisMonth());
   const prevMk = shiftMonth(thisMonth(), -1);
   const lastLivre = monthHasData(prevMk) ? Math.max(0, monthStats(prevMk).livre) : 0;
-  const pt = n => n.toFixed(2).replace(".", ",");
 
   const partes = [];
-  if (ms.brGanho > 0) partes.push(`<b>${fmtBR(ms.brGanho)}</b> da renda Brasil deste mês`);
-  if (lastLivre > 0) partes.push(`<b>${fmtUS0(lastLivre)}</b> livres que sobraram do mês passado`);
+  if (ms.brGanho > 0) partes.push(t("apCtxBr", fmtBR(ms.brGanho)));
+  if (lastLivre > 0) partes.push(t("apCtxFree", fmtUS0(lastLivre)));
   document.getElementById("ap-context").innerHTML = partes.length
-    ? `Dinheiro procurando destino: ${partes.join(" + ")}. Com CDI a ${pt(m.cdi)}% a.a., cada R$ 10.000 parados deixam de render ~${fmtBR(10000 * m.cdi / 100 / 12)}/mês.`
-    : `Nenhum dinheiro parado detectado agora — quando um mês fechar com sobra ou entrar renda do Brasil, o assistente aponta o destino aqui.`;
+    ? t("apCtx", partes.join(" + "), ptn(m.cdi), fmtBR(10000 * m.cdi / 100 / 12))
+    : t("apCtxNone");
 
-  const row = (name, rate, why, link) => `<div class="rate-row">
-    <div><b>${name}</b>${link ? ` <a href="${link}" target="_blank" style="font-size:11.5px">↗</a>` : ""}<div class="why">${why}</div></div>
-    <span class="rr-rate">${rate}</span></div>`;
+  const row = it => `<div class="rate-row">
+    <div><b>${typeof it.n === "object" ? L(it.n) : it.n}</b>${it.l ? ` <a href="${it.l}" target="_blank" rel="noopener" style="font-size:11.5px">↗</a>` : ""}<div class="why">${L(it.w)}</div></div>
+    <span class="rr-rate">${it.r(m)}</span></div>`;
 
-  el.innerHTML =
-    row("Tesouro Selic 2029", `${pt(m.selic)}%`, "liquidez diária, risco soberano — a 'reserva' em reais", "https://www.tesourodireto.com.br") +
-    row("CDB 100%+ do CDI", `≥ ${pt(m.cdi)}%`, "via corretora; garantia FGC até R$ 250 mil por instituição", "") +
-    row("LCI / LCA (≥90% CDI)", "isento IR", `rende líquido perto do CDI cheio (${pt(m.cdi)}%); carência típica de 9+ meses`, "") +
-    row("Tesouro IPCA+ 2035", "IPCA + 6,65%", `taxa recorde em 14/08 — juro real altíssimo; oscila antes do vencimento`, "https://www.tesourodireto.com.br") +
-    row("Tesouro Prefixado 2029/31", "≈ 14,2%", "trava a taxa de hoje — ganha mais se os juros caírem", "") +
-    (m.btcusd ? row("Bitcoin", `$${Math.round(m.btcusd).toLocaleString("en-US")}`, "você já tem — mantenha uma fatia pequena, que aguente cair 50%", "") : "");
-
-  document.getElementById("ap-us").innerHTML =
-    row("Empeople · Share Certificate 12m", "4,10% APY", "a melhor taxa da casa (mín. $500) — bate T-bills e empata com as melhores HYSAs do país", "https://empeople.com/tools-resources/rates/") +
-    row("Empeople · Certificates 6m / 24m", "4,00% APY", "escada de prazos: parte em 6m, parte em 12m, parte em 24m = liquidez escalonada", "") +
-    row("Empeople · All-In Savings", "3,10% APY", "acima de $5.000, exigindo 21+ compras no cartão/mês e $1.500 em depósitos — com salário caindo lá, você tende a se qualificar. Lugar da reserva de emergência", "https://empeople.com/bank/savings/") +
-    row("T-bills (TreasuryDirect)", "3,8–4,0%", "3m ~3,80% / 12m ~3,97% — isentos de imposto estadual de Iowa", "https://treasurydirect.gov") +
-    row("Empeople · Money Market", "0,25–1,35%", "só melhora acima de $100 mil — evite como reserva principal", "");
-
-  document.getElementById("ap-foot").innerHTML =
-    `Leitura do especialista: em reais o Brasil paga <b>~${pt(m.cdi)}% a.a.</b> (juro real ~${pt(Math.max(0, m.cdi - m.ipca12))}%); em dólares o teto está em <b>~4,1%</b> (Empeople 12m). A diferença é o prêmio do risco-câmbio — dividir entre os dois países, como você já faz, é a prática comum. Taxas Empeople/Tesouro da pesquisa de ${RATES_ASOF} (confira no dia do aporte); Selic/CDI/IPCA/dólar ao vivo. Informação educacional — não é recomendação individual.`;
+  el.innerHTML = AP_BR.map(row).join("") +
+    (m.btcusd ? row({ n:"Bitcoin", r: () => `$${Math.round(m.btcusd).toLocaleString("en-US")}`,
+      w:{pt:"mantenha uma fatia pequena, que aguente cair 50%", en:"keep a small slice — one that can survive a 50% drop"}, l:"" }) : "");
+  document.getElementById("ap-us").innerHTML = AP_US.map(row).join("");
+  document.getElementById("ap-foot").innerHTML = t("apFoot", ptn(m.cdi), ptn(Math.max(0, m.cdi - m.ipca12)), RATES_ASOF);
 }
 
 /* ───────── Checklist do mês ───────── */
@@ -1158,16 +1592,16 @@ function renderChecklist() {
   const avgSpend = spent3.length ? spent3.reduce((a, b) => a + b, 0) / spent3.length : Math.max(ms.spent, 800);
   const reservaAlvo = Math.round(avgSpend * 3 / 100) * 100;
   const items = [
-    { id: "fatura", t: "Fatura do cartão paga integral", w: "juros de cartão nos EUA passam de 25% a.a. — nenhum investimento cobre isso", manual: true },
-    { id: "reserva", t: `Reserva de emergência: ~${fmtUS0(reservaAlvo)} líquidos`, w: `3× seu gasto médio (${fmtUS0(avgSpend)}/mês) na All-In Savings do Empeople (3,10%) — protege o plano de imprevistos`, manual: true },
-    { id: "aporte", t: `Compromisso do mês aportado (${fmtUS0(S.settings.saveMonthly)})`, w: "marca sozinho quando você lançar aportes em US$ somando o compromisso", auto: S.settings.saveMonthly > 0 && ms.savedUSD >= S.settings.saveMonthly },
-    ...(S.settings.brMonthly > 0 ? [{ id: "brasil", t: `Renda Brasil destinada (${fmtBR(S.settings.brMonthly)})`, w: "marca sozinho quando os aportes em R$ do mês somarem o valor — com CDI a ~14%, cada mês parado custa caro", auto: ms.savedBRL >= S.settings.brMonthly * 0.9 }] : []),
-    { id: "parado", t: "Sobra do mês passado direcionada", w: lastLivre > 0 ? `${fmtUS0(lastLivre)} sobraram em ${monthLabel(prev)} — transforme em aporte ou deixe combinado que é para a próxima viagem` : "nada parado do mês passado 🎉", auto: lastLivre <= 0 },
+    { id: "fatura", tt: t("chkCard"), w: t("chkCardWhy"), manual: true },
+    { id: "reserva", tt: t("chkReserve", fmtUS0(reservaAlvo)), w: t("chkReserveWhy", fmtUS0(avgSpend)), manual: true },
+    { id: "aporte", tt: t("chkCommit", fmtUS0(S.settings.saveMonthly)), w: t("chkCommitWhy"), auto: S.settings.saveMonthly > 0 && ms.savedUSD >= S.settings.saveMonthly },
+    ...(S.settings.brMonthly > 0 ? [{ id: "brasil", tt: t("chkBr", fmtBR(S.settings.brMonthly)), w: t("chkBrWhy"), auto: ms.savedBRL >= S.settings.brMonthly * 0.9 }] : []),
+    { id: "parado", tt: t("chkIdle"), w: lastLivre > 0 ? t("chkIdleWhy", fmtUS0(lastLivre), monthLabel(prev)) : t("chkIdleOk"), auto: lastLivre <= 0 },
   ];
   el.innerHTML = items.map(it => {
     const done = it.manual ? !!marks[it.id] : it.auto;
     return `<label class="chk"><input type="checkbox" ${done ? "checked" : ""} ${it.manual ? `onchange="toggleChk('${it.id}', this.checked)"` : "disabled"}>
-      <span class="${done ? "done" : ""}"><b>${it.t}</b><div class="hint" style="margin:0">${it.w}</div></span></label>`;
+      <span class="${done ? "done" : ""}"><b>${it.tt}</b><div class="hint" style="margin:0">${it.w}</div></span></label>`;
   }).join("");
 }
 function toggleChk(id, v) {
@@ -1179,44 +1613,81 @@ function toggleChk(id, v) {
 
 /* ───────── Ideias: renda extra & economia ───────── */
 const IDEAS_RENDA = [
-  { id: "juros", ok: "✅", n: "Deixar o dinheiro trabalhar (juros e dividendos)", w: "Renda passiva é permitida no visto. Empeople paga 4,10% no certificate de 12m; no Brasil o CDI está em ~14% — é a renda extra que não dá trabalho nem risco de visto." },
-  { id: "brrenda", ok: "✅", n: "Renda gerada no Brasil (aluguel, dividendos, PJ remota paga no BR)", w: "O visto americano não alcança renda produzida no Brasil. Atenção: como residente fiscal nos EUA você declara renda global ao IRS — combine com um contador." },
-  { id: "vender", ok: "✅", n: "Vender itens pessoais usados", w: "Permitido quando ocasional (mudança, garage sale, Marketplace). Virar revenda habitual = trabalho não autorizado." },
-  { id: "cashref", ok: "✅", n: "Cashback, bônus bancários e indicações", w: "Rebate e referral não são salário — permitidos. Somam com a aba Rewards: cartão certo + programas de posto + bônus de abertura de conta." },
-  { id: "gig", ok: "🚫", n: "Uber, DoorDash, freelas para clientes nos EUA", w: "NÃO permitido: seu visto só autoriza trabalho para a patrocinadora. Multa real: perder o visto atual e complicar os futuros." },
-  { id: "trade", ok: "🚫", n: "Day trade como atividade / e-commerce ativo", w: "Investir é permitido; operar como negócio, não. Mantenha compras de longo prazo e aportes regulares." },
+  { id: "juros", ok: "✅",
+    n:{pt:"Deixar o dinheiro trabalhar (juros e dividendos)", en:"Let money work (interest & dividends)"},
+    w:{pt:"Renda passiva é permitida no visto. Empeople paga 4,10% no certificate de 12m; no Brasil o CDI está em ~14% — é a renda extra que não dá trabalho nem risco de visto.",
+       en:"Passive income is visa-safe. Empeople pays 4.10% on the 12m certificate; in Brazil CDI runs ~14% — extra income with zero work and zero visa risk."} },
+  { id: "brrenda", ok: "✅",
+    n:{pt:"Renda gerada no Brasil (aluguel, dividendos, PJ remota paga no BR)", en:"Income generated in Brazil (rent, dividends, remote work paid in BR)"},
+    w:{pt:"O visto americano não alcança renda produzida no Brasil. Atenção: como residente fiscal nos EUA você declara renda global ao IRS — combine com um contador.",
+       en:"The US visa doesn't reach income produced in Brazil. Note: as a US tax resident you report worldwide income to the IRS — align with an accountant."} },
+  { id: "vender", ok: "✅",
+    n:{pt:"Vender itens pessoais usados", en:"Sell used personal items"},
+    w:{pt:"Permitido quando ocasional (mudança, garage sale, Marketplace). Virar revenda habitual = trabalho não autorizado.",
+       en:"Allowed when occasional (moving, garage sale, Marketplace). Habitual reselling = unauthorized work."} },
+  { id: "cashref", ok: "✅",
+    n:{pt:"Cashback, bônus bancários e indicações", en:"Cashback, bank bonuses and referrals"},
+    w:{pt:"Rebate e referral não são salário — permitidos. Somam com a aba Rewards: cartão certo + programas de posto + bônus de abertura de conta.",
+       en:"Rebates and referrals aren't wages — allowed. Stack with the Rewards tab: right card + fuel programs + account-opening bonuses."} },
+  { id: "gig", ok: "🚫",
+    n:{pt:"Uber, DoorDash, freelas para clientes nos EUA", en:"Uber, DoorDash, freelancing for US clients"},
+    w:{pt:"NÃO permitido: seu visto só autoriza trabalho para a patrocinadora. Multa real: perder o visto atual e complicar os futuros.",
+       en:"NOT allowed: your visa only authorizes work for the sponsor. Real cost: losing this visa and complicating future ones."} },
+  { id: "trade", ok: "🚫",
+    n:{pt:"Day trade como atividade / e-commerce ativo", en:"Day trading as a business / active e-commerce"},
+    w:{pt:"Investir é permitido; operar como negócio, não. Mantenha compras de longo prazo e aportes regulares.",
+       en:"Investing is allowed; running it as a business isn't. Stick to long-term buys and regular contributions."} },
 ];
 const IDEAS_ECON = [
-  { id: "remessa", n: "Remessas ao Brasil via Wise / Remessa Online", w: "Banco tradicional cobra 3–5% entre spread e tarifas; fintechs ~1%. Você vai remeter todo mês — em cada $1.000, ~$20–40 ficam com você.", est: [30, 80] },
-  { id: "cozinha", n: "Meal prep no domingo", w: "Refeição fora nos EUA: $15–25. Em casa: $4–6. Três marmitas por semana já pagam um jantar bom no fim do mês.", est: [150, 300] },
-  { id: "mercado", n: "Mercado no Aldi / Costco + marca própria", w: "20–30% mais barato que redes premium para a mesma qualidade.", est: [60, 120] },
-  { id: "chip", n: "Celular em MVNO (Mint, US Mobile, Visible)", w: "Mesmas antenas das grandes operadoras por $15–30/mês em vez de $70+.", est: [25, 45] },
-  { id: "cartao", n: "Cartão certo em cada categoria", w: "1–3% de volta em tudo que você já gasta — configure uma vez na aba Rewards.", est: [20, 60] },
-  { id: "assin", n: "Auditoria trimestral de assinaturas", w: "Streaming, apps, academia fantasma — cancele o que não usou no último mês.", est: [20, 50] },
-  { id: "sale", n: "Compra grande só em promoção + portal de cashback", w: "Black Friday, fim de estação, Rakuten/TopCashback por cima do desconto.", est: [0, 100] },
+  { id: "remessa", est: [30, 80],
+    n:{pt:"Remessas ao Brasil via Wise / Remessa Online", en:"Remittances to Brazil via Wise / Remessa Online"},
+    w:{pt:"Banco tradicional cobra 3–5% entre spread e tarifas; fintechs ~1%. Em cada $1.000, ~$20–40 ficam com você.",
+       en:"Traditional banks take 3–5% in spread and fees; fintechs ~1%. On every $1,000, ~$20–40 stays with you."} },
+  { id: "cozinha", est: [150, 300],
+    n:{pt:"Meal prep no domingo", en:"Sunday meal prep"},
+    w:{pt:"Refeição fora nos EUA: $15–25. Em casa: $4–6. Três marmitas por semana já pagam um jantar bom no fim do mês.",
+       en:"Eating out in the US: $15–25. At home: $4–6. Three packed meals a week buys a nice dinner by month's end."} },
+  { id: "mercado", est: [60, 120],
+    n:{pt:"Mercado no Aldi / Costco + marca própria", en:"Groceries at Aldi / Costco + store brands"},
+    w:{pt:"20–30% mais barato que redes premium para a mesma qualidade.", en:"20–30% cheaper than premium chains for the same quality."} },
+  { id: "chip", est: [25, 45],
+    n:{pt:"Celular em MVNO (Mint, US Mobile, Visible)", en:"Phone on an MVNO (Mint, US Mobile, Visible)"},
+    w:{pt:"Mesmas antenas das grandes operadoras por $15–30/mês em vez de $70+.", en:"Same towers as the big carriers for $15–30/mo instead of $70+."} },
+  { id: "cartao", est: [20, 60],
+    n:{pt:"Cartão certo em cada categoria", en:"Right card for each category"},
+    w:{pt:"1–3% de volta em tudo que você já gasta — configure uma vez na aba Rewards.", en:"1–3% back on everything you already spend — set it up once in Rewards."} },
+  { id: "assin", est: [20, 50],
+    n:{pt:"Auditoria trimestral de assinaturas", en:"Quarterly subscription audit"},
+    w:{pt:"Streaming, apps, academia fantasma — cancele o que não usou no último mês.", en:"Streaming, apps, ghost gym — cancel whatever went unused last month."} },
+  { id: "sale", est: [0, 100],
+    n:{pt:"Compra grande só em promoção + portal de cashback", en:"Big purchases only on sale + cashback portal"},
+    w:{pt:"Black Friday, fim de estação, Rakuten/TopCashback por cima do desconto.", en:"Black Friday, end of season, Rakuten/TopCashback on top of the discount."} },
 ];
-const IDEA_STATUS = { pendente: "Pendente", avaliando: "Avaliando", adotei: "Adotei ✓", descartado: "Não é pra mim" };
+const IDEA_STATUS = {
+  pendente:{pt:"Pendente",en:"Pending"}, avaliando:{pt:"Avaliando",en:"Evaluating"},
+  adotei:{pt:"Adotei ✓",en:"Adopted ✓"}, descartado:{pt:"Não é pra mim",en:"Not for me"},
+};
 function renderIdeias() {
   const el = document.getElementById("id-renda");
   if (!el) return;
   const item = (it, extra) => {
     const st = S.ideas[it.id] || "pendente";
     return `<div class="gitem ${st === "descartado" ? "off" : ""}">
-      <div><b>${it.ok ? it.ok + " " : ""}${it.n}</b> ${st === "adotei" ? '<span class="badge covered">adotei</span>' : ""}${extra || ""}<div class="why">${it.w}</div></div>
+      <div><b>${it.ok ? it.ok + " " : ""}${L(it.n)}</b> ${st === "adotei" ? `<span class="badge covered">${L(IDEA_STATUS.adotei)}</span>` : ""}${extra || ""}<div class="why">${L(it.w)}</div></div>
       <select onchange="setIdea('${it.id}', this.value)">
-        ${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${v}</option>`).join("")}
+        ${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${L(v)}</option>`).join("")}
       </select>
     </div>`;
   };
   el.innerHTML = IDEAS_RENDA.map(it => item(it)).join("");
   document.getElementById("id-econ").innerHTML = IDEAS_ECON.map(it =>
-    item(it, ` <span class="badge counts">~$${it.est[0]}–${it.est[1]}/mês</span>`)).join("");
+    item(it, ` <span class="badge counts">~$${it.est[0]}–${it.est[1]}${t("idPerMonth")}</span>`)).join("");
   const adopted = IDEAS_ECON.filter(it => S.ideas[it.id] === "adotei");
   const lo = adopted.reduce((s, it) => s + it.est[0], 0);
   const hi = adopted.reduce((s, it) => s + it.est[1], 0);
   document.getElementById("id-econ-head").innerHTML = adopted.length
-    ? `Você adotou <b>${adopted.length}</b> ideia${adopted.length > 1 ? "s" : ""} — potencial de <b class="pos">~$${lo}–${hi}/mês</b> de volta no bolso (dá ${fmtUS0(hi * 12)} por ano no ritmo máximo).`
-    : `Total possível adotando tudo: <b>~$${IDEAS_ECON.reduce((s, i) => s + i.est[0], 0)}–${IDEAS_ECON.reduce((s, i) => s + i.est[1], 0)}/mês</b>. Comece pela remessa — é a de maior impacto no seu caso.`;
+    ? t("idAdopted", adopted.length, lo, hi, fmtUS0(hi * 12))
+    : t("idTotal", IDEAS_ECON.reduce((s, i) => s + i.est[0], 0), IDEAS_ECON.reduce((s, i) => s + i.est[1], 0));
 }
 function setIdea(id, v) { S.ideas[id] = v; save(); renderIdeias(); }
 
@@ -1228,19 +1699,18 @@ function renderRelatorio() {
   if (!el) return;
   const mk = repMonth || thisMonth();
   const ms = monthStats(mk);
-  const prev = monthStats(shiftMonth(mk, -1));
   document.getElementById("rep-title").textContent = monthLabel(mk);
 
   const taxaPoup = ms.ganho > 0 ? Math.max(0, (ms.ganho - ms.spent) / ms.ganho * 100) : 0;
   el.innerHTML = `<table class="rep"><tbody>
-    <tr><td>Ganhou (EUA)</td><td class="num">${fmtUS(ms.ganho)}</td></tr>
-    ${ms.brGanho > 0 ? `<tr><td>Ganhou (Brasil, à parte)</td><td class="num">${fmtBR(ms.brGanho)}</td></tr>` : ""}
-    <tr><td>Gastou do próprio bolso</td><td class="num">${fmtUS(ms.spent)}</td></tr>
-    <tr><td>Empresa cobriu (viagens a trabalho)</td><td class="num">${fmtUS(ms.covered)}</td></tr>
-    <tr><td>Aportou em US$</td><td class="num">${fmtUS(ms.savedUSD)}</td></tr>
-    ${ms.savedBRL > 0 ? `<tr><td>Aportou em R$</td><td class="num">${fmtBR(ms.savedBRL)}</td></tr>` : ""}
-    <tr><td><b>Livre restante</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtUS(ms.livre)}</b></td></tr>
-    <tr><td>Do que ganhou nos EUA, não gastou</td><td class="num">${taxaPoup.toFixed(0)}%</td></tr>
+    <tr><td>${t("repEarnedUS")}</td><td class="num">${fmtUS(ms.ganho)}</td></tr>
+    ${ms.brGanho > 0 ? `<tr><td>${t("repEarnedBR")}</td><td class="num">${fmtBR(ms.brGanho)}</td></tr>` : ""}
+    <tr><td>${t("repSpentOwn")}</td><td class="num">${fmtUS(ms.spent)}</td></tr>
+    <tr><td>${t("repCovered")}</td><td class="num">${fmtUS(ms.covered)}</td></tr>
+    <tr><td>${t("repSavedUS")}</td><td class="num">${fmtUS(ms.savedUSD)}</td></tr>
+    ${ms.savedBRL > 0 ? `<tr><td>${t("repSavedBR")}</td><td class="num">${fmtBR(ms.savedBRL)}</td></tr>` : ""}
+    <tr><td><b>${t("repFree")}</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtUS(ms.livre)}</b></td></tr>
+    <tr><td>${t("repRate")}</td><td class="num">${taxaPoup.toFixed(0)}%</td></tr>
   </tbody></table>`;
 
   const byCat = {}, byCatPrev = {};
@@ -1248,14 +1718,14 @@ function renderRelatorio() {
   S.expenses.filter(e => monthKey(e.date) === shiftMonth(mk, -1) && counts(e)).forEach(e => byCatPrev[e.cat] = (byCatPrev[e.cat] || 0) + e.amount);
   const rows = CATS.filter(c => byCat[c.id] || byCatPrev[c.id]).sort((a, b) => (byCat[b.id] || 0) - (byCat[a.id] || 0));
   document.getElementById("rep-cats").innerHTML = rows.length === 0
-    ? '<div class="empty">Sem gastos registrados no período.</div>'
+    ? `<div class="empty">${t("repNoExp")}</div>`
     : `<table class="rep"><tbody>` + rows.map(c => {
         const now = byCat[c.id] || 0, was = byCatPrev[c.id] || 0, d = now - was;
         const delta = was === 0 && now === 0 ? "" : d === 0 ? "=" :
           `<span class="${d > 0 ? "neg" : "pos"}">${d > 0 ? "▲" : "▼"} ${fmtUS0(Math.abs(d))}</span>`;
-        return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${c.label}</td>
+        return `<tr><td><span class="dot" style="background:var(${c.color})"></span>${L(c.label)}</td>
           <td class="num">${fmtUS0(now)}</td><td class="num" style="font-size:12px">${delta}</td></tr>`;
-      }).join("") + `</tbody></table><div class="hint">▲▼ comparado com o mês anterior.</div>`;
+      }).join("") + `</tbody></table><div class="hint">${t("repDeltaHint")}</div>`;
 
   /* Patrimônio & meta */
   const st = S.settings;
@@ -1268,18 +1738,19 @@ function renderRelatorio() {
   const media3 = [...Array(span)].map((_, n) => { const s = monthStats(shiftMonth(thisMonth(), -n)); return s.savedUSD * st.fx + s.savedBRL; });
   const mediaBRL = media3.reduce((a, b) => a + b, 0) / span;
   let proj = "";
-  if (falta <= 0) proj = '<span class="badge covered">meta atingida 🎉</span>';
+  if (falta <= 0) proj = `<span class="badge covered">${t("bdgGoalDone")}</span>`;
   else if (mediaBRL > 0) {
     const meses = Math.ceil(falta / mediaBRL);
     const dataEst = shiftMonth(thisMonth(), meses);
     const alvoOk = st.goalMonth && dataEst <= st.goalMonth;
-    proj = `No ritmo real dos últimos 3 meses (${fmtBR(mediaBRL)}/mês), você chega em <b>${monthLabel(dataEst)}</b> ${st.goalMonth ? (alvoOk ? '<span class="badge covered">antes do alvo ✓</span>' : `<span class="badge warn">depois do alvo (${monthLabel(st.goalMonth)})</span>`) : ""}`;
-  } else proj = "Registre aportes para o app projetar a data de chegada da meta.";
+    proj = t("repProj", fmtBR(mediaBRL), monthLabel(dataEst)) + " " +
+      (st.goalMonth ? (alvoOk ? `<span class="badge covered">${t("repBefore")}</span>` : `<span class="badge warn">${t("repAfter", monthLabel(st.goalMonth))}</span>`) : "");
+  } else proj = t("repProjNone");
   document.getElementById("rep-meta").innerHTML = `<table class="rep"><tbody>
-    <tr><td>Investido hoje</td><td class="num">${fmtBR(inv)}</td></tr>
-    <tr><td>Meta</td><td class="num">${fmtBR(st.goalAmount)}${st.goalMonth ? " · " + monthLabel(st.goalMonth) : ""}</td></tr>
-    <tr><td>Falta</td><td class="num">${fmtBR(falta)}</td></tr>
-    <tr><td>Aportes no mês</td><td class="num">${fmtBR(ms.savedUSD * st.fx + ms.savedBRL)}</td></tr>
+    <tr><td>${t("repInvested")}</td><td class="num">${fmtBR(inv)}</td></tr>
+    <tr><td>${t("repGoal")}</td><td class="num">${fmtBR(st.goalAmount)}${st.goalMonth ? " · " + monthLabel(st.goalMonth) : ""}</td></tr>
+    <tr><td>${t("repMissing")}</td><td class="num">${fmtBR(falta)}</td></tr>
+    <tr><td>${t("repMonthContrib")}</td><td class="num">${fmtBR(ms.savedUSD * st.fx + ms.savedBRL)}</td></tr>
   </tbody></table><div style="font-size:13px; margin-top:8px">${proj}</div>`;
 
   /* Ano até aqui */
@@ -1294,25 +1765,25 @@ function renderRelatorio() {
     return acc;
   }, { ganho: 0, gasto: 0, coberto: 0, aporte: 0, br: 0 });
   document.getElementById("rep-ytd").innerHTML = `<table class="rep"><tbody>
-    <tr><td>Ganhos EUA no ano</td><td class="num">${fmtUS(tot.ganho)}</td></tr>
-    ${tot.br > 0 ? `<tr><td>Ganhos Brasil no ano</td><td class="num">${fmtBR(tot.br)}</td></tr>` : ""}
-    <tr><td>Gastos do bolso</td><td class="num">${fmtUS(tot.gasto)}</td></tr>
-    <tr><td>Viagens cobertas pela empresa</td><td class="num">${fmtUS(tot.coberto)}</td></tr>
-    <tr><td><b>Aportado no ano</b></td><td class="num"><b>${fmtBR(tot.aporte)}</b></td></tr>
+    <tr><td>${t("repYEarnedUS")}</td><td class="num">${fmtUS(tot.ganho)}</td></tr>
+    ${tot.br > 0 ? `<tr><td>${t("repYEarnedBR")}</td><td class="num">${fmtBR(tot.br)}</td></tr>` : ""}
+    <tr><td>${t("repYSpent")}</td><td class="num">${fmtUS(tot.gasto)}</td></tr>
+    <tr><td>${t("repYCovered")}</td><td class="num">${fmtUS(tot.coberto)}</td></tr>
+    <tr><td><b>${t("repYSaved")}</b></td><td class="num"><b>${fmtBR(tot.aporte)}</b></td></tr>
   </tbody></table>
-  <div class="hint">Conta apenas meses de ${year} até ${monthLabel(mk)} — sem input nenhum seu, tudo vem dos lançamentos.</div>`;
+  <div class="hint">${t("repYtdHint", year, monthLabel(mk))}</div>`;
 }
 
 /* ───────── Conta & sincronização (Supabase) ─────────
-   Preencher SB_URL e SB_KEY (anon public) do projeto Supabase para ativar.
-   Vazios = app funciona 100% local, sem login. Estratégia de sync: estado
-   inteiro com last-write-wins por _ts (suficiente para 1 usuário, N aparelhos). */
+   Estratégia de sync: estado inteiro com last-write-wins por _ts
+   (suficiente para 1 usuário, N aparelhos). */
 const SB_URL = "https://yeilsajnttrmkxnewpun.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllaWxzYWpudHRybWt4bmV3cHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4Mjk5MDAsImV4cCI6MjEwMjQwNTkwMH0.dqFnTtaiwKKuEPbFK4xfguM9rJFYqW4cEwMCn_x7UqY";
 let sb = null, sbUser = null, sbPushTimer = null, sbLastPush = 0;
 
 function sbConfigured() { return !!(SB_URL && SB_KEY && window.supabase); }
 function initAuth() {
+  applyLang();
   if (!sbConfigured()) { renderAuthUI(); wizardIfNeeded(); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY);
   sb.auth.onAuthStateChange((_e, session) => {
@@ -1338,17 +1809,17 @@ function wizardIfNeeded() {
 async function sbSignup() {
   const email = document.getElementById("au-email").value.trim();
   const pass = document.getElementById("au-pass").value;
-  if (!email || pass.length < 6) return authErr("Preencha e-mail e uma senha de 6+ caracteres.");
+  if (!email || pass.length < 6) return authErr(t("authFill"));
   authErr("");
   const { data, error } = await sb.auth.signUp({ email, password: pass });
   if (error) return authErr(traduzErro(error.message));
-  if (!data?.session) return authErr("Conta criada! Confirme pelo link enviado ao seu e-mail e depois toque em Entrar.");
+  if (!data?.session) return authErr(t("authConfirm"));
   document.getElementById("auth").classList.remove("on");
 }
 async function sbLogin() {
   const email = document.getElementById("au-email").value.trim();
   const pass = document.getElementById("au-pass").value;
-  if (!email || !pass) return authErr("Preencha e-mail e senha.");
+  if (!email || !pass) return authErr(t("authFillLogin"));
   authErr("");
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) return authErr(traduzErro(error.message));
@@ -1370,10 +1841,10 @@ function authOpen() {
 }
 function authErr(msg) { document.getElementById("au-err").textContent = msg; }
 function traduzErro(m) {
-  if (/invalid login/i.test(m)) return "E-mail ou senha incorretos.";
-  if (/already registered/i.test(m)) return "Este e-mail já tem conta — use Entrar.";
-  if (/rate limit/i.test(m)) return "Muitas tentativas — aguarde um minuto.";
-  if (/valid email/i.test(m)) return "Digite um e-mail válido.";
+  if (/invalid login/i.test(m)) return t("errBadLogin");
+  if (/already registered/i.test(m)) return t("errExists");
+  if (/rate limit/i.test(m)) return t("errRate");
+  if (/valid email/i.test(m)) return t("errEmail");
   return m;
 }
 
@@ -1393,6 +1864,7 @@ async function firstSync() {
         S = { ...structuredClone(DEFAULTS), ...data.data, settings: { ...DEFAULTS.settings, ...data.data.settings } };
         localStorage.setItem(KEY, JSON.stringify(S));
         document.getElementById("cfg-fx").value = S.settings.fx;
+        if (S.settings.lang && S.settings.lang !== lang) { lang = S.settings.lang; applyLang(); }
         renderAll();
       } else if (localTs > remoteTs) await sbPushNow();
     }
@@ -1425,19 +1897,19 @@ function renderAuthUI() {
   const cfg = document.getElementById("cfg-account");
   if (!sbConfigured()) {
     badge.innerHTML = "";
-    if (cfg) cfg.innerHTML = '<div class="hint" style="margin:0">Sincronização ainda não configurada nesta versão — os dados ficam neste aparelho. Backup manual logo abaixo.</div>';
+    if (cfg) cfg.innerHTML = `<div class="hint" style="margin:0">${t("cfgDataHint")}</div>`;
     return;
   }
   if (sbUser) {
-    badge.innerHTML = `☁ ${sbLastPush ? "sincronizado " + new Date(sbLastPush).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "conectado"}`;
+    badge.innerHTML = sbLastPush ? t("syncOk", new Date(sbLastPush).toLocaleTimeString(dloc(), { hour: "2-digit", minute: "2-digit" })) : t("syncOn");
     if (cfg) cfg.innerHTML = `
-      <div style="font-size:13.5px">Conectado como <b>${esc(sbUser.email)}</b> — seus lançamentos sincronizam sozinhos entre aparelhos.</div>
-      <button class="btn ghost" style="margin-top:10px" onclick="sbLogout()">Sair da conta</button>`;
+      <div style="font-size:13.5px">${t("cfgConnected", esc(sbUser.email))}</div>
+      <button class="btn ghost" style="margin-top:10px" onclick="sbLogout()">${t("cfgLogout")}</button>`;
   } else {
-    badge.innerHTML = `<button onclick="authOpen()">☁ Entrar</button>`;
+    badge.innerHTML = `<button onclick="authOpen()">${t("syncEnter")}</button>`;
     if (cfg) cfg.innerHTML = `
-      <div style="font-size:13.5px">Sem conta neste aparelho — os dados ficam só aqui até você entrar.</div>
-      <button class="btn" style="margin-top:10px" onclick="authOpen()">Entrar / criar conta</button>`;
+      <div style="font-size:13.5px">${t("cfgNoAccount")}</div>
+      <button class="btn" style="margin-top:10px" onclick="authOpen()">${t("cfgEnter")}</button>`;
   }
 }
 
@@ -1455,11 +1927,11 @@ function importData(input) {
   r.onload = () => {
     try {
       const d = JSON.parse(r.result);
-      if (!d.settings || !Array.isArray(d.expenses)) throw new Error("formato inválido");
+      if (!d.settings || !Array.isArray(d.expenses)) throw new Error("invalid");
       S = { ...structuredClone(DEFAULTS), ...d, settings: { ...DEFAULTS.settings, ...d.settings } };
       save(); document.getElementById("cfg-fx").value = S.settings.fx; renderAll();
-      alert("Backup importado com sucesso.");
-    } catch (e) { alert("Não foi possível importar: " + e.message); }
+      alert(t("importOk"));
+    } catch (e) { alert(t("importFail") + e.message); }
   };
   r.readAsText(f);
 }
@@ -1473,7 +1945,13 @@ document.getElementById("nav").addEventListener("click", e => {
   document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === "tab-" + b.dataset.tab));
 });
 
-document.getElementById("l-cat").innerHTML = CATS.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
+function fillCatSelects() {
+  const opts = CATS.map(c => `<option value="${c.id}">${L(c.label)}</option>`).join("");
+  const l = document.getElementById("l-cat"), r = document.getElementById("r-cat");
+  const lv = l.value, rv = r.value;
+  l.innerHTML = opts; r.innerHTML = opts;
+  if (lv) l.value = lv; if (rv) r.value = rv;
+}
 document.getElementById("l-date").value = todayStr();
 document.getElementById("l-type").onchange = updateLancForm;
 document.getElementById("l-trip").onchange = updateLancHint;
@@ -1481,19 +1959,18 @@ document.getElementById("l-cat").onchange = updateLancHint;
 
 document.getElementById("f-lanc").onsubmit = e => {
   e.preventDefault();
-  const t = document.getElementById("l-type").value;
+  const tp = document.getElementById("l-type").value;
   const base = { id: uid(), date: document.getElementById("l-date").value, amount: Number(document.getElementById("l-amount").value) };
   const desc = document.getElementById("l-desc").value.trim();
   const cur = document.getElementById("l-cur").value;
-  if (t === "gasto") S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, trip: document.getElementById("l-trip").value, desc });
-  if (t === "renda") S.incomes.push({ ...base, cur, source: desc });
-  if (t === "aporte") S.contributions.push({ ...base, cur, dest: desc });
+  if (tp === "gasto") S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, trip: document.getElementById("l-trip").value, desc });
+  if (tp === "renda") S.incomes.push({ ...base, cur, source: desc });
+  if (tp === "aporte") S.contributions.push({ ...base, cur, dest: desc });
   save();
   document.getElementById("l-amount").value = ""; document.getElementById("l-desc").value = "";
   renderAll();
 };
 
-document.getElementById("r-cat").innerHTML = document.getElementById("l-cat").innerHTML;
 document.getElementById("f-port").onsubmit = e => {
   e.preventDefault();
   S.portfolio.push({ id: uid(), name: document.getElementById("p-name").value.trim(),
@@ -1529,10 +2006,11 @@ document.getElementById("f-fuel").onsubmit = e => {
 
 const fxEl = document.getElementById("cfg-fx");
 fxEl.value = S.settings.fx;
-fxEl.onchange = () => { S.settings.fx = Number(fxEl.value) || 5.45; save(); renderAll(); };
+fxEl.onchange = () => { S.settings.fx = Number(fxEl.value) || 5.24; save(); renderAll(); };
 
+fillCatSelects();
 updateLancForm();
-renderAll();
+applyLang();
 fetchMarket();
 /* O wizard de primeiras metas é decidido pelo initAuth (depois de checar a nuvem) */
 document.addEventListener("DOMContentLoaded", initAuth);

@@ -1,13 +1,28 @@
 {
+  "id": "/controle-financeiro/",
   "name": "Folga — quanto está livre este mês",
   "short_name": "Folga",
-  "description": "Sua folga do mês em um número: quanto entra, quanto guardar, quanto está livre para gastar sem culpa",
+  "description": "Sua folga do mês em um número: quanto entra, quanto guardar, quanto está livre para gastar sem culpa. Your month's slack in one number.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",
+  "categories": ["finance", "productivity", "lifestyle"],
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo lançamento / New entry",
+      "short_name": "Lançar",
+      "url": "./#lanc",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

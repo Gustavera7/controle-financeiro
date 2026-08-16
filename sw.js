@@ -1,7 +1,7 @@
 /* Service worker: app funciona offline depois da primeira visita.
    Ao publicar uma versão nova do app, incremente CACHE para forçar atualização. */
-const CACHE = "cf-v6";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "cf-v8";
+const ASSETS = ["./", "./index.html", "./privacy.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
