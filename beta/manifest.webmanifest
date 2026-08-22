@@ -1,0 +1,20 @@
+{
+  "id": "/controle-financeiro/beta/",
+  "name": "Folga BETA",
+  "short_name": "Folga BETA",
+  "description": "Versão de teste da Folga: viagens, dois países e categorias próprias. Beta version of Folga.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "categories": ["finance", "productivity", "lifestyle"],
+  "icons": [
+    { "src": "../icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

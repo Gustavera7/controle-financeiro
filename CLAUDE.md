@@ -18,6 +18,7 @@ o que mantém o custo zero e o deploy instantâneo.
 | `privacy.html` | Política de privacidade bilíngue (exigida pelas lojas) |
 | `STORE.md` | Textos e checklist prontos para Play Store / App Store |
 | `supabase-schema.sql` | Schema da tabela `app_state` (sync entre aparelhos) |
+| `beta/` | Versão de teste (viagens, dois países, categorias do usuário) — veja abaixo |
 
 ## Regras que não podem ser quebradas
 
@@ -45,6 +46,52 @@ o que mantém o custo zero e o deploy instantâneo.
    antes de exibir números de um mês vazio. Vale também para médias: só conte meses com dados.
 9. **Todo estado que entra no app passa por `migrate()`** — localStorage, nuvem e backup
    importado. Ela é idempotente e é o único lugar que conhece formatos antigos.
+
+## A beta (`beta/`)
+
+Versão de teste publicada em `/controle-financeiro/beta/`, ao lado do app estável e sem
+tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas.
+
+- **Dados separados:** `localStorage["folga-beta-v1"]`. Na primeira abertura ela copia a
+  chave do app principal (mesma origem) e, se houver conta, faz **uma única** leitura da
+  nuvem. Depois disso é só daquele aparelho.
+- **Nunca escreve na nuvem** (`sbPushNow` sai na hora quando `BETA`), porque a tabela
+  `app_state` tem uma linha por usuário — escrever de lá sobrescreveria o app de verdade.
+- **Service worker próprio** (`beta/sw.js`, cache `folga-beta-v1`, escopo `/beta/`).
+- **Promover para o principal** quando os testes aprovarem: copiar `beta/index.html` sobre
+  `index.html`, trocar `const BETA = true` por `false`, devolver `KEY` para
+  `"controle-financeiro-v2"`, apagar o cartão `#beta-note` e incrementar `CACHE` no `sw.js`
+  da raiz. Os dados criados na beta não migram sozinhos — exporte pela Config e importe.
+- Tag `estavel-2026-08-22` marca o commit do app antes da beta.
+
+### O que a beta acrescenta
+
+- **Categorias:** `restaurante` entra nas sugeridas (separada de `alimentacao`, que segue
+  sendo mercado/comida em geral) e o usuário cria as dele em Config → Categorias
+  (`S.cats`). Quem lê categoria usa `allCats()` / `catById()`, nunca `CATS` direto.
+  Apagar categoria move os gastos dela para `outros` — histórico não se perde.
+- **Lugares:** todo gasto tem `place` (`"home"`, `"second"` ou o id de uma viagem) e `cur`.
+  O campo "Onde" no formulário **só aparece quando existe mais de um lugar** — quem vive
+  num país só e não viaja nunca vê o campo.
+- **Viagens** (`S.trips`): destino, moeda, câmbio próprio, datas, orçamento (na moeda que
+  a pessoa escolher) e reforços (`topups`). Três tipos: `fun`, `work` e `long`
+  (temporada longa — orçamento por mês e meta opcional).
+- **Enquanto a viagem está aberta, os gastos dela não mexem no livre do mês**
+  (`inOpenTrip()` dentro de `counts()`); eles vivem no orçamento da viagem. Ao **encerrar**
+  (`closeTrip`), passam a contar no painel, nos meses em que aconteceram. Temporada longa
+  (`kind === "long"`) é exceção: conta desde sempre, porque é vida normal.
+- **Dois bolsos:** `expBucket()` manda para o bolso do segundo país só o que foi gasto
+  **vivendo lá** (`place === "second"`, política `main`). Viagem sai do dinheiro de casa.
+  A faixa do Brasil no Início virou entrou/gastou/aportou/sobra e abre uma folha.
+- **Câmbio genérico:** `unitsPerMain(cur)` conhece a moeda principal, a segunda e as das
+  viagens; moeda sem câmbio conhecido devolve o valor como está, sem inventar conversão.
+- **Relatório** ganhou "Panorama por país": ganho, gasto e patrimônio de cada país na
+  moeda dele, mais as viagens do período.
+- **Folha única** (`openSheet(kind, id)` → `renderSheet()`): patrimônio, viagem e segundo
+  país dividem a mesma folha. Continua valendo: profundidade nova vira folha, não aba.
+- **Correções de celular** que valem também para o app principal quando promover: campos
+  com 16px de verdade (a regra base `font: inherit` vencia a do `@media`, e o iOS dava
+  zoom ao focar), `.grid > *` com `min-width: 0` e tabelas largas rolando dentro do cartão.
 
 ## Dados externos (ao vivo)
 
@@ -125,7 +172,7 @@ Blocos que só aparecem para quem eles servem: guia de benefícios e preço de c
 ## Pendências conhecidas (antes de vender para outras pessoas)
 
 - Ofertas de parceiro são locais; falta o feed (e o contrato comercial por trás dele).
-- Gastos são sempre na moeda principal — quem gasta nos dois países ainda não tem isso.
+- Gastos são sempre na moeda principal **no app principal**; a beta já resolve isso.
 - O guia de benefícios, quando aparece, ainda cita lojas do Meio-Oeste dos EUA.
 - Play Store via TWA exige `assetlinks.json` na **raiz do domínio** — o endereço atual
   (`/controle-financeiro/`) não permite; precisa de um repo `gustavera7.github.io` ou
