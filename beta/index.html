@@ -945,7 +945,7 @@ pt: {
   lancWhere: "Onde",
   vgNew: "Nova viagem ou temporada fora", vgList: "Suas viagens",
   vgLead: "Viagem tem dinheiro próprio: enquanto ela dura, o gasto de lá vive no orçamento dela e o seu mês em casa não se assusta. Ao encerrar, tudo entra no painel.",
-  vgOngoing: "Agora", vgNext: "Próximas", vgDone: "Já foram", vgNone: "Nenhuma viagem ainda — crie a primeira acima.",
+  vgStart: "Começar", vgOngoing: "Agora", vgNext: "Próximas", vgDone: "Já foram", vgNone: "Nenhuma viagem ainda — crie a primeira acima.",
   vgYear: (n, v) => `${n > 1 ? n + " viagens" : "1 viagem"} este ano · ${v} gastos`,
   tripNew: "Nova viagem", tripDest: "Destino", tripKind: "Tipo", tripNameLabel: "Nome (opcional)",
   tripKindFun: "Férias / lazer", tripKindWork: "Trabalho", tripKindLong: "Temporada longa",
@@ -1262,7 +1262,7 @@ en: {
   lancWhere: "Where",
   vgNew: "New trip or stay abroad", vgList: "Your trips",
   vgLead: "A trip has its own money: while it lasts, spending there lives in its budget and your month at home stays calm. When you close it, everything lands on the panel.",
-  vgOngoing: "Now", vgNext: "Coming up", vgDone: "Past", vgNone: "No trips yet — create your first one above.",
+  vgStart: "Start", vgOngoing: "Now", vgNext: "Coming up", vgDone: "Past", vgNone: "No trips yet — create your first one above.",
   vgYear: (n, v) => `${n} trip${n > 1 ? "s" : ""} this year · ${v} spent`,
   tripNew: "New trip", tripDest: "Destination", tripKind: "Type", tripNameLabel: "Name (optional)",
   tripKindFun: "Vacation", tripKindWork: "Work", tripKindLong: "Long stay",
@@ -3477,7 +3477,7 @@ function renderViagens() {
   document.getElementById("vg-form").innerHTML = `
     <div class="hint" style="margin:0 0 10px">${t("vgLead")}</div>
     <details ${aberto ? "open" : ""} ontoggle="tripFormOpen = this.open">
-      <summary style="cursor:pointer; font-size:13.5px; color:var(--s1)">${t("tripNew")}</summary>
+      <summary style="cursor:pointer; font-size:13.5px; color:var(--s1)">${t("vgStart")}</summary>
       <form class="inline" style="margin-top:12px" onsubmit="return createTrip(event)">
         <div class="field" style="min-width:160px"><label>${t("tripDest")}</label>
           <select id="tr-country" onchange="tripFormSetCountry(this.value)">${countryOptions(c.c)}</select></div>
