@@ -343,6 +343,8 @@
     <div class="label" data-i18n="heroLabel"></div>
     <div class="value" id="h-livre"></div>
     <div class="note" id="h-note"></div>
+    <div class="note" id="h-cut" role="button" tabindex="0" style="margin-top:10px; cursor:pointer"
+      onclick="openSheet('fixed')" onkeydown="if(event.key==='Enter'){openSheet('fixed')}"></div>
   </div>
 
   <div id="trip-card"></div>
@@ -397,13 +399,6 @@
       <div class="field" id="l-place-f"><label data-i18n="lancWhere"></label><select id="l-place" onchange="placeTouched = true; updateLancPlace()"></select></div>
       <div class="field" id="l-cur-f"><label data-i18n="lancCur"></label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
       <div class="field" id="l-cat-f"><label data-i18n="lancCat"></label><select id="l-cat"></select></div>
-      <div class="field" id="l-trip-f"><label data-i18n="lancTrip"></label>
-        <select id="l-trip">
-          <option value="none" data-i18n="tripNone"></option>
-          <option value="work" data-i18n="tripWork"></option>
-          <option value="personal" data-i18n="tripPersonal"></option>
-        </select>
-      </div>
       <div class="field" style="flex:1; min-width:140px"><label data-i18n="lancDesc"></label><input type="text" id="l-desc" data-i18n-ph="lancDescPh"></div>
       <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
@@ -457,6 +452,7 @@
 
   <div class="card">
     <h2 data-i18n="apTitle"></h2>
+    <div id="ap-plan"></div>
     <div id="ap-context" style="font-size:13.5px; margin-bottom:10px"></div>
     <div class="grid cols-2">
       <div>
@@ -624,11 +620,6 @@
   </div>
 
   <div class="card">
-    <h2 data-i18n="cfgTravel"></h2>
-    <div id="cfg-travel"></div>
-  </div>
-
-  <div class="card">
     <h2 data-i18n="cfgTitle"></h2>
     <form class="inline" onsubmit="return false">
       <div class="field"><label data-i18n="cfgLang"></label>
@@ -707,13 +698,12 @@ pt: {
   lancCur: "Moeda", lancCat: "Categoria", lancTrip: "Contexto", lancDesc: "Descrição",
   lancDescPh: "opcional", btnAdd: "Adicionar", lancHist: "Histórico",
   typeExpense: "Gasto", typeIncome: "Renda extra", typeInvest: "Investimento (aporte)",
-  tripNone: "Sem viagem", tripWork: "Viagem a trabalho", tripPersonal: "Viagem pessoal",
-  hintCovered: "✓ Coberto pela empresa — <b>não desconta</b> do seu livre.",
+  hintOff: "✓ Categoria marcada como <b>não desconta</b> — esse gasto fica fora do seu livre.",
   hintAporte: "Aporte conta como 'guardado' no mês e soma no seu patrimônio investido.",
   hintRenda: "Renda extra aumenta o livre do mês da data.",
   noLanc: "Nada registrado ainda. Todo gasto, renda extra e aporte entra por aqui.",
   thDate: "Data", thType: "Tipo", thDetail: "Detalhe", thValue: "Valor",
-  bdgCovered: "coberto", bdgIncome: "renda", bdgInvest: "aporte", wordExpense: "gasto",
+  bdgOff: "não conta", bdgIncome: "renda", bdgInvest: "aporte", wordExpense: "gasto",
   incomeFallback: "renda extra", investFallback: "investimento", del: "Excluir",
   goalWealthTitle: "Meta de patrimônio", goalMonthlyTitle: "Compromisso mensal", goalIncomeTitle: "Minha renda",
   goalRedo: "↺ Refazer conversa de metas",
@@ -799,14 +789,11 @@ pt: {
   repYtdHint: (y, m) => `Conta apenas meses de ${y} até ${m} — sem input nenhum seu, tudo vem dos lançamentos.`,
   cfgAccount: "Conta & sincronização", cfgTitle: "Configurações",
   cfgFx: (sc, mc) => `Câmbio (${sc} por ${mc})`,
-  cfgProfile: "Seu perfil", cfgTravel: "Viagens a trabalho",
+  cfgProfile: "Seu perfil",
   cfgCountryLine: (c, cur) => `País principal: <b>${c}</b> · dia a dia em <b>${cur}</b>.`,
   cfgSecondLine: (c, cur) => `Segunda renda: <b>${c}</b> · em <b>${cur}</b>.`,
   cfgNoSecond: "Sem segunda renda — o app trabalha com um país só.",
   cfgWealthCur: "Moeda do patrimônio",
-  cfgTravelOn: "A empresa reembolsa minhas viagens a trabalho",
-  cfgTravelWhy: "com isso ligado, gastos marcados como viagem a trabalho nas categorias abaixo não descontam do seu livre",
-  cfgCoveredCats: "Categorias cobertas em viagem a trabalho:",
   cfgLang: "Idioma / Language", cfgData: "Dados", cfgExport: "Exportar backup (JSON)", cfgImport: "Importar backup",
   cfgDataHint: "Os dados ficam salvos neste navegador e, com conta, na nuvem. Exporte um backup de vez em quando.",
   cfgPrivacy: "Política de privacidade ↗",
@@ -934,10 +921,40 @@ pt: {
   betaBackup: "Baixar backup", betaReseed: "Recopiar do app principal", betaOk: "Entendi",
   betaReseedAsk: "Isso apaga os dados desta beta e copia tudo de novo do app principal. Continuar?",
   betaSync: "beta · só neste aparelho",
+  /* ── Aporte do mês ── */
+  apPlanLead: (falta, meta) => `Faltam <b>${falta}</b> para fechar a meta de ${meta} deste mês. Onde colocar:`,
+  apPlanDone: meta => `Meta de ${meta} batida este mês ✓ — se sobrar mais, siga esta ordem:`,
+  apPlanNoGoal: "Defina quanto quer guardar por mês na aba Metas e o assistente divide o aporte para você.",
+  apPlanMix: (hoje, alvo) => `hoje ${hoje}% da carteira · alvo ${alvo}%`,
+  apPlanWhy: perfil => `A divisão persegue o alvo do perfil ${perfil}: o dinheiro novo vai para o que está abaixo do alvo, que é o jeito de rebalancear sem vender nada.`,
+  apPlanFirst: "Como a carteira ainda está vazia, a divisão segue direto o alvo do seu perfil.",
+  apPlanFree: "escolha o produto abaixo",
+  planFixed: "Pagar as contas do mês",
+  planFixedWhy: (n, tot) => `${n} em aberto, de ${tot} no mês — já descontadas do seu livre.`,
+  planFixedOk: "Contas do mês pagas", planFixedOkWhy: "todas registradas — o que sobrou é seu de verdade",
+  /* ── Contas fixas ── */
+  fixTitle: "Contas do mês", fixList: "Suas contas fixas", fixDefaultName: "Contas fixas",
+  wzFixT: "O que já tem dono todo mês? 🏠",
+  wzFixS: "Aluguel, luz, água, internet, mercado, academia — o que sai todo mês independente de você. Some tudo num número só; dá para detalhar depois.",
+  wzFixHint: "Não precisa ser exato. É melhor errar para mais do que descobrir no dia 28.",
+  wzFixLive: (fixo, livre, dia) => `Com ${fixo} de contas, sobra <b class="pos">${livre}</b> para viver o mês — uns ${dia} por dia, sem culpa.`,
+  wzFixNone: "Sem contas fixas? Ótimo — dá para pular. Aparecendo alguma, é só cadastrar depois.",
+  wz6fixed: "Contas fixas",
+  fixCut: (meta, contas) => `já tirei ${meta} da meta e ${contas} de contas fixas`,
+  fixToPay: n => `${n} a pagar`, fixAllPaid: "todas pagas ✓",
+  fixToPayLong: (n, v) => `${n} ainda a pagar, somando ${v} — já fora do seu livre`,
+  fixClosed: "mês fechado: aqui aparece o que foi pago de verdade",
+  fixInvite: "tem aluguel, luz, internet? cadastre e o livre já desconta",
+  fixNone: "Nenhuma conta fixa cadastrada.",
+  fixName: "Conta", fixNamePh: "ex: aluguel, internet, mercado", fixAmount: "Valor por mês",
+  fixPay: "Paguei", fixPaid: "paga", fixOpen: "a pagar", fixUndo: "desfazer",
+  fixHint: "O total sai do livre desde o dia 1. Quando você marca “Paguei”, vira lançamento na categoria escolhida e o livre nem pisca — o dinheiro já estava reservado.",
+  fixDelAsk: n => `Apagar a conta “${n}”? Os lançamentos já feitos continuam no histórico.`,
   /* ── Categorias ── */
   cfgCats: "Categorias", cfgCatSug: "Sugeridas", cfgCatMine: "Suas categorias",
   cfgCatsHint: "As sugeridas já vêm prontas. Crie as suas para o que só existe na sua vida — elas aparecem em todo lugar onde há categoria.",
   cfgCatNew: "Nova categoria", cfgCatPh: "ex: Academia", cfgCatNone: "Nenhuma ainda — a primeira leva 5 segundos.",
+  cfgCatOff: "não desconta do livre (empresa paga, reembolso)",
   catDup: "Já existe uma categoria com esse nome.",
   catDelAsk: n => `Apagar a categoria “${n}”?`,
   catDelUsed: (n, q) => `“${n}” tem ${q} lançamento${q > 1 ? "s" : ""}. Apagar move ${q > 1 ? "esses gastos" : "esse gasto"} para “Outros”. Continuar?`,
@@ -952,6 +969,7 @@ pt: {
   tripStart: "Ida", tripEnd: "Volta", tripBudget: "Orçamento", tripBudgetMonth: "Orçamento por mês",
   tripGoal: "Meta para a temporada",
   tripFx: (a, b) => `${a} por 1 ${b}`, tripFxAuto: "automático",
+  tripFxNeed: (a, b) => `Diga quantos ${a} valem 1 ${b} — sem isso o orçamento vira número solto.`,
   tripCreate: "Criar viagem", tripNeedDates: "Escolha a data de ida (e a de volta, se for viagem).",
   tripNeedBudget: "Diga o orçamento — é ele que vira o “disponível por dia”.",
   tripOngoing: "em andamento", tripSoon: n => n <= 1 ? "começa amanhã" : `começa em ${n} dias`,
@@ -1030,13 +1048,12 @@ en: {
   lancCur: "Currency", lancCat: "Category", lancTrip: "Context", lancDesc: "Description",
   lancDescPh: "optional", btnAdd: "Add", lancHist: "History",
   typeExpense: "Expense", typeIncome: "Extra income", typeInvest: "Investment (contribution)",
-  tripNone: "No trip", tripWork: "Work trip", tripPersonal: "Personal trip",
-  hintCovered: "✓ Covered by the company — <b>doesn't reduce</b> your free amount.",
+  hintOff: "✓ This category is set to <b>not count</b> — the expense stays out of your free amount.",
   hintAporte: "A contribution counts as 'saved' this month and adds to your invested wealth.",
   hintRenda: "Extra income increases that month's free amount.",
   noLanc: "Nothing yet. Every expense, extra income and contribution goes here.",
   thDate: "Date", thType: "Type", thDetail: "Detail", thValue: "Amount",
-  bdgCovered: "covered", bdgIncome: "income", bdgInvest: "invested", wordExpense: "expense",
+  bdgOff: "off budget", bdgIncome: "income", bdgInvest: "invested", wordExpense: "expense",
   incomeFallback: "extra income", investFallback: "investment", del: "Delete",
   goalWealthTitle: "Wealth goal", goalMonthlyTitle: "Monthly commitment", goalIncomeTitle: "My income",
   goalRedo: "↺ Redo the goals conversation",
@@ -1122,14 +1139,11 @@ en: {
   repYtdHint: (y, m) => `Counts only ${y} months through ${m} — zero input from you, all from your entries.`,
   cfgAccount: "Account & sync", cfgTitle: "Settings",
   cfgFx: (sc, mc) => `Exchange rate (${sc} per ${mc})`,
-  cfgProfile: "Your profile", cfgTravel: "Work travel",
+  cfgProfile: "Your profile",
   cfgCountryLine: (c, cur) => `You live in <b>${c}</b> and daily life is in <b>${cur}</b>.`,
   cfgSecondLine: (c, cur) => `Second income: <b>${c}</b>, in <b>${cur}</b>.`,
   cfgNoSecond: "No second income — the app runs on a single country.",
   cfgWealthCur: "Wealth currency",
-  cfgTravelOn: "My company reimburses work trips",
-  cfgTravelWhy: "with this on, expenses tagged as a work trip in the categories below don't reduce your free amount",
-  cfgCoveredCats: "Categories covered on work trips:",
   cfgLang: "Idioma / Language", cfgData: "Data", cfgExport: "Export backup (JSON)", cfgImport: "Import backup",
   cfgDataHint: "Data lives in this browser and, with an account, in the cloud. Export a backup now and then.",
   cfgPrivacy: "Privacy policy ↗",
@@ -1251,10 +1265,40 @@ en: {
   betaBackup: "Download backup", betaReseed: "Copy from main app again", betaOk: "Got it",
   betaReseedAsk: "This erases the beta data and copies everything again from the main app. Continue?",
   betaSync: "beta · this device only",
+  /* ── This month's contribution ── */
+  apPlanLead: (falta, meta) => `<b>${falta}</b> to go to hit this month's ${meta} goal. Where to put it:`,
+  apPlanDone: meta => `${meta} goal hit this month ✓ — if more is left over, follow this order:`,
+  apPlanNoGoal: "Set how much you want to save per month in Goals and the assistant will split it for you.",
+  apPlanMix: (hoje, alvo) => `${hoje}% of the portfolio today · target ${alvo}%`,
+  apPlanWhy: perfil => `The split chases your ${perfil} target: new money goes where you're below target, which rebalances without selling anything.`,
+  apPlanFirst: "Your portfolio is still empty, so the split follows your profile target directly.",
+  apPlanFree: "pick a product below",
+  planFixed: "Pay this month's bills",
+  planFixedWhy: (n, tot) => `${n} still open, out of ${tot} this month — already taken out of your free amount.`,
+  planFixedOk: "This month's bills are paid", planFixedOkWhy: "all logged — what's left is really yours",
+  /* ── Fixed bills ── */
+  fixTitle: "Monthly bills", fixList: "Your fixed bills", fixDefaultName: "Fixed bills",
+  wzFixT: "What already has an owner every month? 🏠",
+  wzFixS: "Rent, power, water, internet, groceries, gym — what leaves every month no matter what. One total is enough; you can break it down later.",
+  wzFixHint: "It doesn't have to be exact. Better to overshoot than to find out on the 28th.",
+  wzFixLive: (fixo, livre, dia) => `With ${fixo} of bills, <b class="pos">${livre}</b> is left to live the month — about ${dia} a day, guilt-free.`,
+  wzFixNone: "No fixed bills? Great — skip it. If one shows up, add it later.",
+  wz6fixed: "Fixed bills",
+  fixCut: (meta, contas) => `${meta} for your goal and ${contas} of bills already taken out`,
+  fixToPay: n => `${n} to pay`, fixAllPaid: "all paid ✓",
+  fixToPayLong: (n, v) => `${n} still to pay, ${v} in total — already out of your free amount`,
+  fixClosed: "closed month: this shows what was actually paid",
+  fixInvite: "rent, power, internet? add them and your free amount already accounts for it",
+  fixNone: "No fixed bills yet.",
+  fixName: "Bill", fixNamePh: "e.g. rent, internet, groceries", fixAmount: "Amount per month",
+  fixPay: "Paid it", fixPaid: "paid", fixOpen: "to pay", fixUndo: "undo",
+  fixHint: "The total leaves your free amount from day one. When you tap “Paid it”, it becomes an entry in the chosen category and the number doesn't move — the money was already set aside.",
+  fixDelAsk: n => `Delete the bill “${n}”? Entries already logged stay in your history.`,
   /* ── Categories ── */
   cfgCats: "Categories", cfgCatSug: "Suggested", cfgCatMine: "Your categories",
   cfgCatsHint: "The suggested ones come ready. Add your own for what only exists in your life — they show up everywhere a category does.",
   cfgCatNew: "New category", cfgCatPh: "e.g. Gym", cfgCatNone: "None yet — the first one takes 5 seconds.",
+  cfgCatOff: "doesn't count against your free amount (company pays, reimbursed)",
   catDup: "A category with that name already exists.",
   catDelAsk: n => `Delete the category “${n}”?`,
   catDelUsed: (n, q) => `“${n}” has ${q} entr${q > 1 ? "ies" : "y"}. Deleting moves ${q > 1 ? "them" : "it"} to “Other”. Continue?`,
@@ -1269,6 +1313,7 @@ en: {
   tripStart: "Out", tripEnd: "Back", tripBudget: "Budget", tripBudgetMonth: "Budget per month",
   tripGoal: "Goal for the stay",
   tripFx: (a, b) => `${a} per 1 ${b}`, tripFxAuto: "automatic",
+  tripFxNeed: (a, b) => `Tell me how many ${a} make 1 ${b} — without it the budget is a loose number.`,
   tripCreate: "Create trip", tripNeedDates: "Pick the start date (and the return, if it is a trip).",
   tripNeedBudget: "Set the budget — it is what becomes “available per day”.",
   tripOngoing: "ongoing", tripSoon: n => n <= 1 ? "starts tomorrow" : `starts in ${n} days`,
@@ -1339,8 +1384,6 @@ const OUTROS = "outros";
 const CAT_COLORS = ["--s9","--s10","--s3","--s5","--s1","--s4","--s6","--s2"];
 const allCats = () => CATS.concat(S.cats || []);
 const catById = id => allCats().find(c => c.id === id) || CATS[CATS.length - 1];
-const COVERED_DEFAULT = ["combustivel","alimentacao","restaurante","carro"];
-const TRIPS = { none:{pt:"—",en:"—"}, work:{pt:"Trabalho",en:"Work"}, personal:{pt:"Pessoal",en:"Personal"} };
 
 /* ═════════ Países e moedas ═════════
    O app trabalha com no máximo dois países: o principal (onde a pessoa vive e
@@ -1396,15 +1439,15 @@ const DEFAULTS = {
     saveMonthly: 0,      // quanto se compromete a guardar por mês (moeda principal)
     riskProfile: "moderado",
     /* Perfil de uso */
-    travelCovered: true,               // a empresa reembolsa viagem a trabalho?
-    coveredCats: [...COVERED_DEFAULT], // categorias cobertas em viagem a trabalho
     catRestDone: false,                // "restaurantes" já foi oferecido a quem cobre comida
+    workCatDone: false,                // reembolso de viagem a trabalho já virou categoria
   },
   expenses: [], incomes: [], contributions: [],
   portfolio: [], opportunities: [], rewards: [], fuel: [],
   checklist: {}, market: null,
   accounts: [],   // contas/produtos do usuário com taxa conhecida
   offers: [],     // ofertas de parceiros (hoje manuais; amanhã, feed do Folga)
+  fixed: [],      // contas que se repetem todo mês (aluguel, luz, internet…)
   cats: [],       // categorias criadas pelo usuário
   trips: [],      // viagens e temporadas fora (cada uma com moeda e orçamento)
 };
@@ -1440,7 +1483,6 @@ function migrate(d) {
   delete st.usMonthly; delete st.brMonthly;
   if (!st.homeCur) st.homeCur = countryOf(st.homeCountry).cur;
   if (!st.secondCur) st.secondCur = countryOf(st.secondCountry).cur;
-  if (!Array.isArray(st.coveredCats)) st.coveredCats = [...COVERED_DEFAULT];
   if (!st.hasSecond) st.secondMonthly = 0;
   /* carteira: cada ativo passa a ter tipo e moeda próprios. Para quem já tinha
      ativos cadastrados, o tipo é chutado pelo nome — melhor que jogar tudo em
@@ -1456,12 +1498,18 @@ function migrate(d) {
     ...o, amount: Number(o.amount) || 0, ret: Number(o.ret) || 0,
     risk: ["baixo","medio","alto"].includes(o.risk) ? o.risk : "medio",
   }));
+  /* Contas fixas: nome, valor e a categoria que o gasto recebe quando paga */
+  s.fixed = (s.fixed || []).filter(f => f && f.id).map(f => ({
+    id: f.id, name: String(f.name || ""), amount: Number(f.amount) || 0,
+    cur: f.cur || st.homeCur, cat: f.cat || "outros", active: f.active !== false,
+  }));
   /* Categorias do usuário: rótulo pode ter vindo como texto simples */
   s.cats = (s.cats || []).filter(c => c && c.id).map((c, i) => ({
     id: c.id,
     label: (c.label && typeof c.label === "object") ? c.label : { pt: String(c.label || c.id), en: String(c.label || c.id) },
     color: c.color || CAT_COLORS[i % CAT_COLORS.length],
     custom: true,
+    noCount: !!c.noCount,
   }));
   /* Viagens e temporadas: tudo com moeda, orçamento e datas explícitos */
   s.trips = (s.trips || []).filter(tp => tp && tp.id).map(tp => ({
@@ -1478,13 +1526,30 @@ function migrate(d) {
     topups: Array.isArray(tp.topups) ? tp.topups : [],
     closed: !!tp.closed, closedAt: tp.closedAt || "",
   }));
+  /* O reembolso saiu das configurações e virou categoria. Para não mudar
+     nenhum número do passado, o que era coberto vai para uma categoria que
+     não desconta — e o nome da categoria antiga fica na descrição. */
+  if (!st.workCatDone) {
+    const cobertas = Array.isArray(st.coveredCats) ? st.coveredCats : [];
+    const eraCoberto = e => e.trip === "work" && st.travelCovered !== false && cobertas.includes(e.cat);
+    if ((s.expenses || []).some(eraCoberto)) {
+      if (!s.cats.some(c => c.id === "empresa")) {
+        s.cats.push({ id: "empresa", label: { pt: "Empresa paga", en: "Company pays" }, color: "--s10", custom: true, noCount: true });
+      }
+      const nomeDe = id => {
+        const c = CATS.concat(s.cats).find(x => x.id === id);
+        return c ? (c.label.pt || c.label.en || id) : id;
+      };
+      s.expenses = s.expenses.map(e => eraCoberto(e)
+        ? { ...e, cat: "empresa", desc: [e.desc, nomeDe(e.cat)].filter(Boolean).join(" · ") }
+        : e);
+    }
+    st.workCatDone = true;
+  }
+  delete st.travelCovered; delete st.coveredCats;
   /* "Restaurantes" nasceu depois de "Comida": quem cobria comida em viagem a
      trabalho passa a cobrir restaurante também. Uma vez só — depois é escolha
      do usuário, e desmarcar tem que continuar valendo. */
-  if (!st.catRestDone) {
-    if (st.coveredCats.includes("alimentacao") && !st.coveredCats.includes("restaurante")) st.coveredCats.push("restaurante");
-    st.catRestDone = true;
-  }
   /* Gasto órfão (viagem apagada) volta a ser gasto de casa */
   const ids = new Set(s.trips.map(tp => String(tp.id)));
   s.expenses = (s.expenses || []).map(e =>
@@ -1666,18 +1731,18 @@ function placeFlag(place) {
   return tp ? flagOf(tp.country) : flagOf(S.settings.homeCountry);
 }
 
-/* Gasto de viagem a trabalho nas categorias cobertas não desconta do livre —
-   é a regra central do app, e quais categorias entram é escolha do usuário. */
-function reimbursed(e) {
-  return e.trip === "work" && S.settings.travelCovered && (S.settings.coveredCats || []).includes(e.cat);
-}
+/* Categoria que não desconta do livre: o que a empresa paga, o que é
+   reembolsado, o que sai do bolso de outra pessoa. É escolha do usuário,
+   marcada na própria categoria — sem tela de configuração para manter. */
+const catNoCount = id => !!catById(id).noCount;
+function offBudget(e) { return catNoCount(e.cat); }
 /* Viagem em andamento vive no orçamento dela: o mês só recebe esses gastos
    quando você encerra a viagem. Temporada longa é vida normal — conta sempre. */
 function inOpenTrip(e) {
   const tp = e.place ? tripById(e.place) : null;
   return !!(tp && !tp.closed && tp.kind !== "long");
 }
-function counts(e) { return !reimbursed(e) && !inOpenTrip(e); }
+function counts(e) { return !offBudget(e) && !inOpenTrip(e); }
 /* Em que bolso o gasto entra: o do dia a dia ou o do segundo país (que fica
    fora do livre quando a política é "só a renda principal"). */
 function expBucket(e) {
@@ -1689,6 +1754,30 @@ const ptn = n => lang === "pt" ? Number(n).toFixed(2).replace(".", ",") : Number
 /* Taxa curta, sem zero sobrando: 9,5% em vez de 9,50% */
 const pctn = n => Number(n || 0).toLocaleString(dloc(), { maximumFractionDigits: 2 });
 
+/* ───────── Contas fixas ─────────
+   Uma conta fixa vira gasto no dia em que você marca "paguei" — antes disso
+   ela já sai do livre, porque aquele dinheiro tem dono. O total não muda
+   quando você paga: sai de "a pagar" e entra em "gasto". */
+const fixedList = () => (S.fixed || []).filter(f => f.active !== false);
+const fixedPaidIn = (mk, id) => S.expenses.find(e => String(e.fixedId) === String(id) && monthKey(e.date) === mk);
+function fixedPending(mk) {
+  const out = { main: 0, second: 0, aPagar: 0, total: 0, qtd: 0 };
+  const M = mainCur(), SC = secondCur();
+  const st = S.settings;
+  const somaTudo = st.freePolicy === "all" && st.hasSecond;
+  fixedList().forEach(f => {
+    out.qtd++;
+    out.total += conv(f.amount, f.cur || M, M);
+    /* Mês fechado mostra o que aconteceu, não o que faltava pagar */
+    if (mk < thisMonth() || fixedPaidIn(mk, f.id)) return;
+    out.aPagar++;
+    const noSegundo = st.hasSecond && SC !== M && (f.cur || M) === SC && !somaTudo;
+    if (noSegundo) out.second += f.amount;
+    else out.main += conv(f.amount, f.cur || M, M);
+  });
+  return out;
+}
+
 /* ───────── Números do mês ─────────
    Tudo que sai daqui na moeda principal, exceto o que tem sufixo Second. */
 function monthStats(mk) {
@@ -1699,7 +1788,7 @@ function monthStats(mk) {
   let spent = 0, spentSecond = 0, covered = 0, tripSpent = 0;
   exp.forEach(e => {
     const c = expCur(e);
-    if (reimbursed(e)) { covered += conv(e.amount, c, M); return; }
+    if (offBudget(e)) { covered += conv(e.amount, c, M); return; }
     if (inOpenTrip(e)) { tripSpent += conv(e.amount, c, M); return; }
     if (expBucket(e) === "second") spentSecond += e.amount;
     else spent += conv(e.amount, c, M);
@@ -1720,11 +1809,13 @@ function monthStats(mk) {
   const saved = savedMain + toMain(savedSecond, SC);
   const savedNoLivre = savedMain + (somaTudo ? toMain(savedSecond, SC) : 0);
   const reservado = Math.max(st.saveMonthly, savedNoLivre);
-  const livre = ganho - reservado - spent;
-  /* Sobra do segundo país: o que entrou lá, menos o que foi gasto e aportado lá */
-  const leftSecond = rendaSecond - spentSecond - savedSecond;
+  /* Contas fixas ainda não pagas já saem do livre: elas vão sair de qualquer jeito */
+  const fix = fixedPending(mk);
+  const livre = ganho - reservado - spent - fix.main;
+  /* Sobra do segundo país: o que entrou lá, menos gasto, aporte e contas de lá */
+  const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second;
   return { spent, spentSecond, tripSpent, covered, extrasMain, extrasSecond, savedMain, savedSecond, saved,
-           ganho, rendaSecond, leftSecond, livre, reservado };
+           ganho, rendaSecond, leftSecond, livre, reservado, fix };
 }
 function invested() {
   return S.settings.investedBase + S.contributions.reduce((s,c) => s + toWealth(c.amount, c.cur), 0);
@@ -1777,6 +1868,13 @@ function renderInicio() {
     mk < cur ? t("heroClosedNote") :
     mk > cur ? t("heroFutureNote") :
     st.livre >= 0 ? t("heroPerDay", fmtM0(st.livre / dias)) : t("heroOver", fmtM0(-st.livre));
+
+  /* O que já saiu antes do livre — a conta que faz o número ser confiável */
+  const corte = document.getElementById("h-cut");
+  const fix = st.fix;
+  corte.innerHTML = vazio ? ""
+    : fix.qtd === 0 ? `<span style="color:var(--muted)">${t("fixInvite")}</span> <span class="chev">›</span>`
+    : `${t("fixCut", fmtM0(st.reservado), fmtM0(fix.total))}${fix.aPagar > 0 ? " · " + t("fixToPay", fix.aPagar) : " · " + t("fixAllPaid")} <span class="chev">›</span>`;
 
   const set = (id, v) => document.getElementById(id).textContent = vazio ? "—" : v;
   set("t-ganho", fmtM0(st.ganho));
@@ -1847,7 +1945,6 @@ function renderInicio() {
 function updateLancForm() {
   const tp = document.getElementById("l-type").value;
   document.getElementById("l-cat-f").style.display = tp === "gasto" ? "" : "none";
-  document.getElementById("l-trip-f").style.display = tp === "gasto" ? "" : "none";
   /* "Onde" só existe quando há mais de um lugar: segundo país ou viagem aberta.
      Quem vive num país só nunca vê esse campo. */
   document.getElementById("l-place-f").style.display = (tp === "gasto" && placeOptions().length > 1) ? "" : "none";
@@ -1893,9 +1990,8 @@ function updateLancHint() {
   const tp = document.getElementById("l-type").value;
   const el = document.getElementById("l-hint");
   const viagem = tp === "gasto" ? tripById(lancPlace()) : null;
-  if (tp === "gasto" && document.getElementById("l-trip").value === "work" && S.settings.travelCovered
-      && (S.settings.coveredCats || []).includes(document.getElementById("l-cat").value)) {
-    el.innerHTML = t("hintCovered");
+  if (tp === "gasto" && catNoCount(document.getElementById("l-cat").value)) {
+    el.innerHTML = t("hintOff");
   } else if (viagem) {
     const ts = tripStats(viagem);
     el.innerHTML = `${t("tripAvail")}: <b class="${ts.left < 0 ? "neg" : "pos"}">${fmtCur(ts.left, viagem.cur, 0)}</b>` +
@@ -1920,8 +2016,8 @@ function renderLanc() {
         if (x._t === "gasto") {
           const c = catById(x.cat);
           const pl = expPlace(x);
-          det = `<span class="dot" style="background:var(${c.color})"></span>${L(c.label)}${x.trip !== "none" ? " · " + L(TRIPS[x.trip]) : ""}${x.desc ? " · " + esc(x.desc) : ""}${pl !== "home" ? " · " + placeFlag(pl) : ""}`;
-          badge = reimbursed(x) ? `<span class="badge covered">${t("bdgCovered")}</span>`
+          det = `<span class="dot" style="background:var(${c.color})"></span>${L(c.label)}${x.desc ? " · " + esc(x.desc) : ""}${pl !== "home" ? " · " + placeFlag(pl) : ""}`;
+          badge = offBudget(x) ? `<span class="badge covered">${t("bdgOff")}</span>`
             : inOpenTrip(x) ? `<span class="badge warn">${t("tripBadge")}</span>` : "";
           v = "− " + fmtCur(x.amount, expCur(x));
         } else if (x._t === "renda") {
@@ -2184,6 +2280,7 @@ function openSheet(kind, id) {
 function renderSheet() {
   if (sheetView?.kind === "trip") return renderTripSheet(sheetView.id);
   if (sheetView?.kind === "country") return renderCountrySheet();
+  if (sheetView?.kind === "fixed") return renderFixedSheet();
   renderWealthSheet();
 }
 addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
@@ -2620,14 +2717,34 @@ const WZ_STEPS = [
     saveStep: () => wzData.saveMonthly = num("wz-in"),
   },
   {
+    /* A pergunta que faz o número final ser confiável: o que já tem dono
+       antes de qualquer jantar. Um valor total basta — detalhar depois é
+       um toque na tela Início. */
+    title: () => t("wzFixT"), sub: () => t("wzFixS"),
+    render: () => `
+      <div class="biginput"><span class="cur">${curSym(wzData.homeCur)}</span>
+        <input type="number" inputmode="decimal" id="wz-in" value="${wzData.fixedTotal || ""}" step="any" min="0" placeholder="0"></div>
+      <div class="hint">${t("wzFixHint")}</div>`,
+    live: () => {
+      const somaTudo = wzData.hasSecond && wzData.freePolicy === "all";
+      const fixo = num("wz-in");
+      const livre = wzData.mainMonthly + (somaTudo ? wzConvBack(wzData.secondMonthly) : 0) - wzData.saveMonthly - fixo;
+      return fixo > 0 ? t("wzFixLive", wzFmtMain(fixo), wzFmtMain(livre), wzFmtMain(livre / 30))
+        : t("wzFixNone");
+    },
+    saveStep: () => wzData.fixedTotal = num("wz-in"),
+  },
+  {
     title: () => t("wz6t"), sub: () => t("wz6s"),
     render: () => {
       const somaTudo = wzData.hasSecond && wzData.freePolicy === "all";
-      const livre = wzData.mainMonthly + (somaTudo ? wzConvBack(wzData.secondMonthly) : 0) - wzData.saveMonthly;
+      const livre = wzData.mainMonthly + (somaTudo ? wzConvBack(wzData.secondMonthly) : 0)
+        - wzData.saveMonthly - (wzData.fixedTotal || 0);
       return `<div class="resumo">
         <div><span>${t("wz6in", countryName(wzData.homeCountry))}</span><b>${wzFmtMain(wzData.mainMonthly)}</b></div>
         ${wzData.hasSecond ? `<div><span>${somaTudo ? t("wz6secAll", countryName(wzData.secondCountry)) : t("wz6sec", countryName(wzData.secondCountry))}</span><b>${wzFmtSec(wzData.secondMonthly)}</b></div>` : ""}
         <div><span>${t("wz6save")}</span><b>${wzFmtMain(wzData.saveMonthly)}</b></div>
+        ${wzData.fixedTotal > 0 ? `<div><span>${t("wz6fixed")}</span><b>${wzFmtMain(wzData.fixedTotal)}</b></div>` : ""}
         <div><span>${t("wz6goal")}</span><b>${wzFmtW(wzData.goalAmount)}${wzData.goalMonth ? t("wz6until") + monthLabel(wzData.goalMonth) : ""}</b></div>
         <div class="total"><span>${t("wz6free")}</span><b class="pos">${wzFmtMain(livre)}</b></div>
       </div>
@@ -2652,7 +2769,10 @@ function suggestedPace() {
 }
 function startWizard() {
   const st = S.settings;
+  /* O passo das contas fixas comeca com o que já está cadastrado */
+  const fixoAtual = fixedList().reduce((acc, f) => acc + conv(f.amount, f.cur || st.homeCur, st.homeCur), 0);
   wzData = {
+    fixedTotal: Math.round(fixoAtual),
     homeCountry: st.homeCountry, homeCur: st.homeCur, mainMonthly: st.mainMonthly,
     hasSecond: st.hasSecond, secondCountry: st.secondCountry, secondCur: st.secondCur,
     secondMonthly: st.secondMonthly, fx: st.fx, freePolicy: st.freePolicy,
@@ -2695,6 +2815,15 @@ function wzNext() {
   }
   WZ_STEPS[wzStep].saveStep();
   if (wzStep < WZ_STEPS.length - 1) { wzStep++; renderWizard(); return; }
+  /* O total informado vira uma conta fixa única; detalhar depois é opcional */
+  const fixoTotal = Number(wzData.fixedTotal) || 0;
+  delete wzData.fixedTotal;
+  S.fixed = S.fixed || [];
+  const geral = S.fixed.find(f => f.id === "geral");
+  if (fixoTotal > 0) {
+    if (geral) { geral.amount = fixoTotal; geral.cur = wzData.homeCur; geral.active = true; }
+    else S.fixed.unshift({ id: "geral", name: t("fixDefaultName"), amount: fixoTotal, cur: wzData.homeCur, cat: "outros", active: true });
+  } else if (geral) geral.active = false;
   Object.assign(S.settings, wzData, { onboarded: true });
   if (!S.settings.hasSecond) { S.settings.secondMonthly = 0; S.settings.freePolicy = "main"; }
   S.settings.wealthCur = S.settings.wealthCur || S.settings.homeCur;
@@ -2835,9 +2964,69 @@ const PLAYBOOK = {
 const playbookFor = c => PLAYBOOK[c] || PLAYBOOK.DEFAULT;
 const usesBRL = () => S.settings.homeCountry === "BR" || (S.settings.hasSecond && S.settings.secondCountry === "BR");
 
+/* ───────── O aporte deste mês ─────────
+   O assistente para de listar produtos e passa a responder a pergunta real:
+   "tenho X para aportar agora — onde ponho?". A resposta vem do buraco entre
+   a carteira de hoje e o alvo do perfil: cada tipo abaixo do alvo recebe na
+   proporção do que falta, e o playbook do país empresta o nome do produto. */
+function aportePlan() {
+  const st = S.settings;
+  const ms = monthStats(thisMonth());
+  const alloc = allocation();
+  const alvo = RISK_TARGETS[riskProfile()] || RISK_TARGETS.moderado;
+  const metaW = conv(st.saveMonthly, mainCur(), wealthCur());
+  const jaW = toWealth(ms.savedMain, mainCur()) + toWealth(ms.savedSecond, secondCur());
+  const falta = Math.max(0, metaW - jaW);
+  const base = falta > 0 ? falta : metaW;
+  const futuro = alloc.total + base;
+  const buracos = ASSET_TYPES.map(ty => {
+    const alvoPct = alvo[ty.id] || 0;
+    const hoje = alloc.by[ty.id] || 0;
+    return { ty, hoje, alvoPct, pctHoje: alloc.total > 0 ? hoje / alloc.total * 100 : 0,
+             gap: Math.max(0, alvoPct / 100 * futuro - hoje) };
+  });
+  const soma = buracos.reduce((acc, b) => acc + b.gap, 0);
+  const linhas = buracos
+    .map(b => ({ ...b, valor: soma > 0 ? base * b.gap / soma : base * (b.alvoPct / 100) }))
+    .filter(b => b.valor >= Math.max(1, base * 0.03))
+    .sort((a, b) => b.valor - a.valor);
+  return { metaW, jaW, falta, base, linhas, total: alloc.total };
+}
+/* O produto com o nome de gente: o playbook do país onde o patrimônio mora */
+function produtoPara(tipoId) {
+  const st = S.settings;
+  const pais = [st.homeCountry, st.secondCountry].find(c => c && countryOf(c).cur === wealthCur()) || st.homeCountry;
+  const item = playbookFor(pais).find(p => p.ty === tipoId);
+  return item ? { nome: typeof item.n === "object" ? L(item.n) : item.n, taxa: item.r(marketData()), pais } : null;
+}
+function renderAportePlan() {
+  const el = document.getElementById("ap-plan");
+  if (!el) return;
+  const p = aportePlan();
+  if (!(p.metaW > 0)) { el.innerHTML = `<div class="hint" style="margin:0 0 10px">${t("apPlanNoGoal")}</div>`; return; }
+  const lead = p.falta > 0
+    ? t("apPlanLead", fmtW0(p.falta), fmtW0(p.metaW))
+    : t("apPlanDone", fmtW0(p.metaW));
+  el.innerHTML = `
+    <div style="font-size:14px; margin-bottom:8px">${lead}</div>
+    <div class="steps">${p.linhas.map((b, i) => {
+      const prod = produtoPara(b.ty.id);
+      return `<div class="step">
+        <div class="n">${i + 1}</div>
+        <div style="flex:1; min-width:0">
+          <div style="display:flex; justify-content:space-between; gap:10px">
+            <b>${L(b.ty.label)}</b><span class="amt">${fmtW0(b.valor)}</span></div>
+          <div class="why">${prod ? `${esc(prod.nome)} · ${prod.taxa}` : t("apPlanFree")}
+            · ${t("apPlanMix", Math.round(b.pctHoje), b.alvoPct)}</div>
+        </div></div>`;
+    }).join("")}</div>
+    <div class="hint" style="margin-bottom:14px">${p.total > 0 ? t("apPlanWhy", riskLabel()) : t("apPlanFirst")}</div>`;
+}
+
 function renderAporte() {
   const el = document.getElementById("ap-main");
   if (!el) return;
+  renderAportePlan();
   const st = S.settings;
   const m = marketData();
   const ms = monthStats(thisMonth());
@@ -2938,6 +3127,11 @@ function renderPlan() {
   const reservaManual = total === 0;
   const steps = [];
   steps.push({ n:1, tt:t("planDebt"), amt:"", why:t("chkCardWhy"), done:!!marks.fatura, chk:"fatura" });
+  /* Contas fixas vem antes de qualquer decisao de investir: ja tem dono */
+  if (ms.fix.qtd > 0) steps.push(ms.fix.aPagar > 0
+    ? { n:0, tt:t("planFixed"), amt:fmtM0(ms.fix.main + conv(ms.fix.second, secondCur(), mainCur())),
+        why:t("planFixedWhy", ms.fix.aPagar, fmtM0(ms.fix.total)), done:false }
+    : { n:0, tt:t("planFixedOk"), amt:fmtM0(ms.fix.total), why:t("planFixedOkWhy"), done:true });
   if (reservaManual) steps.push({ n:steps.length+1, tt:t("chkReserve", fmtM0(reservaAlvo)), amt:"",
     why:t("chkReserveWhy", fmtM0(avgSpend)), done:!!marks.reserva, chk:"reserva" });
   else if (faltaReserva > 1) steps.push({ n:steps.length+1, tt:t("planReserve", destinoReserva), amt:fmtM0(faltaReserva),
@@ -3244,7 +3438,7 @@ function tripStats(tp) {
   let spent = 0, covered = 0;
   conta.forEach(e => {
     const v = conv(e.amount, expCur(e), tp.cur);
-    if (reimbursed(e)) covered += v; else spent += v;
+    if (offBudget(e)) covered += v; else spent += v;
   });
   const base = conv(tp.budget, tp.budgetCur, tp.cur);
   const extra = (tp.topups || []).reduce((acc, x) => acc + conv(x.amount, x.cur || tp.budgetCur, tp.cur), 0);
@@ -3338,6 +3532,12 @@ function renderTripSheet(id) {
         ${tp.goal > 0 ? linha(t("tripGoal"), fmtT(tp, conv(tp.goal, tp.budgetCur, tp.cur))) : ""}
       </tbody></table>
       ${st.extra > 0 ? `<div class="hint">${t("tripBudgetLine", fmtT(tp, st.base), fmtT(tp, st.extra), fmtT(tp, st.budget))}</div>` : ""}
+      ${tp.cur === mainCur() ? "" : `<form class="inline" style="margin-top:10px" onsubmit="return false">
+        <div class="field"><label>${t("tripFx", tp.cur, mainCur())}</label>
+          <input type="number" id="ts-fx" inputmode="decimal" step="any" value="${tp.fx || ""}" style="width:120px"
+            onchange="setTripFx('${tp.id}', this.value)"></div>
+        <div class="field" style="justify-content:flex-end"><span class="hint" style="margin:0">${fmtM0(100)} = <b>${fmtCur(100 * (Number(tp.fx) || 0), tp.cur, 2)}</b></span></div>
+      </form>`}
       ${tp.closed ? "" : `<form class="inline" style="margin-top:12px" onsubmit="return addTripBudget(event,'${tp.id}')">
         <div class="field"><label>${t("tripAddBudget")} (${curSym(tp.budgetCur)})</label>
           <input type="number" id="tb-add" inputmode="decimal" step="any" min="0.01" required style="width:120px"></div>
@@ -3357,7 +3557,7 @@ function renderTripSheet(id) {
           const c = catById(e.cat);
           return `<tr><td>${fmtD(parseDate(e.date))}</td>
             <td><span class="dot" style="background:var(${c.color})"></span>${esc(L(c.label))}${e.desc ? " · " + esc(e.desc) : ""}
-              ${reimbursed(e) ? `<span class="badge covered">${t("bdgCovered")}</span>` : ""}</td>
+              ${offBudget(e) ? `<span class="badge covered">${t("bdgOff")}</span>` : ""}</td>
             <td class="num">${fmtCur(e.amount, expCur(e), 2)}</td>
             <td style="width:30px"><button class="mini" onclick="delLanc('gasto','${e.id}')" title="${t("del")}">✕</button></td></tr>`;
         }).join("")}</tbody></table>`}
@@ -3383,6 +3583,14 @@ function addTripBudget(ev, id) {
   tp.topups.push({ id: uid(), date: todayStr(), amount: v, cur: tp.budgetCur, why: document.getElementById("tb-why").value.trim() });
   save(); renderAll(); renderConfig(); renderSheet();
   return false;
+}
+/* Corrigir a taxa depois não mexe em nenhum gasto: eles estão na moeda de lá,
+   e o câmbio só traduz para a sua. */
+function setTripFx(id, v) {
+  const tp = tripById(id);
+  if (!tp) return;
+  tp.fx = Math.max(0, Number(v) || 0);
+  save(); renderAll(); renderSheet();
 }
 function delTopup(id, tid) {
   const tp = tripById(id);
@@ -3482,7 +3690,7 @@ function renderViagens() {
         <div class="field" style="min-width:160px"><label>${t("tripDest")}</label>
           <select id="tr-country" onchange="tripFormSetCountry(this.value)">${countryOptions(c.c)}</select></div>
         <div class="field"><label>${t("lancCur")}</label>
-          <select id="tr-cur" onchange="tripFxAuto()" style="max-width:120px">${curOptions(c.cur)}</select></div>
+          <select id="tr-cur" onchange="tripFxAuto(true)" style="max-width:120px">${curOptions(c.cur)}</select></div>
         <div class="field"><label>${t("tripKind")}</label>
           <select id="tr-kind" onchange="tripFormKind()">
             <option value="fun">${t("tripKindFun")}</option>
@@ -3496,7 +3704,8 @@ function renderViagens() {
         <div class="field"><label>${t("lancCur")}</label>
           <select id="tr-bcur" style="max-width:120px">${[mainCur(), c.cur].filter((v, i, a) => a.indexOf(v) === i).map(x => `<option value="${x}">${curSym(x)} ${x}</option>`).join("")}</select></div>
         <div class="field"><label>${t("tripFx", c.cur, mainCur())}</label>
-          <input type="number" id="tr-fx" inputmode="decimal" step="any" style="width:110px" placeholder="${t("tripFxAuto")}"></div>
+          <input type="number" id="tr-fx" inputmode="decimal" step="any" style="width:110px" placeholder="${t("tripFxAuto")}" oninput="tripFxHint()"></div>
+        <div class="field" style="justify-content:flex-end"><span class="hint" id="tr-fx-hint" style="margin:0"></span></div>
         <div class="field" id="tr-goal-f" style="display:none"><label>${t("tripGoal")}</label>
           <input type="number" id="tr-goal" inputmode="decimal" step="any" min="0" style="width:120px"></div>
         <div class="field" style="flex:1; min-width:140px"><label>${t("tripNameLabel")}</label><input type="text" id="tr-name"></div>
@@ -3510,30 +3719,50 @@ function tripFormSetCountry(cc) {
   tripFormCountry = cc;
   const c = countryOf(cc);
   const cur = document.getElementById("tr-cur");
+  const mudou = cur && cur.value !== c.cur;
   if (cur) cur.value = c.cur;
   const b = document.getElementById("tr-bcur");
   if (b) b.innerHTML = [mainCur(), c.cur].filter((v, i, a) => a.indexOf(v) === i).map(x => `<option value="${x}">${curSym(x)} ${x}</option>`).join("");
-  tripFxAuto();
+  tripFxAuto(mudou);
 }
 function tripFormKind() {
   const longa = val("tr-kind") === "long";
   document.getElementById("tr-goal-f").style.display = longa ? "" : "none";
   document.getElementById("tr-budget-lbl").textContent = longa ? t("tripBudgetMonth") : t("tripBudget");
 }
-/* Câmbio da viagem: tenta o valor de hoje; o usuário pode corrigir a qualquer momento */
-async function tripFxAuto() {
+/* Câmbio da viagem: a taxa pertence à moeda escolhida. Trocar o destino
+   descarta a taxa anterior — 5,4 do Brasil como "euros por dólar" seria um
+   orçamento inventado — e busca a de hoje. */
+let tripFxCur = "";
+async function tripFxAuto(mudouMoeda) {
   const el = document.getElementById("tr-fx");
   const cur = val("tr-cur"), m = mainCur();
   if (!el) return;
   const lbl = el.closest(".field")?.querySelector("label");
   if (lbl) lbl.textContent = t("tripFx", cur, m);
+  if (mudouMoeda || (tripFxCur && tripFxCur !== cur)) el.value = "";
+  tripFxCur = cur;
+  tripFxHint();
   if (!cur || cur === m || Number(el.value) > 0 || !navigator.onLine) return;
   const pair = `${m}-${cur}`;
   try {
     const r = await fetch(`https://economia.awesomeapi.com.br/json/last/${pair}`).then(x => x.json());
     const bid = Number(r?.[pair.replace("-", "")]?.bid);
-    if (bid > 0 && !(Number(el.value) > 0)) el.value = Math.round(bid * 10000) / 10000;
+    /* a moeda pode ter mudado enquanto a resposta vinha */
+    if (bid > 0 && val("tr-cur") === cur && !(Number(el.value) > 0)) {
+      el.value = Math.round(bid * 10000) / 10000;
+      tripFxHint();
+    }
   } catch { /* sem rede: o campo fica para o usuário preencher */ }
+}
+/* A conta na cara do gol: "US$ 100 = € 85,55". Taxa invertida salta aos olhos. */
+function tripFxHint() {
+  const el = document.getElementById("tr-fx-hint");
+  if (!el) return;
+  const cur = val("tr-cur"), fx = num("tr-fx");
+  el.innerHTML = (!cur || cur === mainCur()) ? ""
+    : fx > 0 ? `${fmtM0(100)} = <b>${fmtCur(100 * fx, cur, 2)}</b>`
+    : `<span class="neg">${t("tripFxNeed", cur, mainCur())}</span>`;
 }
 function createTrip(ev) {
   ev.preventDefault();
@@ -3545,13 +3774,16 @@ function createTrip(ev) {
   if (end && end < start) { err.textContent = t("tripNeedDates"); return false; }
   if (!(budget > 0)) { err.textContent = t("tripNeedBudget"); return false; }
   const c = countryOf(val("tr-country"));
+  const curV = val("tr-cur") || c.cur;
+  /* Sem câmbio, "3.000" na moeda de lá não quer dizer nada aqui */
+  if (curV !== mainCur() && !(num("tr-fx") > 0)) { err.textContent = t("tripFxNeed", curV, mainCur()); return false; }
   S.trips.push({
-    id: uid(), name: val("tr-name").trim(), country: c.c, cur: val("tr-cur") || c.cur, kind,
+    id: uid(), name: val("tr-name").trim(), country: c.c, cur: curV, kind,
     start, end, fx: num("tr-fx"), budget, budgetCur: val("tr-bcur") || mainCur(),
     goal: num("tr-goal"), topups: [], closed: false, closedAt: "",
   });
   save();
-  tripFormOpen = false; tripFormCountry = "";
+  tripFormOpen = false; tripFormCountry = ""; tripFxCur = "";
   renderAll(); renderConfig(); fillPlaceSelect(); updateLancForm();
   return false;
 }
@@ -3600,6 +3832,81 @@ function renderCountrySheet() {
     </div>`;
 }
 
+/* ───────── Contas do mês (folha) ─────────
+   A lista curta do que se repete. Marcar "paguei" lança o gasto na categoria
+   que você escolheu — o livre não se mexe, porque a conta já estava descontada. */
+function renderFixedSheet() {
+  const mk = viewMonth || thisMonth();
+  const fix = fixedPending(mk);
+  const passado = mk < thisMonth();
+  document.getElementById("sheet-title").textContent = t("fixTitle");
+  const linhas = fixedList().map(f => {
+    const pago = fixedPaidIn(mk, f.id);
+    return `<div class="gitem">
+      <div><b>${esc(f.name)}</b> ${pago ? `<span class="badge covered">${t("fixPaid")}</span>` : passado ? "" : `<span class="badge warn">${t("fixOpen")}</span>`}
+        <div class="why">${fmtCur(f.amount, f.cur || mainCur(), 0)} · ${esc(L(catById(f.cat).label))}</div></div>
+      <div style="display:flex; gap:6px; align-items:center">
+        ${pago ? `<button class="btn ghost" onclick="delLanc('gasto','${pago.id}')">${t("fixUndo")}</button>`
+          : `<button class="btn" onclick="payFixed('${f.id}')">${t("fixPay")}</button>`}
+        <button class="mini" title="${t("del")}" onclick="delFixed('${f.id}')">✕</button></div>
+    </div>`;
+  }).join("");
+  const M = mainCur(), SC = secondCur();
+  document.getElementById("sheet-body").innerHTML = `
+    <div class="card">
+      <div class="label" style="font-size:12.5px; color:var(--ink-2)">${monthLabel(mk)}</div>
+      <div class="tbig" style="font-size:30px; font-weight:650">${fmtM0(fix.total)}</div>
+      <div class="tsub" style="font-size:13px; color:var(--ink-2)">${fix.qtd === 0 ? t("fixNone")
+        : passado ? t("fixClosed") : fix.aPagar > 0 ? t("fixToPayLong", fix.aPagar, fmtM0(fix.main + conv(fix.second, SC, M))) : t("fixAllPaid")}</div>
+      <div class="hint">${t("fixHint")}</div>
+    </div>
+    <div class="card">
+      <h2>${t("fixList")}</h2>
+      ${linhas || `<div class="empty">${t("fixNone")}</div>`}
+      <form class="inline" style="margin-top:12px" onsubmit="return addFixed(event)">
+        <div class="field" style="flex:1; min-width:140px"><label>${t("fixName")}</label>
+          <input type="text" id="fx-name" required placeholder="${t("fixNamePh")}"></div>
+        <div class="field"><label>${t("fixAmount")}</label>
+          <input type="number" id="fx-amount" inputmode="decimal" step="any" min="0.01" required style="width:110px"></div>
+        ${S.settings.hasSecond && SC !== M ? `<div class="field"><label>${t("lancCur")}</label>
+          <select id="fx-cur">${[M, SC].map(c => `<option value="${c}">${curSym(c)} ${c}</option>`).join("")}</select></div>` : ""}
+        <div class="field"><label>${t("lancCat")}</label>
+          <select id="fx-cat">${allCats().map(c => `<option value="${c.id}">${esc(L(c.label))}</option>`).join("")}</select></div>
+        <button class="btn" type="submit">${t("btnAdd")}</button>
+      </form>
+    </div>`;
+}
+function addFixed(ev) {
+  ev.preventDefault();
+  const nome = document.getElementById("fx-name").value.trim();
+  const valor = Number(document.getElementById("fx-amount").value) || 0;
+  if (!nome || !(valor > 0)) return false;
+  S.fixed = S.fixed || [];
+  S.fixed.push({ id: uid(), name: nome, amount: valor,
+    cur: document.getElementById("fx-cur")?.value || mainCur(),
+    cat: document.getElementById("fx-cat").value, active: true });
+  save(); renderAll(); renderSheet();
+  return false;
+}
+/* Pagar é só registrar o que ia acontecer de qualquer jeito */
+function payFixed(id) {
+  const f = (S.fixed || []).find(x => String(x.id) === String(id));
+  const mk = viewMonth || thisMonth();
+  if (!f || fixedPaidIn(mk, f.id)) return;
+  const cur = f.cur || mainCur();
+  const noSegundo = S.settings.hasSecond && cur === secondCur() && cur !== mainCur();
+  S.expenses.push({ id: uid(), date: mk === thisMonth() ? todayStr() : lastDayOf(mk),
+    amount: f.amount, cat: f.cat || OUTROS, desc: f.name,
+    place: noSegundo ? "second" : "home", cur, fixedId: f.id });
+  save(); renderAll(); renderSheet();
+}
+function delFixed(id) {
+  const f = (S.fixed || []).find(x => String(x.id) === String(id));
+  if (!f || !confirm(t("fixDelAsk", f.name))) return;
+  S.fixed = S.fixed.filter(x => String(x.id) !== String(id));
+  save(); renderAll(); renderSheet();
+}
+
 /* ───────── Categorias do usuário (Config) ───────── */
 function renderCats() {
   const el = document.getElementById("cfg-cats");
@@ -3611,15 +3918,29 @@ function renderCats() {
     <div class="hint" style="margin:0">${t("cfgCatSug")}</div>
     <div class="chiprow" style="margin-top:6px">${CATS.map(c => chip(c, false)).join("")}</div>
     <div class="hint" style="margin-top:14px">${t("cfgCatMine")}</div>
-    <div class="chiprow" style="margin-top:6px">${(S.cats || []).length
-      ? S.cats.map(c => chip(c, true)).join("")
-      : `<span class="hint" style="margin:0">${t("cfgCatNone")}</span>`}</div>
+    ${(S.cats || []).length ? S.cats.map(c => `
+      <div class="gitem">
+        <div><b><span class="dot" style="background:var(${c.color})"></span>${esc(L(c.label))}</b>
+          <label class="hint" style="display:flex; gap:6px; align-items:center; margin-top:4px; cursor:pointer">
+            <input type="checkbox" ${c.noCount ? "checked" : ""} onchange="toggleCatCount('${c.id}', this.checked)">
+            ${t("cfgCatOff")}</label></div>
+        <button class="mini" onclick="delCat('${c.id}')" title="${t("del")}" aria-label="${t("del")}">✕</button>
+      </div>`).join("")
+      : `<div class="hint" style="margin:0">${t("cfgCatNone")}</div>`}
     <form class="inline" style="margin-top:12px" onsubmit="return addCat(event)">
       <div class="field" style="flex:1; min-width:160px"><label>${t("cfgCatNew")}</label>
         <input type="text" id="cat-new" maxlength="24" placeholder="${t("cfgCatPh")}"></div>
       <button class="btn" type="submit">${t("btnAdd")}</button>
     </form>
     <div class="hint neg" id="cat-err" style="min-height:16px"></div>`;
+}
+/* Marcar uma categoria como "não desconta" muda o passado também — é o mesmo
+   dinheiro sendo reclassificado, e o histórico fica coerente. */
+function toggleCatCount(id, on) {
+  const c = (S.cats || []).find(x => x.id === id);
+  if (!c) return;
+  c.noCount = !!on;
+  save(); renderAll(); renderConfig(); updateLancHint();
 }
 function addCat(ev) {
   ev.preventDefault();
@@ -3645,7 +3966,6 @@ function delCat(id) {
   S.expenses = S.expenses.map(e => e.cat === id ? { ...e, cat: OUTROS } : e);
   S.rewards = (S.rewards || []).filter(r => r.cat !== id);
   S.offers = (S.offers || []).filter(o => o.cat !== id);
-  S.settings.coveredCats = (S.settings.coveredCats || []).filter(x => x !== id);
   S.cats = (S.cats || []).filter(x => x.id !== id);
   save();
   renderConfig(); fillCatSelects(); renderAll();
@@ -3737,18 +4057,6 @@ function renderConfig() {
     </div>`;
 
   renderCats();
-
-  document.getElementById("cfg-travel").innerHTML = `
-    <label class="chk"><input type="checkbox" ${st.travelCovered ? "checked" : ""} onchange="setFlag('travelCovered', this.checked)">
-      <span><b>${t("cfgTravelOn")}</b><div class="hint" style="margin:0">${t("cfgTravelWhy")}</div></span></label>
-    <div style="margin-top:10px; ${st.travelCovered ? "" : "opacity:.45; pointer-events:none"}">
-      <div class="hint" style="margin-bottom:6px">${t("cfgCoveredCats")}</div>
-      <div class="chiprow">
-        ${allCats().map(c => `<label class="mchip" style="cursor:pointer; display:flex; gap:6px; align-items:center">
-          <input type="checkbox" ${(st.coveredCats || []).includes(c.id) ? "checked" : ""} onchange="toggleCoveredCat('${c.id}', this.checked)">
-          <span class="dot" style="background:var(${c.color})"></span>${L(c.label)}</label>`).join("")}
-      </div>
-    </div>`;
 }
 function setFlag(key, v) { S.settings[key] = !!v; save(); renderAll(); renderConfig(); }
 /* Trocar a moeda do patrimônio converte os valores guardados — o número muda de
@@ -3761,13 +4069,6 @@ function setWealthCur(c) {
   S.settings.wealthCur = c;
   save(); renderAll(); renderConfig();
 }
-function toggleCoveredCat(id, on) {
-  const set = new Set(S.settings.coveredCats || []);
-  on ? set.add(id) : set.delete(id);
-  S.settings.coveredCats = [...set];
-  save(); renderAll(); renderConfig(); updateLancHint();
-}
-
 /* ───────── Beta: de onde vieram os dados ───────── */
 function renderBetaNote() {
   const el = document.getElementById("beta-note");
@@ -3849,7 +4150,6 @@ function fillWhereSelect() {
 }
 document.getElementById("l-date").value = todayStr();
 document.getElementById("l-type").onchange = updateLancForm;
-document.getElementById("l-trip").onchange = updateLancHint;
 document.getElementById("l-cat").onchange = updateLancHint;
 
 document.getElementById("f-lanc").onsubmit = e => {
@@ -3860,8 +4160,7 @@ document.getElementById("f-lanc").onsubmit = e => {
   const cur = document.getElementById("l-cur").value;
   if (tp === "gasto") {
     const place = lancPlace();
-    S.expenses.push({ ...base, cat: document.getElementById("l-cat").value,
-      trip: document.getElementById("l-trip").value, desc, place, cur: placeCur(place) });
+    S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, desc, place, cur: placeCur(place) });
   }
   if (tp === "renda") S.incomes.push({ ...base, cur, source: desc });
   if (tp === "aporte") S.contributions.push({ ...base, cur, dest: desc });

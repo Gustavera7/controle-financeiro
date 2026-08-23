@@ -32,9 +32,10 @@ o que mantém o custo zero e o deploy instantâneo.
    outra renda. Quem responde "não" nunca vê seletor de moeda, câmbio ou segunda renda.
    O que entra no "livre" é a política `freePolicy` (`"main"` = só a renda principal,
    padrão; `"all"` = as duas somadas) — o caso do Gustavo é uma configuração, não uma regra.
-4. **Gasto de viagem a trabalho em categoria coberta não desconta do livre.** Continua
-   sendo a regra central; agora `travelCovered` e `coveredCats` são do usuário (Config).
-   Extras pessoais durante viagem de trabalho descontam normalmente.
+4. **Existe gasto que não é seu e não pode descontar do livre.** No app principal isso
+   é "viagem a trabalho em categoria coberta" (`travelCovered` + `coveredCats`, na Config).
+   **Na beta a regra mudou de lugar:** quem decide é a categoria (`noCount`), marcada em
+   Config → Categorias — uma tela de configuração a menos para manter viva.
 5. **Nunca criar contas nem inserir credenciais pelo Gustavo** — ele cria as próprias
    contas (Supabase, Google Play, etc.).
 6. **`DEFAULTS` fica zerado** — nenhum dado pessoal no código. Usuário novo cai no wizard.
@@ -97,6 +98,22 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
   formulário, e cada linha se compara com o que rende **sem risco** naquele país — CDI ao
   vivo no Brasil, `SAFE_RATE` (pesquisa de `RATES_ASOF`) nas outras moedas — mais onde os
   dois chegam em 5 anos. Prioridade saiu: risco e vantagem ordenam a lista.
+- **Contas fixas** (`S.fixed`): aluguel, luz, internet, mercado — o que se repete todo
+  mês. `fixedPending(mk)` desconta do livre o que ainda não foi pago; marcar "Paguei"
+  (`payFixed`) cria o lançamento com `fixedId` e **o livre não se move** (sai de "a pagar",
+  entra em "gasto"). Mês fechado não cobra conta em aberto — mostra o que aconteceu.
+  O wizard ganhou um passo perguntando o total, que vira a primeira conta.
+- **"Empresa paga" é categoria, não configuração:** o cartão "Viagens a trabalho" e o campo
+  "Contexto" do formulário saíram. Uma categoria com `noCount` fica fora do livre, e a
+  migração move o que era coberto para a categoria "Empresa paga" guardando o nome da
+  categoria antiga na descrição — nenhum número do passado muda.
+- **Aporte com plano** (`aportePlan()` → `renderAportePlan()`): diz quanto falta para a meta
+  do mês e divide esse dinheiro entre os tipos que estão **abaixo do alvo** do perfil,
+  nomeando o produto pelo playbook do país onde o patrimônio mora. Rebalancear sem vender.
+- **Câmbio da viagem segue a moeda:** trocar o destino limpa a taxa anterior e busca a nova
+  (`tripFxAuto(mudouMoeda)`), o formulário mostra "US$ 100 = € 85,55" para a direção ficar
+  óbvia, criar viagem em outra moeda exige câmbio, e dá para corrigir depois na folha
+  (`setTripFx`). O bug era a taxa do destino anterior sobrevivendo à troca.
 - **Rewards direcionado ao gasto:** o guia longo de benefícios foi removido. Cada linha de
   `renderRewardInsights()` é acionável — registra ou troca o cartão daquela categoria ali
   mesmo (`rxEdit` / `rxSave`), sem voltar para um formulário no fim da tela.
