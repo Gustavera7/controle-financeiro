@@ -89,6 +89,17 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
   moeda dele, mais as viagens do período.
 - **Folha única** (`openSheet(kind, id)` → `renderSheet()`): patrimônio, viagem e segundo
   país dividem a mesma folha. Continua valendo: profundidade nova vira folha, não aba.
+- **Aba Viagens no lugar de Ideias.** A aba Ideias saiu inteira (não será vendida); o
+  número de abas segue o mesmo. A aba tem três partes: o cartão da viagem de agora
+  (`tripCardHTML()`, o mesmo do Início), o formulário curto e a lista agrupada em
+  agora / próximas / já foram. Criar viagem saiu da Config.
+- **Oportunidades com régua** (`oppCompare()`): valor, retorno esperado e risco entram no
+  formulário, e cada linha se compara com o que rende **sem risco** naquele país — CDI ao
+  vivo no Brasil, `SAFE_RATE` (pesquisa de `RATES_ASOF`) nas outras moedas — mais onde os
+  dois chegam em 5 anos. Prioridade saiu: risco e vantagem ordenam a lista.
+- **Rewards direcionado ao gasto:** o guia longo de benefícios foi removido. Cada linha de
+  `renderRewardInsights()` é acionável — registra ou troca o cartão daquela categoria ali
+  mesmo (`rxEdit` / `rxSave`), sem voltar para um formulário no fim da tela.
 - **Correções de celular** que valem também para o app principal quando promover: campos
   com 16px de verdade (a regra base `font: inherit` vencia a do `@media`, e o iOS dava
   zoom ao focar), `.grid > *` com `min-width: 0` e tabelas largas rolando dentro do cartão.
@@ -99,7 +110,8 @@ Cotações e índices vêm de APIs públicas com CORS liberado, sem chave: **Awe
 `MOEDA1-MOEDA2` do usuário, que alimenta o câmbio automático), **CoinGecko** (Bitcoin) e
 **BCB SGS** (séries 432 Selic, 4389 CDI, 13522 IPCA — só buscadas se o Brasil for um dos
 países). O que não tem API vira faixa de mercado no `PLAYBOOK`, com `RATES_ASOF` marcando a
-data da pesquisa; ao atualizar os números, atualize a data.
+data da pesquisa; ao atualizar os números, atualize a data. `SAFE_RATE` (a régua das
+oportunidades na beta) vem da mesma pesquisa — atualize junto.
 
 ## Como o dinheiro é representado
 
@@ -143,7 +155,8 @@ Não existe suíte de testes. O caminho que funciona:
 
 ## Telas
 
-`inicio` · `lanc` (lançamentos) · `invest` · `ideias` · `relatorio` · `rewards` · `metas` · `config`
+`inicio` · `lanc` (lançamentos) · `invest` · `relatorio` · `rewards` · `metas` · `config`
+(a beta troca `ideias` por `viagens`)
 
 As três primeiras são as do hábito diário e devem permanecer **limpas**; profundidade vai
 nas telas secundárias. Gustavo rejeitou uma versão anterior por ter módulos demais na
@@ -173,7 +186,8 @@ Blocos que só aparecem para quem eles servem: guia de benefícios e preço de c
 
 - Ofertas de parceiro são locais; falta o feed (e o contrato comercial por trás dele).
 - Gastos são sempre na moeda principal **no app principal**; a beta já resolve isso.
-- O guia de benefícios, quando aparece, ainda cita lojas do Meio-Oeste dos EUA.
+- O guia de benefícios (só no app principal) ainda cita lojas do Meio-Oeste dos EUA — na
+  beta ele foi removido em favor das linhas acionáveis por categoria.
 - Play Store via TWA exige `assetlinks.json` na **raiz do domínio** — o endereço atual
   (`/controle-financeiro/`) não permite; precisa de um repo `gustavera7.github.io` ou
   domínio próprio.

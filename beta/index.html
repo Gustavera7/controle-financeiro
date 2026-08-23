@@ -131,7 +131,7 @@
   .gitem .why { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
   .gitem select { font-size: 12.5px; padding: 3px 6px; }
   .gitem.off { opacity: .5; }
-  .gitem h3, #guide h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 14px 0 4px; }
+  .gitem h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 14px 0 4px; }
   input.cellnum { width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
   .month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .month-nav b { font-size: 15px; text-transform: capitalize; }
@@ -313,7 +313,7 @@
     <button data-tab="inicio" class="active" data-i18n="navHome"></button>
     <button data-tab="lanc" data-i18n="navEntries"></button>
     <button data-tab="invest" data-i18n="navInvest"></button>
-    <button data-tab="ideias" data-i18n="navIdeas"></button>
+    <button data-tab="viagens" data-i18n="navTrips"></button>
     <button data-tab="relatorio" data-i18n="navReport"></button>
     <button data-tab="rewards" data-i18n="navRewards"></button>
     <button data-tab="metas" data-i18n="navGoals"></button>
@@ -490,13 +490,19 @@
     <h2 data-i18n="oppTitle"></h2>
     <form class="inline" id="f-opp">
       <div class="field" style="flex:1; min-width:150px"><label data-i18n="oppName"></label><input type="text" id="o-name" required></div>
-      <div class="field"><label data-i18n="oppWhere"></label><select id="o-where"></select></div>
+      <div class="field"><label data-i18n="oppWhere"></label><select id="o-where" onchange="oppCurLabel()"></select></div>
+      <div class="field"><label id="o-amount-lbl" data-i18n="oppAmount"></label>
+        <input type="number" id="o-amount" inputmode="decimal" step="any" min="0" style="width:110px"></div>
+      <div class="field"><label data-i18n="oppRet"></label>
+        <input type="number" id="o-ret" inputmode="decimal" step="any" min="0" style="width:90px"></div>
+      <div class="field"><label data-i18n="oppRisk"></label>
+        <select id="o-risk"><option value="baixo" data-i18n="riskLo"></option><option value="medio" selected data-i18n="riskMid"></option><option value="alto" data-i18n="riskHi"></option></select></div>
       <div class="field"><label>Status</label><select id="o-status"><option value="avaliando" data-i18n="stEval"></option><option value="descartado" data-i18n="stDrop"></option><option value="investido" data-i18n="stDone"></option></select></div>
-      <div class="field"><label data-i18n="oppPrio"></label><select id="o-prio"><option value="alta" data-i18n="prHigh"></option><option value="media" selected data-i18n="prMed"></option><option value="baixa" data-i18n="prLow"></option></select></div>
       <div class="field" style="flex:1; min-width:150px"><label data-i18n="oppNotes"></label><input type="text" id="o-notes"></div>
       <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
     <div id="o-list" style="margin-top:10px"></div>
+    <div class="disclaimer hint" id="o-foot"></div>
     </div>
   </div>
 </section>
@@ -527,21 +533,19 @@
     <div class="hint" style="margin-top:10px" data-i18n-html="ofBiz"></div>
   </div>
 
-  <div class="card" id="guide-card">
-    <h2 data-i18n="gdTitle"></h2>
-    <p class="hint" style="margin-bottom:4px" data-i18n-html="gdTip"></p>
-    <div id="guide"></div>
-  </div>
   <div class="grid cols-2">
     <div class="card">
       <h2 data-i18n="rwTitle"></h2>
-      <form class="inline" id="f-rw">
-        <div class="field"><label data-i18n="lancCat"></label><select id="r-cat"></select></div>
-        <div class="field" style="flex:1"><label data-i18n="rwProg"></label><input type="text" id="r-prog" required data-i18n-ph="rwProgPh"></div>
-        <div class="field"><label data-i18n="rwRate"></label><input type="number" id="r-rate" inputmode="decimal" step="0.1" min="0" required style="width:90px"></div>
-        <button class="btn" type="submit" data-i18n="btnAdd"></button>
-      </form>
-      <div id="r-list" style="margin-top:10px"></div>
+      <div id="r-list"></div>
+      <details style="margin-top:10px">
+        <summary class="hint" style="cursor:pointer" data-i18n="rwOther"></summary>
+        <form class="inline" id="f-rw" style="margin-top:10px">
+          <div class="field"><label data-i18n="lancCat"></label><select id="r-cat"></select></div>
+          <div class="field" style="flex:1"><label data-i18n="rwProg"></label><input type="text" id="r-prog" required data-i18n-ph="rwProgPh"></div>
+          <div class="field"><label data-i18n="rwRate"></label><input type="number" id="r-rate" inputmode="decimal" step="any" min="0" required style="width:90px"></div>
+          <button class="btn" type="submit" data-i18n="btnAdd"></button>
+        </form>
+      </details>
     </div>
     <div class="card" id="fuel-card">
       <h2 data-i18n="fuTitle"></h2>
@@ -556,18 +560,17 @@
   </div>
 </section>
 
-<!-- ─────────── IDEIAS ─────────── -->
-<section class="tab" id="tab-ideias">
+
+<!-- ─────────── VIAGENS ─────────── -->
+<section class="tab" id="tab-viagens">
+  <div id="vg-atual"></div>
   <div class="card">
-    <h2 data-i18n="idRendaTitle"></h2>
-    <div class="warnbox" id="id-visa" data-i18n-html="idVisa"></div>
-    <div id="id-renda"></div>
+    <h2 data-i18n="vgNew"></h2>
+    <div id="vg-form"></div>
   </div>
   <div class="card">
-    <h2 data-i18n="idEconTitle"></h2>
-    <div id="id-econ-head" style="font-size:13.5px; margin-bottom:6px"></div>
-    <div id="id-econ"></div>
-    <div class="hint" data-i18n="idEconHint"></div>
+    <h2 data-i18n="vgList"></h2>
+    <div id="vg-lista"></div>
   </div>
 </section>
 
@@ -613,11 +616,6 @@
   <div class="card">
     <h2 data-i18n="cfgProfile"></h2>
     <div id="cfg-profile"></div>
-  </div>
-
-  <div class="card">
-    <h2 data-i18n="cfgPlaces"></h2>
-    <div id="cfg-places"></div>
   </div>
 
   <div class="card">
@@ -681,7 +679,7 @@ betaSeedLocal();
 const I18N = {
 pt: {
   docTitle: "Folga — quanto está livre este mês",
-  navHome: "Início", navEntries: "Lançamentos", navInvest: "Investir", navIdeas: "Ideias",
+  navHome: "Início", navEntries: "Lançamentos", navInvest: "Investir", navTrips: "Viagens",
   navReport: "Relatório", navRewards: "Rewards", navGoals: "Metas", navConfig: "Config",
   heroLabel: "Livre para gastar este mês",
   heroClosedNote: "mês fechado — o que sobrou depois de gastar e guardar",
@@ -768,26 +766,23 @@ pt: {
   apListTitle: "Todos os aportes", apListEmpty: "Nenhum aporte ainda.",
   apListHint: "Aportes são lançados na aba Lançamentos (tipo \"Investimento\").",
   oppTitle: "Oportunidades (investimento / negócio)", oppName: "Oportunidade", oppWhere: "Onde",
-  oppPrio: "Prioridade", oppNotes: "Notas",
+  oppNotes: "Notas", oppAmount: "Valor", oppRet: "Retorno esperado (%/ano)", oppRisk: "Risco",
+  riskLo: "Risco baixo", riskMid: "Risco médio", riskHi: "Risco alto",
+  oppSafeName: "renda fixa", oppPerYear: r => `${r}%/ano`,
+  oppAbove: (pp, n, r) => `<b class="pos">${pp} p.p. acima do seguro</b> (${n} ${r}%)`,
+  oppBelow: (pp, n, r) => `<b class="neg">${pp} p.p. abaixo do seguro</b> (${n} ${r}%)`,
+  oppInYears: (a, meu, seg) => `em ${a} anos: ${meu} contra ${seg} sem risco →`,
+  oppNums: "informe valor e retorno esperado para comparar com o que rende sem risco",
+  oppFoot: d => `A comparação usa o que rende sem risco naquele país (CDI ao vivo no Brasil; faixa de mercado nos outros, pesquisada em ${d}) e o retorno que você informou — não é promessa nem recomendação. Risco maior é justamente a chance de o número não vir.`,
   stEval: "Avaliando", stDrop: "Descartado", stDone: "Investido",
-  prHigh: "Alta", prMed: "Média", prLow: "Baixa",
   oppEmpty: "Nenhuma oportunidade registrada.",
-  thOpp: "Oportunidade", thWhere: "Onde", thPrio: "Prioridade", thNotes: "Notas",
-  gdTitle: "Guia de benefícios — EUA (Meio-Oeste) & viagens de carro",
-  gdTip: "<b>Dica-chave:</b> programas de fidelidade creditam na <b>sua</b> conta pessoal mesmo pagando com o cartão da empresa — escaneie o app ou informe seu telefone antes de pagar. Confirme na política da empresa.",
-  gdMember: "membro", gdEval: "avaliando",
   rwTitle: "Melhor cartão por categoria", rwProg: "Cartão / programa", rwProgPh: "ex: Costco Visa", rwRate: "Retorno (%)",
-  rwEmpty: "Registre seus cartões e o retorno por categoria.", rwBest: "melhor", thProg: "Programa", thReturn: "Retorno",
+  rwEmpty: "Nenhum cartão registrado ainda — use os botões do bloco de cima.", rwBest: "melhor", thProg: "Programa", thReturn: "Retorno",
+  rwOther: "Registrar cartão de uma categoria sem gasto ainda",
   fuTitle: "Preço de combustível por posto", fuName: "Posto", fuNamePh: "ex: Costco Davenport",
   fuPrice: "US$/galão", fuUpdate: "Atualizar", fuEmpty: "Nenhum posto registrado.",
   fuCheapest: "mais barato", thStation: "Posto", thVs: "vs. mais barato", thUpdated: "Atualizado",
   fuHint: "Registrar o mesmo posto de novo atualiza preço e data.",
-  idRendaTitle: "Renda extra — o que pode (e o que não pode) no seu visto",
-  idVisa: "⚠️ <b>Regra de ouro do visto de trabalho:</b> você só pode ter <i>emprego</i> no país onde mora com a empresa que patrocina o visto. Renda <b>ativa</b> por fora (aplicativos, freelas locais, revenda habitual) viola o visto e ameaça vistos futuros. O caminho seguro: renda <b>passiva</b> onde você mora + renda gerada no seu país de origem.",
-  idEconTitle: "Economia — onde soltar menos dinheiro",
-  idEconHint: "Estimativas para quem mora só, viaja muito e remete dinheiro ao Brasil. Marque \"Adotei\" para somar no potencial.",
-  idAdopted: (n, lo, hi, yr) => `Você adotou <b>${n}</b> ideia${n > 1 ? "s" : ""} — potencial de <b class="pos">~$${lo}–${hi}/mês</b> de volta no bolso (dá ${yr} por ano no ritmo máximo).`,
-  idTotal: (lo, hi) => `Total possível adotando tudo: <b>~$${lo}–${hi}/mês</b>. Comece pela remessa — é a de maior impacto.`,
   idPerMonth: "/mês",
   repPrint: "🖨 Imprimir / PDF", repSummary: "Resumo do mês", repCats: "Gastos por categoria",
   repWealth: "Patrimônio & meta", repYtd: "Ano até aqui",
@@ -809,8 +804,6 @@ pt: {
   cfgSecondLine: (c, cur) => `Segunda renda: <b>${c}</b> · em <b>${cur}</b>.`,
   cfgNoSecond: "Sem segunda renda — o app trabalha com um país só.",
   cfgWealthCur: "Moeda do patrimônio",
-  cfgVisa: "Mostrar avisos de visto de trabalho",
-  cfgVisaWhy: "para quem mora fora com visto patrocinado: a aba Ideias marca o que é permitido e o que arrisca o visto",
   cfgTravelOn: "A empresa reembolsa minhas viagens a trabalho",
   cfgTravelWhy: "com isso ligado, gastos marcados como viagem a trabalho nas categorias abaixo não descontam do seu livre",
   cfgCoveredCats: "Categorias cobertas em viagem a trabalho:",
@@ -914,11 +907,12 @@ pt: {
   rxLead: (cat, spend, has, year) => `Seu maior gasto é <b>${cat}</b>, ${spend}/mês. ${has} Ajustando categoria por categoria, dá para recuperar <b class="pos">${year}/ano</b> a mais.`,
   rxLeadHas: (prog, rate) => `Hoje ele passa no ${prog} (${rate}%).`,
   rxLeadNone: "Você ainda não registrou cartão para essa categoria — é dinheiro passando sem cashback.",
-  rxCol1: "Gasto/mês", rxCol2: "O que fazer", rxCol3: "Ganho/ano",
-  rxOk: "no melhor",
-  rxUpgrade: (prog, rate, lo, hi) => `${prog} rende ${rate}% — cartões da categoria costumam devolver ${lo}–${hi}%`,
-  rxNoCard: (lo, hi) => `sem cartão cadastrado — a categoria costuma devolver ${lo}–${hi}%`,
-  rxPerYear: "no ritmo atual",
+  rxHas: (prog, rate, v) => `${prog} · ${rate}% → volta ${v}/mês`,
+  rxNone: "nenhum cartão registrado aqui — esse gasto passa sem cashback",
+  rxOffer: (p, r) => `oferta ativa: ${p} +${r}%`,
+  rxBench: (lo, hi) => `cartões da categoria costumam devolver ${lo}–${hi}%`,
+  rxAddCard: "Registrar cartão", rxChange: "Trocar", rxSaveBtn: "Salvar", rxCancel: "cancelar",
+  rxPerYear: "por ano, no ritmo atual",
   rxFoot: m => `Média dos últimos ${m} ${m > 1 ? "meses" : "mês"} com lançamentos. As faixas são retorno típico de mercado por categoria, não ofertas do Folga — confirme com o emissor do cartão.`,
   /* ── Ofertas ── */
   ofTitle: "Ofertas Folga",
@@ -928,7 +922,6 @@ pt: {
   ofBadge: "oferta", ofValid: m => `até ${m}`, ofWorth: v => `vale ~${v}/mês para você`,
   ofExpired: "expirada",
   ofBiz: "<b>Para empresas:</b> uma marca pode oferecer +1% de cashback a quem usa o Folga e aparecer justamente para quem já gasta naquela categoria. O cruzamento acontece <b>dentro do aparelho</b>: a oferta chega ao app, e nenhum dado de quem usa sai daqui. Interessado? Fale com a gente.",
-  idNoEst: "Ideias de economia — as estimativas em dólar valem para quem mora nos EUA; aqui ficam as ideias que valem em qualquer lugar.",
   otherLang: "English",
   installTitle: "Instalar no celular",
   installBody: "Deixe a Folga na tela inicial: abre em tela cheia e funciona sem internet.",
@@ -949,9 +942,11 @@ pt: {
   catDelAsk: n => `Apagar a categoria “${n}”?`,
   catDelUsed: (n, q) => `“${n}” tem ${q} lançamento${q > 1 ? "s" : ""}. Apagar move ${q > 1 ? "esses gastos" : "esse gasto"} para “Outros”. Continuar?`,
   /* ── Onde / países e viagens ── */
-  lancWhere: "Onde", whereHere: "aqui",
-  cfgPlaces: "Países e viagens",
-  cfgPlacesHint: "Viagem de férias, semana de trabalho fora ou uma temporada longa: crie aqui e o app abre a visão da viagem enquanto ela durar. Ao encerrar, os gastos entram no painel principal.",
+  lancWhere: "Onde",
+  vgNew: "Nova viagem ou temporada fora", vgList: "Suas viagens",
+  vgLead: "Viagem tem dinheiro próprio: enquanto ela dura, o gasto de lá vive no orçamento dela e o seu mês em casa não se assusta. Ao encerrar, tudo entra no painel.",
+  vgOngoing: "Agora", vgNext: "Próximas", vgDone: "Já foram", vgNone: "Nenhuma viagem ainda — crie a primeira acima.",
+  vgYear: (n, v) => `${n > 1 ? n + " viagens" : "1 viagem"} este ano · ${v} gastos`,
   tripNew: "Nova viagem", tripDest: "Destino", tripKind: "Tipo", tripNameLabel: "Nome (opcional)",
   tripKindFun: "Férias / lazer", tripKindWork: "Trabalho", tripKindLong: "Temporada longa",
   tripStart: "Ida", tripEnd: "Volta", tripBudget: "Orçamento", tripBudgetMonth: "Orçamento por mês",
@@ -959,7 +954,6 @@ pt: {
   tripFx: (a, b) => `${a} por 1 ${b}`, tripFxAuto: "automático",
   tripCreate: "Criar viagem", tripNeedDates: "Escolha a data de ida (e a de volta, se for viagem).",
   tripNeedBudget: "Diga o orçamento — é ele que vira o “disponível por dia”.",
-  tripNone: "Nenhuma viagem cadastrada.",
   tripOngoing: "em andamento", tripSoon: n => n <= 1 ? "começa amanhã" : `começa em ${n} dias`,
   tripOver: "terminou", tripClosedBadge: "encerrada", tripLong: "temporada",
   tripAvail: "Disponível na viagem",
@@ -1008,7 +1002,7 @@ en: {
   installIos: "On iPhone: tap Share (⬆️) in the Safari bar and choose “Add to Home Screen”.",
   installDone: "Done — Folga is installed. 🎉",
   docTitle: "Folga — how much is free this month",
-  navHome: "Home", navEntries: "Entries", navInvest: "Invest", navIdeas: "Ideas",
+  navHome: "Home", navEntries: "Entries", navInvest: "Invest", navTrips: "Trips",
   navReport: "Report", navRewards: "Rewards", navGoals: "Goals", navConfig: "Settings",
   heroLabel: "Free to spend this month",
   heroClosedNote: "closed month — what was left after spending and saving",
@@ -1095,26 +1089,23 @@ en: {
   apListTitle: "All contributions", apListEmpty: "No contributions yet.",
   apListHint: "Contributions are logged in the Entries tab (type \"Investment\").",
   oppTitle: "Opportunities (investment / business)", oppName: "Opportunity", oppWhere: "Where",
-  oppPrio: "Priority", oppNotes: "Notes",
+  oppNotes: "Notes", oppAmount: "Amount", oppRet: "Expected return (%/yr)", oppRisk: "Risk",
+  riskLo: "Low risk", riskMid: "Medium risk", riskHi: "High risk",
+  oppSafeName: "fixed income", oppPerYear: r => `${r}%/yr`,
+  oppAbove: (pp, n, r) => `<b class="pos">${pp} pp above safe</b> (${n} ${r}%)`,
+  oppBelow: (pp, n, r) => `<b class="neg">${pp} pp below safe</b> (${n} ${r}%)`,
+  oppInYears: (a, meu, seg) => `in ${a} years: ${meu} against ${seg} risk-free →`,
+  oppNums: "add amount and expected return to compare against the risk-free option",
+  oppFoot: d => `The comparison uses what money earns risk-free in that country (live CDI in Brazil; market range elsewhere, researched on ${d}) and the return you entered — not a promise, not advice. Higher risk is exactly the chance that number doesn't show up.`,
   stEval: "Evaluating", stDrop: "Dropped", stDone: "Invested",
-  prHigh: "High", prMed: "Medium", prLow: "Low",
   oppEmpty: "No opportunities logged.",
-  thOpp: "Opportunity", thWhere: "Where", thPrio: "Priority", thNotes: "Notes",
-  gdTitle: "Perks guide — US Midwest & road trips",
-  gdTip: "<b>Key tip:</b> loyalty programs credit <b>your</b> personal account even when you pay with the company card — scan the app or give your phone number before paying. Check company policy.",
-  gdMember: "member", gdEval: "evaluating",
   rwTitle: "Best card per category", rwProg: "Card / program", rwProgPh: "e.g. Costco Visa", rwRate: "Return (%)",
-  rwEmpty: "Log your cards and the return per category.", rwBest: "best", thProg: "Program", thReturn: "Return",
+  rwEmpty: "No cards logged yet — use the buttons in the block above.", rwBest: "best", thProg: "Program", thReturn: "Return",
+  rwOther: "Add a card for a category with no spending yet",
   fuTitle: "Gas price by station", fuName: "Station", fuNamePh: "e.g. Costco Davenport",
   fuPrice: "US$/gallon", fuUpdate: "Update", fuEmpty: "No stations logged.",
   fuCheapest: "cheapest", thStation: "Station", thVs: "vs. cheapest", thUpdated: "Updated",
   fuHint: "Logging the same station again updates its price and date.",
-  idRendaTitle: "Extra income — what your visa allows (and what it doesn't)",
-  idVisa: "⚠️ <b>Work-visa golden rule:</b> in the country you live in, you may only be <i>employed</i> by the company sponsoring your visa. <b>Active</b> side income (gig apps, local freelancing, habitual reselling) violates the visa and threatens future ones. The safe path: <b>passive</b> income where you live + income generated in your home country.",
-  idEconTitle: "Savings — where to stop leaking money",
-  idEconHint: "Estimates for someone living alone, traveling a lot and sending money to Brazil. Mark \"Adopted\" to add to your potential.",
-  idAdopted: (n, lo, hi, yr) => `You adopted <b>${n}</b> idea${n > 1 ? "s" : ""} — potential of <b class="pos">~$${lo}–${hi}/mo</b> back in your pocket (${yr} a year at full pace).`,
-  idTotal: (lo, hi) => `Adopting everything: <b>~$${lo}–${hi}/mo</b>. Start with remittances — the biggest impact.`,
   idPerMonth: "/mo",
   repPrint: "🖨 Print / PDF", repSummary: "Month summary", repCats: "Spending by category",
   repWealth: "Wealth & goal", repYtd: "Year so far",
@@ -1136,8 +1127,6 @@ en: {
   cfgSecondLine: (c, cur) => `Second income: <b>${c}</b>, in <b>${cur}</b>.`,
   cfgNoSecond: "No second income — the app runs on a single country.",
   cfgWealthCur: "Wealth currency",
-  cfgVisa: "Show work-visa warnings",
-  cfgVisaWhy: "for people living abroad on a sponsored visa: the Ideas tab flags what's allowed and what risks the visa",
   cfgTravelOn: "My company reimburses work trips",
   cfgTravelWhy: "with this on, expenses tagged as a work trip in the categories below don't reduce your free amount",
   cfgCoveredCats: "Categories covered on work trips:",
@@ -1241,11 +1230,12 @@ en: {
   rxLead: (cat, spend, has, year) => `Your biggest expense is <b>${cat}</b>, ${spend}/mo. ${has} Fixing it category by category recovers <b class="pos">${year}/yr</b> more.`,
   rxLeadHas: (prog, rate) => `Today it runs through ${prog} (${rate}%).`,
   rxLeadNone: "You haven't logged a card for that category yet — that's money going by with no cashback.",
-  rxCol1: "Spend/mo", rxCol2: "What to do", rxCol3: "Gain/yr",
-  rxOk: "best available",
-  rxUpgrade: (prog, rate, lo, hi) => `${prog} returns ${rate}% — category cards typically give ${lo}–${hi}%`,
-  rxNoCard: (lo, hi) => `no card logged — this category typically returns ${lo}–${hi}%`,
-  rxPerYear: "at your current pace",
+  rxHas: (prog, rate, v) => `${prog} · ${rate}% → ${v}/mo back`,
+  rxNone: "no card logged here — this spending earns nothing back",
+  rxOffer: (p, r) => `active offer: ${p} +${r}%`,
+  rxBench: (lo, hi) => `cards in this category usually give ${lo}–${hi}%`,
+  rxAddCard: "Add card", rxChange: "Change", rxSaveBtn: "Save", rxCancel: "cancel",
+  rxPerYear: "a year, at the current pace",
   rxFoot: m => `Average of the last ${m} ${m > 1 ? "months" : "month"} with entries. The ranges are typical market returns per category, not Folga offers — confirm with your card issuer.`,
   /* ── Offers ── */
   ofTitle: "Folga offers",
@@ -1255,7 +1245,6 @@ en: {
   ofBadge: "offer", ofValid: m => `until ${m}`, ofWorth: v => `worth ~${v}/mo to you`,
   ofExpired: "expired",
   ofBiz: "<b>For businesses:</b> a brand can offer +1% cashback to Folga users and show up exactly for the people already spending in that category. The matching happens <b>on the device</b>: the offer comes into the app, and no user data leaves it. Interested? Get in touch.",
-  idNoEst: "Savings ideas — the dollar estimates apply to the US; these are the ones that work anywhere.",
   otherLang: "Português",
   /* ── Beta ── */
   betaNote: d => `This is the <b>beta</b>: trips, two countries and your own categories. Your data was <b>copied</b> from the main app${d ? " on " + d : ""} — the app you already use stays untouched, and nothing here goes back on its own.`,
@@ -1270,9 +1259,11 @@ en: {
   catDelAsk: n => `Delete the category “${n}”?`,
   catDelUsed: (n, q) => `“${n}” has ${q} entr${q > 1 ? "ies" : "y"}. Deleting moves ${q > 1 ? "them" : "it"} to “Other”. Continue?`,
   /* ── Where / countries and trips ── */
-  lancWhere: "Where", whereHere: "here",
-  cfgPlaces: "Countries & trips",
-  cfgPlacesHint: "A vacation, a work week abroad or a long stay: create it here and the app opens the trip view while it lasts. When you close it, the spending lands on your main panel.",
+  lancWhere: "Where",
+  vgNew: "New trip or stay abroad", vgList: "Your trips",
+  vgLead: "A trip has its own money: while it lasts, spending there lives in its budget and your month at home stays calm. When you close it, everything lands on the panel.",
+  vgOngoing: "Now", vgNext: "Coming up", vgDone: "Past", vgNone: "No trips yet — create your first one above.",
+  vgYear: (n, v) => `${n} trip${n > 1 ? "s" : ""} this year · ${v} spent`,
   tripNew: "New trip", tripDest: "Destination", tripKind: "Type", tripNameLabel: "Name (optional)",
   tripKindFun: "Vacation", tripKindWork: "Work", tripKindLong: "Long stay",
   tripStart: "Out", tripEnd: "Back", tripBudget: "Budget", tripBudgetMonth: "Budget per month",
@@ -1280,7 +1271,6 @@ en: {
   tripFx: (a, b) => `${a} per 1 ${b}`, tripFxAuto: "automatic",
   tripCreate: "Create trip", tripNeedDates: "Pick the start date (and the return, if it is a trip).",
   tripNeedBudget: "Set the budget — it is what becomes “available per day”.",
-  tripNone: "No trips yet.",
   tripOngoing: "ongoing", tripSoon: n => n <= 1 ? "starts tomorrow" : `starts in ${n} days`,
   tripOver: "ended", tripClosedBadge: "closed", tripLong: "long stay",
   tripAvail: "Available on this trip",
@@ -1408,12 +1398,11 @@ const DEFAULTS = {
     /* Perfil de uso */
     travelCovered: true,               // a empresa reembolsa viagem a trabalho?
     coveredCats: [...COVERED_DEFAULT], // categorias cobertas em viagem a trabalho
-    visaNotes: false,                  // mostrar avisos de visto de trabalho
     catRestDone: false,                // "restaurantes" já foi oferecido a quem cobre comida
   },
   expenses: [], incomes: [], contributions: [],
-  portfolio: [], opportunities: [], rewards: [], fuel: [], guide: {},
-  ideas: {}, checklist: {}, market: null,
+  portfolio: [], opportunities: [], rewards: [], fuel: [],
+  checklist: {}, market: null,
   accounts: [],   // contas/produtos do usuário com taxa conhecida
   offers: [],     // ofertas de parceiros (hoje manuais; amanhã, feed do Folga)
   cats: [],       // categorias criadas pelo usuário
@@ -1447,7 +1436,6 @@ function migrate(d) {
     st.secondCountry = "BR"; st.secondCur = "BRL";
     st.freePolicy = "main";          // era a regra fixa do app
     st.wealthCur = "BRL";            // patrimônio e meta eram sempre em reais
-    st.visaNotes = st.hasSecond;     // quem tinha renda nos dois países via os avisos
   }
   delete st.usMonthly; delete st.brMonthly;
   if (!st.homeCur) st.homeCur = countryOf(st.homeCountry).cur;
@@ -1462,6 +1450,12 @@ function migrate(d) {
   }));
   s.accounts = s.accounts || [];
   s.offers = s.offers || [];
+  /* Oportunidade agora tem valor, retorno esperado e risco — as antigas
+     entram sem números e o usuário completa quando quiser. */
+  s.opportunities = (s.opportunities || []).map(o => ({
+    ...o, amount: Number(o.amount) || 0, ret: Number(o.ret) || 0,
+    risk: ["baixo","medio","alto"].includes(o.risk) ? o.risk : "medio",
+  }));
   /* Categorias do usuário: rótulo pode ter vindo como texto simples */
   s.cats = (s.cats || []).filter(c => c && c.id).map((c, i) => ({
     id: c.id,
@@ -1516,7 +1510,6 @@ function load() {
       s.opportunities = o.opportunities || [];
       s.rewards = o.rewards || [];
       s.fuel = o.fuel || [];
-      s.guide = o.guide || {};
       if (o.settings) {
         s.settings.fx = o.settings.fx || s.settings.fx;
         if (o.settings.paycheck) s.settings.mainMonthly = Math.round(o.settings.paycheck * 26 / 12);
@@ -1693,6 +1686,8 @@ function expBucket(e) {
     ? "second" : "main";
 }
 const ptn = n => lang === "pt" ? Number(n).toFixed(2).replace(".", ",") : Number(n).toFixed(2);
+/* Taxa curta, sem zero sobrando: 9,5% em vez de 9,50% */
+const pctn = n => Number(n || 0).toLocaleString(dloc(), { maximumFractionDigits: 2 });
 
 /* ───────── Números do mês ─────────
    Tudo que sai daqui na moeda principal, exceto o que tem sufixo Second. */
@@ -2093,24 +2088,41 @@ function renderInvest() {
         <td class="num">${fmtCur(c.amount, c.cur || mainCur())}</td>
         <td style="width:30px"><button class="mini" title="${t("del")}" onclick="delLanc('aporte','${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
 
-  const prioOrder = { alta: 0, media: 1, baixa: 2 };
-  const statusBadge = { avaliando: "warn", investido: "covered", descartado: "crit" };
   const stLabel = { avaliando: t("stEval"), investido: t("stDone"), descartado: t("stDrop") };
+  const riskLabel = { baixo: t("riskLo"), medio: t("riskMid"), alto: t("riskHi") };
+  const riskBadge = { baixo: "covered", medio: "counts", alto: "warn" };
+  /* Ordem: o que ainda está vivo primeiro, e dentro disso o que mais rende
+     acima da régua — a lista já é a resposta. */
+  const vantagem = o => { const c = oppCompare(o); return c ? c.delta : -999; };
   const os = [...S.opportunities].sort((a,b) =>
-    (a.status === "descartado") - (b.status === "descartado") || prioOrder[a.prio] - prioOrder[b.prio]);
+    (a.status === "descartado") - (b.status === "descartado") ||
+    vantagem(b) - vantagem(a) || (b.amount || 0) - (a.amount || 0));
   document.getElementById("o-list").innerHTML = os.length === 0
     ? `<div class="empty">${t("oppEmpty")}</div>`
-    : `<table><thead><tr><th>${t("thOpp")}</th><th>${t("thWhere")}</th><th>${t("thPrio")}</th><th>Status</th><th>${t("thNotes")}</th><th></th></tr></thead><tbody>` +
-      os.map(o => `<tr ${o.status === "descartado" ? 'style="opacity:.55"' : ""}>
-        <td>${esc(o.name)}</td><td>${oppWhereLabel(o.where)}</td>
-        <td>${o.prio === "alta" ? "🔺 " + t("prHigh") : o.prio === "media" ? t("prMed") : t("prLow")}</td>
-        <td><span class="badge ${statusBadge[o.status]}">${stLabel[o.status]}</span>
-          <select onchange="setOppStatus('${o.id}', this.value)" style="font-size:11px; padding:1px 2px; margin-left:4px">
-            ${["avaliando","investido","descartado"].map(s2 => `<option value="${s2}" ${s2 === o.status ? "selected" : ""}>${stLabel[s2]}</option>`).join("")}
-          </select></td>
-        <td>${esc(o.notes || "")}</td>
-        <td><button class="mini" title="${t("del")}" onclick="delOpp('${o.id}')">✕</button></td>
-      </tr>`).join("") + "</tbody></table>";
+    : os.map(o => {
+        const cur = oppCur(o);
+        const cmp = oppCompare(o);
+        const linha1 = [oppWhereLabel(o.where), o.amount > 0 ? fmtCur(o.amount, cur, 0) : "",
+          o.ret > 0 ? t("oppPerYear", pctn(o.ret)) : ""].filter(Boolean).join(" · ");
+        const linha2 = cmp
+          ? `${cmp.delta >= 0 ? t("oppAbove", pctn(cmp.delta), cmp.safe.n, pctn(cmp.safe.r))
+              : t("oppBelow", pctn(-cmp.delta), cmp.safe.n, pctn(cmp.safe.r))} · ` +
+            `${t("oppInYears", cmp.anos, fmtCur(cmp.meu, cur, 0), fmtCur(cmp.seguro, cur, 0))} ` +
+            `<b class="${cmp.dif >= 0 ? "pos" : "neg"}">${cmp.dif >= 0 ? "+" : "−"}${fmtCur(Math.abs(cmp.dif), cur, 0)}</b>`
+          : t("oppNums");
+        return `<div class="gitem ${o.status === "descartado" ? "off" : ""}">
+          <div><b>${esc(o.name)}</b> <span class="badge ${riskBadge[o.risk] || "counts"}">${riskLabel[o.risk] || riskLabel.medio}</span>
+            <div class="why">${linha1}</div>
+            <div class="why">${linha2}</div>
+            ${o.notes ? `<div class="why">${esc(o.notes)}</div>` : ""}</div>
+          <div style="display:flex; gap:4px; align-items:center">
+            <select onchange="setOppStatus('${o.id}', this.value)">
+              ${["avaliando","investido","descartado"].map(s2 => `<option value="${s2}" ${s2 === o.status ? "selected" : ""}>${stLabel[s2]}</option>`).join("")}
+            </select>
+            <button class="mini" title="${t("del")}" onclick="delOpp('${o.id}')">✕</button></div>
+        </div>`;
+      }).join("");
+  document.getElementById("o-foot").textContent = t("oppFoot", RATES_ASOF);
 }
 /* "Onde" das oportunidades: hoje guarda o código do país; dados antigos guardam o nome */
 function oppWhereLabel(w) {
@@ -2123,6 +2135,24 @@ function setPortType(id, ty) { const p = S.portfolio.find(p => String(p.id) === 
 function setPortCur(id, c) { const p = S.portfolio.find(p => String(p.id) === String(id)); if (p) { p.cur = c; save(); afterWealthEdit(); } }
 function delPort(id) { S.portfolio = S.portfolio.filter(p => String(p.id) !== String(id)); save(); afterWealthEdit(); }
 function delOpp(id) { S.opportunities = S.opportunities.filter(o => String(o.id) !== String(id)); save(); renderInvest(); }
+const oppCur = o => countryOf(o.where).cur;
+/* Compara o retorno que você espera com o que renderia sem risco, e mostra
+   onde os dois chegam em 5 anos. Só aparece quando há números para comparar. */
+function oppCompare(o) {
+  const safe = safeRateFor(oppCur(o));
+  if (!(o.amount > 0) || !(o.ret > 0) || !safe || !(safe.r > 0)) return null;
+  const anos = 5;
+  return { safe, anos,
+    meu: o.amount * Math.pow(1 + o.ret / 100, anos),
+    seguro: o.amount * Math.pow(1 + safe.r / 100, anos),
+    delta: o.ret - safe.r,
+    get dif() { return this.meu - this.seguro; } };
+}
+function oppCurLabel() {
+  const el = document.getElementById("o-amount-lbl");
+  const w = document.getElementById("o-where");
+  if (el && w) el.textContent = `${t("oppAmount")} (${curSym(countryOf(w.value).cur)})`;
+}
 function setOppStatus(id, st) { const o = S.opportunities.find(o => String(o.id) === String(id)); if (o) { o.status = st; save(); renderInvest(); } }
 function afterWealthEdit() { renderAll(); if (document.getElementById("sheet").classList.contains("on")) renderSheet(); }
 function setRisk(v) { S.settings.riskProfile = v; save(); afterWealthEdit(); }
@@ -2274,77 +2304,6 @@ function addAsset(e) {
 }
 
 /* ───────── Rewards (visão completa) ───────── */
-const GUIDE = [
-  { group: {pt:"Clubes & mercados — Quad Cities", en:"Clubs & groceries — Quad Cities"}, items: [
-    { id:"costco",   name:"Costco (Davenport)",
-      why:{pt:"Gasolina normalmente a mais barata da região + atacado. Anuidade ~US$65; tier Executive (~US$130) devolve 2% do gasto anual.",
-           en:"Usually the cheapest gas in the region + wholesale. ~US$65/yr; Executive tier (~US$130) returns 2% of annual spending."} },
-    { id:"samsclub", name:"Sam's Club (Davenport / Moline)",
-      why:{pt:"Alternativa mais barata (~US$50/ano), gasolina barata e Scan & Go.",
-           en:"Cheaper alternative (~US$50/yr), cheap gas and Scan & Go."} },
-    { id:"hyvee",    name:"Hy-Vee Perks + Fuel Saver",
-      why:{pt:"Maior mercado de Iowa; compras acumulam desconto por galão (vale nos Casey's participantes). Grátis.",
-           en:"Iowa's biggest grocer; purchases earn per-gallon discounts (works at participating Casey's). Free."} },
-    { id:"kwikstar", name:"Kwik Rewards (Kwik Star)",
-      why:{pt:"Forte em Iowa/Wisconsin/Minnesota; desconto por galão e pontos. Grátis.",
-           en:"Strong in Iowa/Wisconsin/Minnesota; per-gallon discounts and points. Free."} },
-  ]},
-  { group: {pt:"Combustível — redes nacionais (viagens de carro)", en:"Fuel — national networks (road trips)"}, items: [
-    { id:"caseys",  name:"Casey's Rewards",
-      why:{pt:"Onipresente no Meio-Oeste; pontos viram desconto em combustível — mesmo pagando com o cartão da empresa, os pontos são seus.",
-           en:"Everywhere in the Midwest; points become fuel discounts — even paying with the company card, the points are yours."} },
-    { id:"shell",   name:"Shell Fuel Rewards",
-      why:{pt:"Rede nacional — padrão para rotas longas. Grátis.", en:"National network — a staple for long routes. Free."} },
-    { id:"exxon",   name:"Exxon Mobil Rewards+",
-      why:{pt:"Nacional; pontos por galão e na loja. Grátis.", en:"National; points per gallon and in-store. Free."} },
-    { id:"bpme",    name:"BPme Rewards (BP/Amoco)",
-      why:{pt:"Nacional; desconto por galão. Grátis.", en:"National; per-gallon discount. Free."} },
-    { id:"pilot",   name:"Pilot Flying J — myRewards",
-      why:{pt:"Postos de rodovia interestadual. Grátis.", en:"Interstate highway stations. Free."} },
-    { id:"gasbuddy",name:"GasBuddy (app)",
-      why:{pt:"Comparar preços de postos em qualquer cidade. Use só o app grátis.", en:"Compare station prices in any city. Stick to the free app."} },
-    { id:"upside",  name:"Upside (app)",
-      why:{pt:"Cashback real em postos e restaurantes; exige cartão vinculado — confirme se funciona com o cartão da empresa.",
-           en:"Real cashback at stations and restaurants; needs a linked card — check whether it works with the company card."} },
-  ]},
-  { group: {pt:"Voos — MLI (Moline), CID, ORD", en:"Flights — MLI (Moline), CID, ORD"}, items: [
-    { id:"airline", name:{pt:"Escolher 1 programa de milhas principal", en:"Pick 1 main airline loyalty program"},
-      why:{pt:"American, Delta e United atendem MLI. Concentre na companhia que a empresa mais usa e SEMPRE informe seu número: as milhas de voos de trabalho são suas.",
-           en:"American, Delta and United serve MLI. Focus on the airline your company books most and ALWAYS enter your number: miles from work flights are yours."} },
-    { id:"precheck",name:"TSA PreCheck",
-      why:{pt:"~US$78 por 5 anos, fila rápida. Quem voa toda semana recupera em tempo; vários cartões reembolsam.",
-           en:"~US$78 for 5 years, fast lane. Weekly flyers earn it back in time; several cards reimburse it."} },
-  ]},
-  { group: {pt:"Alimentação fora & delivery", en:"Eating out & delivery"}, items: [
-    { id:"dashpass", name:"DoorDash DashPass",
-      why:{pt:"~US$10/mês, entrega grátis — só compensa com 3+ pedidos pessoais/mês (em viagem a trabalho a comida é coberta).",
-           en:"~US$10/mo, free delivery — only worth it with 3+ personal orders/mo (work-trip meals are covered)."} },
-    { id:"uberone",  name:"Uber One",
-      why:{pt:"~US$10/mês: Uber Eats + desconto em corridas — pode valer mais que o DashPass se usa Uber nas viagens.",
-           en:"~US$10/mo: Uber Eats + ride discounts — may beat DashPass if you use Uber when traveling."} },
-    { id:"chainapps",name:{pt:"Apps de redes (McDonald's, Chipotle, Starbucks…)", en:"Chain apps (McDonald's, Chipotle, Starbucks…)"},
-      why:{pt:"Grátis; descontos agressivos e pontos que viram refeição.", en:"Free; aggressive deals and points that become meals."} },
-  ]},
-];
-const GUIDE_STATUS = {
-  pendente:{pt:"Pendente",en:"Pending"}, avaliando:{pt:"Avaliando",en:"Evaluating"},
-  membro:{pt:"Sou membro",en:"I'm a member"}, descartado:{pt:"Descartado",en:"Not for me"},
-};
-function renderGuide() {
-  document.getElementById("guide").innerHTML = GUIDE.map(g =>
-    `<h3>${L(g.group)}</h3>` + g.items.map(it => {
-      const st = S.guide[it.id] || "pendente";
-      const badge = st === "membro" ? `<span class="badge covered">${t("gdMember")}</span>`
-        : st === "avaliando" ? `<span class="badge warn">${t("gdEval")}</span>` : "";
-      return `<div class="gitem ${st === "descartado" ? "off" : ""}">
-        <div><b>${L(it.name)}</b> ${badge}<div class="why">${L(it.why)}</div></div>
-        <select onchange="setGuide('${it.id}', this.value)">
-          ${Object.entries(GUIDE_STATUS).map(([k,v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${L(v)}</option>`).join("")}
-        </select>
-      </div>`;
-    }).join("")).join("");
-}
-function setGuide(id, v) { S.guide[id] = v; save(); renderGuide(); }
 
 /* ═════════ Leitura dos gastos × retorno ═════════
    O app já sabe onde seu dinheiro vai. Aqui ele cruza isso com o que você
@@ -2418,26 +2377,48 @@ function renderRewardInsights() {
     </div>
     <div style="font-size:14px">${t("rxLead", L(top.c.label), fmtM0(top.spend), top.mine ? t("rxLeadHas", esc(top.mine.prog), ptn(top.rate)) : t("rxLeadNone"), fmtM0(gain * 12))}</div>`;
 
-  document.getElementById("rx-list").innerHTML =
-    `<table><thead><tr><th>${t("lancCat")}</th><th class="num">${t("rxCol1")}</th><th>${t("rxCol2")}</th><th class="num">${t("rxCol3")}</th></tr></thead><tbody>` +
-    ins.rows.map(r => {
-      /* A ação mostrada precisa explicar o ganho da coluna ao lado: oferta de
-         parceiro primeiro (é a mais concreta), e o cartão quando ainda há espaço. */
-      const partes = [];
-      if (r.offer) partes.push(`<span class="badge counts">${t("ofBadge")}</span> ${esc(r.offer.partner)} +${ptn(r.offer.rate)}%`);
-      if (r.mine && r.withOffer >= r.bench[1]) {
-        if (!r.offer) partes.push(`<span class="badge covered">${t("rxOk")}</span> ${esc(r.mine.prog)} ${ptn(r.rate)}%`);
-      } else if (r.mine) partes.push(t("rxUpgrade", esc(r.mine.prog), ptn(r.rate), r.bench[0], r.bench[1]));
-      else partes.push(t("rxNoCard", r.bench[0], r.bench[1]));
-      const acao = partes.join(" · ");
-      return `<tr>
-        <td><span class="dot" style="background:var(${r.c.color})"></span>${L(r.c.label)}</td>
-        <td class="num">${fmtM0(r.spend)}</td>
-        <td style="font-size:12.5px">${acao}</td>
-        <td class="num">${r.missed > 0.5 ? `<b class="pos">+${fmtM0(r.missed * 12)}</b><div class="hint" style="margin:0">${t("rxPerYear")}</div>` : "—"}</td>
-      </tr>`;
-    }).join("") + "</tbody></table>";
+  /* Cada linha é uma decisão possível, na ordem do dinheiro que está na mesa:
+     o que você gasta, o que volta hoje e o botão que resolve ali mesmo. */
+  document.getElementById("rx-list").innerHTML = ins.rows.map(r => {
+    const editando = rxOpen === r.c.id;
+    const hoje = r.mine ? t("rxHas", esc(r.mine.prog), pctn(r.rate), fmtM0(r.earn)) : t("rxNone");
+    const alvo = r.offer ? t("rxOffer", esc(r.offer.partner), pctn(r.offer.rate)) : t("rxBench", r.bench[0], r.bench[1]);
+    const ganho = r.missed > 0.5 ? ` \u00b7 <b class="pos">+${fmtM0(r.missed * 12)}</b> ${t("rxPerYear")}` : "";
+    return `<div class="gitem">
+      <div style="flex:1; min-width:0">
+        <b><span class="dot" style="background:var(${r.c.color})"></span>${esc(L(r.c.label))}</b>
+        <span style="color:var(--muted); font-size:12.5px"> ${fmtM0(r.spend)}${t("idPerMonth")}</span>
+        <div class="why">${hoje}</div>
+        <div class="why">${alvo}${ganho}</div>
+        ${editando ? `<form class="inline" style="margin-top:8px" onsubmit="return rxSave(event,'${r.c.id}')">
+          <div class="field" style="flex:1; min-width:130px"><label>${t("rwProg")}</label>
+            <input type="text" id="rx-prog" value="${r.mine ? esc(r.mine.prog) : ""}" placeholder="${t("rwProgPh")}" required></div>
+          <div class="field"><label>${t("rwRate")}</label>
+            <input type="number" id="rx-rate" inputmode="decimal" step="any" min="0" style="width:80px" value="${r.mine ? r.mine.rate : ""}" required></div>
+          <button class="btn" type="submit">${t("rxSaveBtn")}</button>
+          <button class="btn ghost" type="button" onclick="rxEdit('${r.c.id}')">${t("rxCancel")}</button>
+        </form>` : ""}
+      </div>
+      ${editando ? "" : `<button class="btn ghost" onclick="rxEdit('${r.c.id}')">${r.mine ? t("rxChange") : t("rxAddCard")}</button>`}
+    </div>`;
+  }).join("");
   document.getElementById("rx-foot").innerHTML = t("rxFoot", ins.months);
+}
+
+/* Registrar o cartão na própria linha do gasto: nenhuma volta ao formulário */
+let rxOpen = null;
+function rxEdit(cat) { rxOpen = rxOpen === cat ? null : cat; renderRewardInsights(); }
+function rxSave(ev, cat) {
+  ev.preventDefault();
+  const prog = document.getElementById("rx-prog").value.trim();
+  const rate = Number(document.getElementById("rx-rate").value) || 0;
+  if (!prog) return false;
+  const atual = S.rewards.filter(r => r.cat === cat).sort((a, b) => b.rate - a.rate)[0];
+  if (atual) { atual.prog = prog; atual.rate = rate; }
+  else S.rewards.push({ id: uid(), cat, prog, rate });
+  rxOpen = null;
+  save(); renderRewards(); renderRewardInsights();
+  return false;
 }
 
 /* Ofertas: hoje o próprio usuário cadastra o que negociou; o formato já é o que
@@ -2465,10 +2446,8 @@ function renderOffers() {
 function delOffer(id) { S.offers = S.offers.filter(o => String(o.id) !== String(id)); save(); renderOffers(); renderRewardInsights(); }
 
 function renderRewards() {
-  /* Guia local e preço de combustível por galão só fazem sentido nos EUA */
-  const local = S.settings.homeCountry === "US";
-  document.getElementById("guide-card").style.display = local ? "" : "none";
-  document.getElementById("fuel-card").style.display = local ? "" : "none";
+  /* Preço de combustível por galão só faz sentido nos EUA */
+  document.getElementById("fuel-card").style.display = S.settings.homeCountry === "US" ? "" : "none";
   renderRewardInsights();
   renderOffers();
   const rs = [...S.rewards].sort((a,b) => a.cat.localeCompare(b.cat) || b.rate - a.rate);
@@ -2592,7 +2571,6 @@ const WZ_STEPS = [
       }
       /* Sem segundo país não faz sentido contar patrimônio em outra moeda */
       if (!wzData.hasSecond) wzData.wealthCur = wzData.homeCur;
-      wzData.visaNotes = wzData.hasSecond && wzData.secondCountry !== wzData.homeCountry;
     },
   },
   {
@@ -2681,7 +2659,7 @@ function startWizard() {
     wealthCur: st.wealthCur || st.homeCur,
     investedBase: st.investedBase, goalAmount: st.goalAmount,
     goalMonth: st.goalMonth || shiftMonth(thisMonth(), 12),
-    saveMonthly: st.saveMonthly, visaNotes: st.visaNotes,
+    saveMonthly: st.saveMonthly,
   };
   wzStep = 0;
   document.getElementById("wizard").classList.add("on");
@@ -2796,6 +2774,16 @@ function renderMarket() {
    taxa é ao vivo; onde não há, é faixa de mercado da pesquisa em RATES_ASOF.
    Taxas de contas específicas ficam em "Minhas contas", cadastradas pelo usuário. */
 const RATES_ASOF = "15/08/2026";
+/* A régua de qualquer oportunidade: o que o dinheiro rende parado, com
+   segurança, naquela moeda. No Brasil é o CDI ao vivo; nas outras, a faixa
+   da pesquisa de RATES_ASOF — atualize junto com ela. */
+const SAFE_RATE = { USD: 4.0, EUR: 2.2, GBP: 4.2, CAD: 3.4, AUD: 4.3, CHF: 0.8,
+  JPY: 0.6, MXN: 9.0, CLP: 5.0, COP: 9.5, INR: 6.8, AED: 4.2 };
+function safeRateFor(cur) {
+  if (cur === "BRL") return { r: marketData().cdi, n: "CDI" };
+  const r = SAFE_RATE[cur];
+  return r > 0 ? { r, n: t("oppSafeName") } : null;
+}
 const PLAYBOOK = {
   BR: [
     { ty:"reserva", n:"Tesouro Selic", r: m => `${ptn(m.selic)}%`,
@@ -2990,97 +2978,6 @@ function toggleChk(id, v) {
   S.checklist[mk][id] = v;
   save(); renderPlan();
 }
-
-/* ───────── Ideias: renda extra & economia ───────── */
-const IDEAS_RENDA = [
-  { id: "juros", ok: "✅",
-    n:{pt:"Deixar o dinheiro trabalhar (juros e dividendos)", en:"Let money work (interest & dividends)"},
-    w:{pt:"Renda passiva é permitida em praticamente todo visto de trabalho. É a renda extra que não dá trabalho nem risco: veja as taxas na aba Investir.",
-       en:"Passive income is allowed under practically every work visa. Extra income with zero effort and zero risk: see the rates in the Invest tab."} },
-  { id: "brrenda", ok: "✅", needsSecond: true,
-    n:{pt:"Renda gerada no seu outro país (aluguel, dividendos, trabalho remoto pago lá)", en:"Income generated in your other country (rent, dividends, remote work paid there)"},
-    w:{pt:"O visto do país onde você mora normalmente não alcança renda produzida fora dele. Atenção: como residente fiscal você costuma declarar renda global — combine com um contador.",
-       en:"The visa of the country you live in usually doesn't reach income produced elsewhere. Note: as a tax resident you generally report worldwide income — align with an accountant."} },
-  { id: "vender", ok: "✅",
-    n:{pt:"Vender itens pessoais usados", en:"Sell used personal items"},
-    w:{pt:"Permitido quando ocasional (mudança, garage sale, Marketplace). Virar revenda habitual = trabalho não autorizado.",
-       en:"Allowed when occasional (moving, garage sale, Marketplace). Habitual reselling = unauthorized work."} },
-  { id: "cashref", ok: "✅",
-    n:{pt:"Cashback, bônus bancários e indicações", en:"Cashback, bank bonuses and referrals"},
-    w:{pt:"Rebate e referral não são salário — permitidos. Somam com a aba Rewards: cartão certo + programas de posto + bônus de abertura de conta.",
-       en:"Rebates and referrals aren't wages — allowed. Stack with the Rewards tab: right card + fuel programs + account-opening bonuses."} },
-  { id: "gig", ok: "🚫", needsVisa: true,
-    n:{pt:"Uber, DoorDash, freelas para clientes locais", en:"Uber, DoorDash, freelancing for local clients"},
-    w:{pt:"NÃO permitido em visto patrocinado: ele só autoriza trabalho para a empresa que patrocina. Multa real: perder o visto atual e complicar os futuros.",
-       en:"NOT allowed on a sponsored visa: it only authorizes work for the sponsoring company. Real cost: losing this visa and complicating future ones."} },
-  { id: "trade", ok: "🚫",
-    n:{pt:"Day trade como atividade / e-commerce ativo", en:"Day trading as a business / active e-commerce"},
-    w:{pt:"Investir é permitido; operar como negócio, não. Mantenha compras de longo prazo e aportes regulares.",
-       en:"Investing is allowed; running it as a business isn't. Stick to long-term buys and regular contributions."} },
-];
-const IDEAS_ECON = [
-  { id: "remessa", est: [30, 80], needsSecond: true,
-    n:{pt:"Remessas entre países via Wise / fintechs", en:"Cross-border transfers via Wise / fintechs"},
-    w:{pt:"Banco tradicional cobra 3–5% entre spread e tarifas; fintechs ~1%. Em cada $1.000, ~$20–40 ficam com você.",
-       en:"Traditional banks take 3–5% in spread and fees; fintechs ~1%. On every $1,000, ~$20–40 stays with you."} },
-  { id: "cozinha", est: [150, 300],
-    n:{pt:"Meal prep no domingo", en:"Sunday meal prep"},
-    w:{pt:"Refeição fora nos EUA: $15–25. Em casa: $4–6. Três marmitas por semana já pagam um jantar bom no fim do mês.",
-       en:"Eating out in the US: $15–25. At home: $4–6. Three packed meals a week buys a nice dinner by month's end."} },
-  { id: "mercado", est: [60, 120], only: ["US"],
-    n:{pt:"Mercado no Aldi / Costco + marca própria", en:"Groceries at Aldi / Costco + store brands"},
-    w:{pt:"20–30% mais barato que redes premium para a mesma qualidade.", en:"20–30% cheaper than premium chains for the same quality."} },
-  { id: "chip", est: [25, 45], only: ["US"],
-    n:{pt:"Celular em MVNO (Mint, US Mobile, Visible)", en:"Phone on an MVNO (Mint, US Mobile, Visible)"},
-    w:{pt:"Mesmas antenas das grandes operadoras por $15–30/mês em vez de $70+.", en:"Same towers as the big carriers for $15–30/mo instead of $70+."} },
-  { id: "cartao", est: [20, 60],
-    n:{pt:"Cartão certo em cada categoria", en:"Right card for each category"},
-    w:{pt:"1–3% de volta em tudo que você já gasta — configure uma vez na aba Rewards.", en:"1–3% back on everything you already spend — set it up once in Rewards."} },
-  { id: "assin", est: [20, 50],
-    n:{pt:"Auditoria trimestral de assinaturas", en:"Quarterly subscription audit"},
-    w:{pt:"Streaming, apps, academia fantasma — cancele o que não usou no último mês.", en:"Streaming, apps, ghost gym — cancel whatever went unused last month."} },
-  { id: "sale", est: [0, 100],
-    n:{pt:"Compra grande só em promoção + portal de cashback", en:"Big purchases only on sale + cashback portal"},
-    w:{pt:"Black Friday, fim de estação, Rakuten/TopCashback por cima do desconto.", en:"Black Friday, end of season, Rakuten/TopCashback on top of the discount."} },
-];
-const IDEA_STATUS = {
-  pendente:{pt:"Pendente",en:"Pending"}, avaliando:{pt:"Avaliando",en:"Evaluating"},
-  adotei:{pt:"Adotei ✓",en:"Adopted ✓"}, descartado:{pt:"Não é pra mim",en:"Not for me"},
-};
-function renderIdeias() {
-  const el = document.getElementById("id-renda");
-  if (!el) return;
-  const st = S.settings;
-  /* Cada ideia só aparece para quem ela serve: avisos de visto para quem marcou
-     que mora com visto de trabalho, remessa para quem tem dois países, etc. */
-  const fits = it => (!it.needsSecond || st.hasSecond) && (!it.needsVisa || st.visaNotes)
-    && (!it.only || it.only.includes(st.homeCountry));
-  document.getElementById("id-visa").style.display = st.visaNotes ? "" : "none";
-  const item = (it, extra) => {
-    const st = S.ideas[it.id] || "pendente";
-    return `<div class="gitem ${st === "descartado" ? "off" : ""}">
-      <div><b>${it.ok ? it.ok + " " : ""}${L(it.n)}</b> ${st === "adotei" ? `<span class="badge covered">${L(IDEA_STATUS.adotei)}</span>` : ""}${extra || ""}<div class="why">${L(it.w)}</div></div>
-      <select onchange="setIdea('${it.id}', this.value)">
-        ${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}" ${k === st ? "selected" : ""}>${L(v)}</option>`).join("")}
-      </select>
-    </div>`;
-  };
-  el.innerHTML = IDEAS_RENDA.filter(fits).map(it => item(it)).join("");
-  /* As faixas em dólar vieram de pesquisa nos EUA — fora dali, mostra a ideia sem o número */
-  const showEst = st.homeCountry === "US";
-  const econ = IDEAS_ECON.filter(fits);
-  document.getElementById("id-econ").innerHTML = econ.map(it =>
-    item(it, showEst ? ` <span class="badge counts">~$${it.est[0]}–${it.est[1]}${t("idPerMonth")}</span>` : "")).join("");
-  const adopted = econ.filter(it => S.ideas[it.id] === "adotei");
-  const lo = adopted.reduce((s, it) => s + it.est[0], 0);
-  const hi = adopted.reduce((s, it) => s + it.est[1], 0);
-  document.getElementById("id-econ-head").innerHTML = !showEst
-    ? t("idNoEst")
-    : adopted.length
-      ? t("idAdopted", adopted.length, lo, hi, fmtM0(hi * 12))
-      : t("idTotal", econ.reduce((s, i) => s + i.est[0], 0), econ.reduce((s, i) => s + i.est[1], 0));
-}
-function setIdea(id, v) { S.ideas[id] = v; save(); renderIdeias(); }
 
 /* ───────── Relatório ───────── */
 let repMonth = null;
@@ -3386,7 +3283,10 @@ function renderTripCard() {
   const el = document.getElementById("trip-card");
   if (!el) return;
   const tp = featuredTrip();
-  if (!tp) { el.innerHTML = ""; return; }
+  el.innerHTML = tp ? tripCardHTML(tp) : "";
+}
+/* O mesmo cartão serve o Início (quando há viagem em curso) e a aba Viagens */
+function tripCardHTML(tp) {
   const st = tripStats(tp);
   const pct = st.budget > 0 ? Math.min(100, st.spent / st.budget * 100) : 0;
   const alsoM = tp.cur === mainCur() ? "" : ` · ≈ ${fmtM0(conv(st.left, tp.cur, mainCur()))}`;
@@ -3395,7 +3295,7 @@ function renderTripCard() {
     st.ended ? t("tripAfterEnd") :
     st.daysLeft > 1 ? t("tripPerDay", fmtT(tp, st.perDay), st.daysLeft) :
     st.daysLeft === 1 ? t("tripLastDay", fmtT(tp, st.left)) : "";
-  el.innerHTML = `<div class="card trip">
+  return `<div class="card trip">
     <div class="thead">
       <span class="tname">${tripIcon(tp)} ${esc(tripName(tp))}</span>${tripBadge(tp)}
       <span style="flex:1"></span>
@@ -3534,31 +3434,49 @@ function goLanc(place) {
 
 /* ───────── Países e viagens (Config) ───────── */
 let tripFormOpen = false, tripFormCountry = "";
-function renderPlaces() {
-  const el = document.getElementById("cfg-places");
-  if (!el) return;
-  const st = S.settings;
-  const fixas = [
-    `<div class="place-row"><div><div class="pl">${placeLabel("home")} <span class="badge counts">${t("whereHere")}</span></div>
-      <div class="pw">${mainCur()}</div></div></div>`,
-    st.hasSecond && st.secondCountry !== st.homeCountry
-      ? `<div class="place-row"><div><div class="pl">${placeLabel("second")}</div>
-          <div class="pw">${secondCur()} · ${t("cfgFx", secondCur(), mainCur())} ${ptn(fxRate())}</div></div>
-          <button class="btn ghost" onclick="openSheet('country')">${t("chevMore")}</button></div>`
-      : "",
-  ].filter(Boolean).join("");
-  const trips = (S.trips || []).slice().sort((a, b) => (b.start || "").localeCompare(a.start || ""));
-  const lista = trips.length === 0 ? `<div class="empty">${t("tripNone")}</div>` : trips.map(tp => {
-    const ts = tripStats(tp);
+/* ───────── Aba Viagens ─────────
+   A viagem de agora em cima, o formulário curto no meio e o histórico
+   agrupado embaixo: agora, próximas e as que já foram. */
+function renderViagens() {
+  const atual = document.getElementById("vg-atual");
+  if (!atual) return;
+  const tp = featuredTrip();
+  atual.innerHTML = tp ? tripCardHTML(tp) : "";
+
+  const hoje = todayStr();
+  const abertas = (S.trips || []).filter(x => !x.closed);
+  const agora = abertas.filter(x => (!x.start || x.start <= hoje) && (!x.end || x.end >= hoje));
+  const terminadas = abertas.filter(x => x.end && x.end < hoje);
+  const proximas = abertas.filter(x => x.start && x.start > hoje).sort((a, b) => a.start.localeCompare(b.start));
+  const fechadas = (S.trips || []).filter(x => x.closed).sort((a, b) => (b.start || "").localeCompare(a.start || ""));
+
+  const linha = x => {
+    const ts = tripStats(x);
     return `<div class="place-row">
-      <div><div class="pl">${tripIcon(tp)} ${esc(tripName(tp))} ${tripBadge(tp)}</div>
-        <div class="pw">${tripIsLong(tp) ? monthLabel(thisMonth()) : (tp.start ? t("tripPeriod", fmtD(parseDate(tp.start)), tp.end ? fmtD(parseDate(tp.end)) : "—") : "")}
-          · ${t("repTripLine", fmtT(tp, ts.spent), fmtT(tp, ts.budget))}</div></div>
-      <button class="btn ghost" onclick="openSheet('trip','${tp.id}')">${t("chevMore")}</button></div>`;
-  }).join("");
+      <div><div class="pl">${tripIcon(x)} ${esc(tripName(x))} ${tripBadge(x)}</div>
+        <div class="pw">${tripIsLong(x) ? (x.start > hoje ? fmtD(parseDate(x.start)) : monthLabel(thisMonth())) : (x.start ? t("tripPeriod", fmtD(parseDate(x.start)), x.end ? fmtD(parseDate(x.end)) : "—") : "")}
+          · ${t("repTripLine", fmtT(x, ts.spent), fmtT(x, ts.budget))}</div></div>
+      <button class="btn ghost" onclick="openSheet('trip','${x.id}')">${t("chevMore")}</button></div>`;
+  };
+  const grupo = (titulo, lista) => lista.length
+    ? `<h3 style="font-size:13px; font-weight:600; color:var(--ink-2); margin:14px 0 4px">${titulo}</h3>${lista.map(linha).join("")}`
+    : "";
+  const ano = thisMonth().slice(0, 4);
+  const doAno = (S.trips || []).filter(x => (x.start || "").startsWith(ano));
+  const gastoAno = doAno.reduce((acc, x) => acc + conv(tripStats(x).spent, x.cur, mainCur()), 0);
+
+  document.getElementById("vg-lista").innerHTML =
+    (S.trips || []).length === 0
+      ? `<div class="empty">${t("vgNone")}</div>`
+      : grupo(t("vgOngoing"), [...agora, ...terminadas]) + grupo(t("vgNext"), proximas) + grupo(t("vgDone"), fechadas) +
+        (doAno.length ? `<div class="hint">${t("vgYear", doAno.length, fmtM0(gastoAno))}</div>` : "");
+
+  const st = S.settings;
   const c = countryOf(tripFormCountry || (st.hasSecond ? st.secondCountry : st.homeCountry));
-  el.innerHTML = `${fixas}${lista}
-    <details ${tripFormOpen ? "open" : ""} style="margin-top:12px" ontoggle="tripFormOpen = this.open">
+  const aberto = tripFormOpen || (S.trips || []).length === 0;
+  document.getElementById("vg-form").innerHTML = `
+    <div class="hint" style="margin:0 0 10px">${t("vgLead")}</div>
+    <details ${aberto ? "open" : ""} ontoggle="tripFormOpen = this.open">
       <summary style="cursor:pointer; font-size:13.5px; color:var(--s1)">${t("tripNew")}</summary>
       <form class="inline" style="margin-top:12px" onsubmit="return createTrip(event)">
         <div class="field" style="min-width:160px"><label>${t("tripDest")}</label>
@@ -3585,9 +3503,8 @@ function renderPlaces() {
         <button class="btn" type="submit">${t("tripCreate")}</button>
       </form>
       <div class="hint neg" id="tr-err" style="min-height:16px"></div>
-    </details>
-    <div class="hint">${t("cfgPlacesHint")}</div>`;
-  if (tripFormOpen) tripFxAuto();
+    </details>`;
+  if (aberto) tripFxAuto();
 }
 function tripFormSetCountry(cc) {
   tripFormCountry = cc;
@@ -3814,11 +3731,11 @@ function renderConfig() {
             .map(c => `<option value="${c}" ${wealthCur() === c ? "selected" : ""}>${curSym(c)} ${c}</option>`).join("")}
         </select></div>
     </form>
-    <label class="chk" style="margin-top:10px"><input type="checkbox" ${st.visaNotes ? "checked" : ""} onchange="setFlag('visaNotes', this.checked)">
-      <span><b>${t("cfgVisa")}</b><div class="hint" style="margin:0">${t("cfgVisaWhy")}</div></span></label>
-    <button class="btn ghost" style="margin-top:12px" onclick="startWizard()">${t("goalRedo")}</button>`;
+    <div class="chiprow" style="margin-top:12px">
+      <button class="btn ghost" onclick="startWizard()">${t("goalRedo")}</button>
+      ${st.hasSecond ? `<button class="btn ghost" onclick="openSheet('country')">${placeLabel("second")} ${t("chevMore")}</button>` : ""}
+    </div>`;
 
-  renderPlaces();
   renderCats();
 
   document.getElementById("cfg-travel").innerHTML = `
@@ -3897,8 +3814,8 @@ function importData(input) {
 /* ───────── Bindings ───────── */
 function renderAll() {
   renderInicio(); renderTripCard(); renderLanc(); renderMetas(); renderInvest(); renderPlan();
-  renderGuide(); renderRewards(); renderMarket(); renderAporte();
-  renderIdeias(); renderRelatorio();
+  renderRewards(); renderMarket(); renderAporte();
+  renderViagens(); renderRelatorio();
 }
 
 document.getElementById("nav").addEventListener("click", e => {
@@ -3973,10 +3890,12 @@ document.getElementById("f-opp").onsubmit = e => {
   e.preventDefault();
   S.opportunities.push({ id: uid(), name: document.getElementById("o-name").value.trim(),
     where: document.getElementById("o-where").value,
+    amount: Number(document.getElementById("o-amount").value) || 0,
+    ret: Number(document.getElementById("o-ret").value) || 0,
+    risk: document.getElementById("o-risk").value,
     status: document.getElementById("o-status").value,
-    prio: document.getElementById("o-prio").value,
     notes: document.getElementById("o-notes").value.trim() });
-  save(); e.target.reset(); renderInvest();
+  save(); e.target.reset(); fillWhereSelect(); oppCurLabel(); renderInvest();
 };
 document.getElementById("f-rw").onsubmit = e => {
   e.preventDefault();
