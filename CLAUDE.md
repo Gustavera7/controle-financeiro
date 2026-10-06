@@ -137,7 +137,26 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
 - **Teste de coerência que vale repetir:** para cada mês, o herói do Início, a soma das
   linhas da cascata do relatório, a linha final dela e o card "Mês passado" têm que dar
   o mesmo número; e a carteira tem que ser a soma dos meses fechados + acertos −
-  coberturas − aportes feitos com ela.
+  coberturas − aportes feitos com ela — e, com dois bolsos, o mesmo vale para `saldo2`
+  com as sobras do segundo país.
+- **Dois bolsos** (`twoPockets()`, só com segundo país e política `main`): **a moeda do
+  aporte decide de qual bolso ele sai** (`pocketOf`) — real sai do Brasil, dólar sai de
+  casa. Cada bolso tem a própria carteira de sobras (`saldo` e `saldo2`, acertos com
+  `pocket`). O bug que motivou: aporte em reais "da carteira de sobras" era convertido e
+  saía da carteira em dólar, deixando-a negativa, enquanto as sobras do Brasil só eram
+  exibidas. A regra é lida dos dados (moeda + origem), então lançamentos antigos se
+  corrigem sozinhos. No formulário, a origem (`"sobras:BRL"`) já traz a moeda; o
+  seletor de moeda só aparece na realocação, e o destino sugerido é o último ativo que
+  recebeu aporte naquela moeda.
+- **Aportes automáticos** (`S.recur`, `postRecurring()`): parcela de imóvel na planta,
+  previdência, aporte fixo. Lança sozinho no dia (como débito automático), retroativo
+  desde `since`, com `recurId`; antes do dia, `recurPending` já reserva o valor no bolso
+  dele (no bolso de casa, dentro da meta). Apagar um lançamento automático grava o mês em
+  `skip` (não volta); encerrar define `until` e mantém o histórico. Sem mês escolhido, o
+  primeiro lançamento é o próximo vencimento — nunca um que pode já ter sido lançado à
+  mão. Com `total`, vira acompanhamento de compra parcelada (pago, falta, parcelas até o
+  fim), usando o valor do ativo de destino como "já pago". Roda junto com
+  `freezeClosedMonths()` (ao abrir, após nuvem e importação).
 - **Patrimônio = soma dos ativos** (`invested()` → `allocation().total`). Antes havia
   dois totais na mesma tela ("base + aportes" e a soma da carteira). A migração
   (`wealthModel`) transforma o antigo "base + aportes" num ativo "Investimentos" quando

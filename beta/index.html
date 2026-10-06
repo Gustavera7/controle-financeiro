@@ -405,7 +405,7 @@
       <div class="field" id="l-cat-f"><label data-i18n="lancCat"></label><select id="l-cat"></select></div>
       <div class="field" id="l-src-f"><label data-i18n="lancSrc"></label><select id="l-src" onchange="updateLancForm()"></select></div>
       <div class="field" id="l-from-f"><label data-i18n="lancFrom"></label><select id="l-from"></select></div>
-      <div class="field" id="l-dest-f"><label data-i18n="lancDest"></label><select id="l-dest" onchange="updateLancForm()"></select></div>
+      <div class="field" id="l-dest-f"><label data-i18n="lancDest"></label><select id="l-dest" onchange="destTouched = true; updateLancForm()"></select></div>
       <div class="field" style="flex:1; min-width:140px"><label data-i18n="lancDesc"></label><input type="text" id="l-desc" data-i18n-ph="lancDescPh"></div>
       <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
@@ -481,6 +481,16 @@
     </form>
     <div class="hint" data-i18n="accHint"></div>
     <div class="disclaimer hint" id="ap-foot" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="rcTitle"></h2>
+    <div id="rc-list"></div>
+    <details id="rc-new-d" style="margin-top:10px"
+      ontoggle="if (this.open) { document.getElementById('rc-form').dataset.pronto = ''; renderRecur(); }">
+      <summary class="hint" style="cursor:pointer" data-i18n="rcNew"></summary>
+      <div id="rc-form"></div>
+    </details>
   </div>
 
   <div class="grid cols-2">
@@ -964,6 +974,31 @@ pt: {
   betaBackup: "Baixar backup", betaReseed: "Recopiar do app principal", betaOk: "Entendi",
   betaReseedAsk: "Isso apaga os dados desta beta e copia tudo de novo do app principal. Continuar?",
   betaSync: "beta · só neste aparelho",
+  /* ── Dois bolsos ── */
+  srcMonthP: (p, v) => `Dinheiro do mês · ${p}${v ? ` (${v} disponível)` : ""}`,
+  secStripRecur: v => `${v} de aporte automático ainda caem este mês — já descontado da sobra`,
+  secMoneyTitle: "Dinheiro de lá", secInvestWallet: "Aportar das sobras", secInvestMonth: "Aportar a sobra deste mês",
+  srcWalletP: (p, v) => `Carteira de sobras · ${p} (${v})`,
+  hintFromWallet: p => `Sai da carteira de sobras · ${p}`, hintFromMonth: p => `Sai do dinheiro do mês · ${p}`,
+  hintShort: v => `faltam ${v}`,
+  wallet2Hint: p => `O que sobra do dinheiro do ${p} em cada mês fechado. Aporte na moeda de lá sai daqui — nunca da carteira de casa.`,
+  planWallet2: p => `Dar destino às sobras · ${p}`,
+  repSecondLeft: p => `Sobrou · ${p}`, repRecurPending2: "Aportes automáticos ainda por vir (segunda moeda)",
+  repRecurPending: "Aportes automáticos ainda por vir",
+  /* ── Aportes automáticos ── */
+  rcTitle: "Aportes automáticos", bdgAuto: "automático",
+  rcNew: "+ Novo aporte automático (parcela de imóvel, previdência, aporte fixo)",
+  rcNone: "Nenhum ainda. Parcela de apartamento na planta, previdência ou um aporte fixo: cadastre uma vez e o app lança todo mês.",
+  rcHint: "O app lança sozinho no dia, como débito automático: sai do bolso da moeda escolhida e cai no ativo. Antes do dia, o valor já fica reservado. Apagar um lançamento automático pula só aquele mês.",
+  rcName: "Nome", rcNamePh: "ex: Parcela do apartamento", rcAmount: "Valor por mês", rcFrom: "Sai de",
+  rcFromPocket: (p, c) => `dinheiro do mês · ${p} (${c})`, rcDay: "Todo dia", rcDest: "Vai para",
+  rcDestNew: "+ novo ativo com este nome", rcStart: "Primeiro lançamento", rcTotal: "Valor total (se for compra parcelada)",
+  rcOptional: "opcional", rcUntil: "Última parcela", rcCreate: "Criar",
+  rcErr: "Diga o nome, o valor e o dia do mês.",
+  rcLine: (v, d) => `${v}/mês · todo dia ${d}`, rcNext: d => `próximo: ${d}`, rcEnded: "encerrado",
+  rcPaid: (p, tot, pct) => `pago ${p} de ${tot} (${pct}%)`, rcLeft: v => `faltam ${v}`,
+  rcLeftN: (n, m) => `${n} parcela${n > 1 ? "s" : ""} até ${m}`, rcLeftNoEnd: n => `~${n} parcelas nesse ritmo`,
+  rcDelAsk: n => `Encerrar “${n}”? Os lançamentos já feitos continuam no histórico.`,
   /* ── Carteira de sobras ── */
   walletTitle: "Carteira de sobras", walletAvail: "Disponível na carteira",
   walletLine: v => `Carteira de sobras: <b>${v}</b>`, walletReserved: v => `${v} reservado para viagem`,
@@ -1365,6 +1400,31 @@ en: {
   betaBackup: "Download backup", betaReseed: "Copy from main app again", betaOk: "Got it",
   betaReseedAsk: "This erases the beta data and copies everything again from the main app. Continue?",
   betaSync: "beta · this device only",
+  /* ── Two pockets ── */
+  srcMonthP: (p, v) => `This month's money · ${p}${v ? ` (${v} available)` : ""}`,
+  secStripRecur: v => `${v} of automatic contributions still land this month — already taken out of the leftover`,
+  secMoneyTitle: "Money over there", secInvestWallet: "Invest the leftovers", secInvestMonth: "Invest this month's leftover",
+  srcWalletP: (p, v) => `Leftover wallet · ${p} (${v})`,
+  hintFromWallet: p => `Comes out of the leftover wallet · ${p}`, hintFromMonth: p => `Comes out of this month's money · ${p}`,
+  hintShort: v => `${v} short`,
+  wallet2Hint: p => `What's left of the ${p} money in each closed month. A contribution in that currency comes out of here — never out of the home wallet.`,
+  planWallet2: p => `Give the leftovers a job · ${p}`,
+  repSecondLeft: p => `Left over · ${p}`, repRecurPending2: "Automatic contributions still to come (second currency)",
+  repRecurPending: "Automatic contributions still to come",
+  /* ── Automatic contributions ── */
+  rcTitle: "Automatic contributions", bdgAuto: "automatic",
+  rcNew: "+ New automatic contribution (property installment, pension, fixed contribution)",
+  rcNone: "None yet. An off-plan apartment installment, a pension or a fixed contribution: add it once and the app logs it every month.",
+  rcHint: "The app logs it on the day, like an automatic debit: it comes out of the pocket of the chosen currency and lands in the asset. Before the day, the amount is already set aside. Deleting an automatic entry skips only that month.",
+  rcName: "Name", rcNamePh: "e.g. Apartment installment", rcAmount: "Amount per month", rcFrom: "Comes from",
+  rcFromPocket: (p, c) => `this month's money · ${p} (${c})`, rcDay: "Every day", rcDest: "Goes to",
+  rcDestNew: "+ new asset with this name", rcStart: "First entry", rcTotal: "Total price (if paid in installments)",
+  rcOptional: "optional", rcUntil: "Last installment", rcCreate: "Create",
+  rcErr: "Give it a name, an amount and a day of the month.",
+  rcLine: (v, d) => `${v}/mo · every day ${d}`, rcNext: d => `next: ${d}`, rcEnded: "ended",
+  rcPaid: (p, tot, pct) => `paid ${p} of ${tot} (${pct}%)`, rcLeft: v => `${v} to go`,
+  rcLeftN: (n, m) => `${n} installment${n > 1 ? "s" : ""} until ${m}`, rcLeftNoEnd: n => `~${n} installments at this pace`,
+  rcDelAsk: n => `End “${n}”? Entries already logged stay in your history.`,
   /* ── Leftover wallet ── */
   walletTitle: "Leftover wallet", walletAvail: "Available in the wallet",
   walletLine: v => `Leftover wallet: <b>${v}</b>`, walletReserved: v => `${v} reserved for a trip`,
@@ -1575,17 +1635,20 @@ const DEFAULTS = {
   fixed: [],      // contas que se repetem todo mês (aluguel, luz, internet…)
   wallet: { moves: [] }, // carteira de sobras: só acertos e coberturas; o resto é calculado
   closes: {},     // retrato de cada mês fechado: renda, meta e quanto foi investido
+  recur: [],      // aportes automáticos (parcela de imóvel, previdência…)
   cats: [],       // categorias criadas pelo usuário
   trips: [],      // viagens e temporadas fora (cada uma com moeda e orçamento)
 };
 
 /* Chute de tipo pelo nome do ativo — usado só quando o dado veio de uma versão
    sem tipo. O usuário corrige em um toque na tela de patrimônio. */
+/* Nome que soa a imóvel — inclusive o apartamento na planta */
+const IMOVEL_RE = /fii|reit|im[oó]ve|real estate|aluguel|apart|\bap[eê](?![a-z])|\bapto\b|terreno|\blote\b|na planta|condom/i;
 function guessType(name) {
   const n = String(name || "").toLowerCase();
   if (/bitcoin|btc|ether|eth\b|cripto|crypto|solana|usdt/.test(n)) return "cripto";
   if (/401|ira\b|roth|pgbl|vgbl|previd|pension/.test(n)) return "aposentadoria";
-  if (/fii|reit|im[oó]ve|real estate|aluguel/.test(n)) return "imoveis";
+  if (IMOVEL_RE.test(n)) return "imoveis";
   if (/a[cç][oõ]es|stock|etf|s&p|ivvb|bova|ivv|voo|vti|fundo|index|bolsa/.test(n)) return "acoes";
   if (/selic|tesouro|cdb|lci|lca|cdi|bond|treasury|t-bill|renda fixa|fixed|debent|certificate|\bcd\b/.test(n)) return "rendafixa";
   if (/poupan|savings|reserva|caixa|cash|hysa|conta|emerg/.test(n)) return "reserva";
@@ -1653,6 +1716,18 @@ function migrate(d) {
     s.closes[k] = { renda: Number(c.renda) || 0, renda2: Number(c.renda2) || 0, meta: Number(c.meta) || 0,
       investido: c.investido == null || c.investido === "" ? null : Number(c.investido) || 0, conf: !!c.conf };
   });
+  /* Aportes automáticos: valor, moeda (decide o bolso), dia, ativo e vigência */
+  s.recur = (s.recur || []).filter(r => r && r.id).map(r => ({
+    id: r.id, name: String(r.name || ""), amount: Number(r.amount) || 0, cur: r.cur || st.homeCur,
+    day: Math.min(28, Math.max(1, Number(r.day) || 1)), assetId: r.assetId || "",
+    since: r.since || "", until: r.until || "", total: Number(r.total) || 0,
+    skip: Array.isArray(r.skip) ? r.skip : [] }));
+  /* Ativo em "outros" com nome de imóvel (apartamento, terreno…) passa a ser
+     imóvel — uma vez só; depois o tipo é escolha do usuário */
+  if (!st.retypeImoveis) {
+    s.portfolio = (s.portfolio || []).map(p => p.type === "outros" && IMOVEL_RE.test(p.name || "") ? { ...p, type: "imoveis" } : p);
+    st.retypeImoveis = true;
+  }
   /* Carteira de sobras: guarda só o que não dá para calcular (acertos e
      coberturas de mês). O saldo nasce dos meses fechados. */
   s.wallet = { moves: ((s.wallet && s.wallet.moves) || []).filter(m => m && m.id && ["adjust","cover"].includes(m.kind))
@@ -1933,6 +2008,17 @@ const ptn = n => lang === "pt" ? Number(n).toFixed(2).replace(".", ",") : Number
 /* Taxa curta, sem zero sobrando: 9,5% em vez de 9,50% */
 const pctn = n => Number(n || 0).toLocaleString(dloc(), { maximumFractionDigits: 2 });
 
+/* ───────── Dois bolsos ─────────
+   Quem tem renda em dois países e deixa a segunda fora do livre tem dois
+   bolsos: o de casa e o do segundo país. A moeda do aporte decide de qual
+   bolso ele sai — real sai do Brasil, dólar sai de casa. Nunca o contrário. */
+const twoPockets = () => S.settings.hasSecond && secondCur() !== mainCur() && S.settings.freePolicy !== "all";
+const pocketOf = c => twoPockets() && (c.cur || mainCur()) === secondCur() ? "second" : "main";
+const pocketCur = p => p === "second" ? secondCur() : mainCur();
+/* Origem do aporte no formulário: "sobras:BRL" → ["sobras", "BRL"] */
+const srcSplit = v => { const [k, c] = String(v || "").split(":"); return [k || "", c || ""]; };
+const monthsBetween = (a, b) => { const [ay, am] = a.split("-").map(Number), [by, bm] = b.split("-").map(Number); return (by - ay) * 12 + (bm - am); };
+
 /* ───────── Contas fixas ─────────
    Uma conta fixa vira gasto no dia em que você marca "paguei" — antes disso
    ela já sai do livre, porque aquele dinheiro tem dono. O total não muda
@@ -2016,9 +2102,10 @@ function monthStats(mk) {
      vem da carteira de sobras ou de outro investimento já tinha saído antes. */
   const conAll = S.contributions.filter(c => monthKey(c.date) === mk);
   const con = conAll.filter(c => (c.src || "mes") === "mes");
-  const savedMain = con.filter(c => (c.cur || M) !== SC || SC === M).reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
-  const savedSecond = SC === M ? 0 : con.filter(c => c.cur === SC).reduce((s,c) => s + c.amount, 0);
-  const fromWallet = conAll.filter(c => c.src === "sobras").reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
+  const savedMain = con.filter(c => pocketOf(c) === "main").reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
+  const savedSecond = con.filter(c => pocketOf(c) === "second").reduce((s,c) => s + conv(c.amount, c.cur || SC, SC), 0);
+  const fromWallet = conAll.filter(c => c.src === "sobras" && pocketOf(c) === "main").reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
+  const fromWallet2 = conAll.filter(c => c.src === "sobras" && pocketOf(c) === "second").reduce((s,c) => s + conv(c.amount, c.cur || SC, SC), 0);
   /* Dinheiro que a carteira de sobras mandou para este mês (cobrir um aperto) */
   const walletIn = ((S.wallet && S.wallet.moves) || []).filter(m => m.kind === "cover" && m.month === mk)
     .reduce((s, m) => s + m.amount, 0);
@@ -2044,15 +2131,18 @@ function monthStats(mk) {
   if (!fechado) investido = savedNoLivre;
   else if (snap && snap.investido != null) investido = snap.investido;
   else { investido = Math.max(metaMes, savedNoLivre); presumido = metaMes > savedNoLivre; }
-  const metaPendente = fechado ? 0 : Math.max(0, metaMes - savedNoLivre);
-  const reservado = investido + metaPendente;
+  /* Aporte automático que ainda vai cair este mês já tem dono (e faz parte da meta) */
+  const rp = fechado ? { main: 0, second: 0 } : recurPending(mk);
+  const metaPendente = fechado ? 0 : Math.max(0, metaMes - savedNoLivre - rp.main);
+  const reservado = investido + rp.main + metaPendente;
   /* Contas fixas não lançadas: vão sair (mês corrente) ou saíram (mês fechado) */
   const fix = fixedPending(mk);
   const livre = ganho + walletIn - reservado - spent - fix.main;
   /* Sobra do segundo país: o que entrou lá, menos gasto, aporte e contas de lá */
-  const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second;
+  const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second - rp.second;
   return { spent, spentSecond, tripSpent, covered, extrasMain, extrasSecond, savedMain, savedSecond, saved,
-           savedNoLivre, metaPendente, fromWallet, walletIn, fechado, investido, presumido, metaMes,
+           savedNoLivre, metaPendente, fromWallet, fromWallet2, walletIn, fechado, investido, presumido, metaMes,
+           recurMain: rp.main, recurSecond: rp.second,
            confirmado: !!(snap && snap.conf), rendaMain,
            ganho, rendaSecond, leftSecond, livre, reservado, fix };
 }
@@ -2152,7 +2242,8 @@ function renderInicio() {
         <span style="flex:1">${t("secStripFull", flagOf(S.settings.secondCountry), countryName(S.settings.secondCountry),
           fmtS0(st.rendaSecond), fmtS0(st.spentSecond), fmtS0(st.savedSecond), fmtS0(st.leftSecond))}</span>
         <span class="chev">›</span></div>` +
-      (st.savedSecond > 0 ? "" : `<div class="hint" style="margin-top:2px">${t("secStripTodo")}</div>`);
+      (st.recurSecond > 0 ? `<div class="hint" style="margin-top:2px">${t("secStripRecur", fmtS0(st.recurSecond))}</div>`
+        : st.savedSecond > 0 ? "" : `<div class="hint" style="margin-top:2px">${t("secStripTodo")}</div>`);
   } else { secStrip.style.display = "none"; secStrip.onclick = null; }
 
   set("t-guardado", fmtM0(st.investido));
@@ -2215,21 +2306,44 @@ function updateLancForm() {
   document.getElementById("l-src-f").style.display = ap ? "" : "none";
   document.getElementById("l-dest-f").style.display = ap ? "" : "none";
   document.getElementById("l-from-f").style.display = ap && src.value === "invest" ? "" : "none";
+  /* No aporte, a origem já define a moeda; o seletor só aparece na realocação */
+  if (ap) document.getElementById("l-cur-f").style.display = S.settings.hasSecond && src.value === "invest" ? "" : "none";
+  /* Destino acompanha a origem: vai para onde o último aporte nessa moeda foi
+     (quem paga a parcela do apartamento todo mês não escolhe de novo) */
+  const [, srcC] = srcSplit(src.value);
+  if (ap && srcC && !destTouched) {
+    const existe = id => S.portfolio.some(p => String(p.id) === String(id));
+    const ultimo = [...S.contributions].filter(c => (c.cur || mainCur()) === srcC && c.src !== "invest" && existe(c.assetId))
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    const alvo = ultimo ? S.portfolio.find(p => String(p.id) === String(ultimo.assetId))
+      : [...S.portfolio].filter(p => (p.cur || wealthCur()) === srcC).sort((a, b) => b.value - a.value)[0];
+    if (alvo) document.getElementById("l-dest").value = String(alvo.id);
+  }
   const novo = ap && document.getElementById("l-dest").value === "__new";
   const desc = document.getElementById("l-desc");
   desc.required = novo;
   desc.placeholder = novo ? t("lancNewAsset") : t("lancDescPh");
   updateLancPlace();
 }
+let destTouched = false;
 /* Origem com o saldo à vista; destino e "sai de" são os ativos da carteira */
 function fillAporteSelects() {
   const src = document.getElementById("l-src"), dest = document.getElementById("l-dest"), from = document.getElementById("l-from");
   if (!src) return;
   const vs = src.value, vd = dest.value, vf = from.value;
-  src.innerHTML = `<option value="">${t("srcAsk")}</option>
-    <option value="mes">${t("srcMonth")}</option>
-    <option value="sobras">${t("srcWallet", fmtM0(walletState().disponivel))}</option>
-    <option value="invest">${t("srcInvest")}</option>`;
+  /* Cada opção já diz o bolso e o saldo dele; escolher a origem escolhe a moeda */
+  const w = walletState(), M = mainCur(), SC = secondCur();
+  const fM = flagOf(S.settings.homeCountry), fS = flagOf(S.settings.secondCountry);
+  const pM = countryName(S.settings.homeCountry), pS = countryName(S.settings.secondCountry);
+  const livre2 = w.dois ? Math.max(0, monthStats(thisMonth()).leftSecond) : 0;
+  src.innerHTML = `<option value="">${t("srcAsk")}</option>` + (w.dois
+    ? `<option value="mes:${M}">${fM} ${t("srcMonthP", pM, "")}</option>
+       <option value="sobras:${M}">${fM} ${t("srcWalletP", pM, fmtM0(w.disponivel))}</option>
+       <option value="mes:${SC}">${fS} ${t("srcMonthP", pS, fmtS0(livre2))}</option>
+       <option value="sobras:${SC}">${fS} ${t("srcWalletP", pS, fmtS0(w.saldo2))}</option>`
+    : `<option value="mes:${M}">${t("srcMonth")}</option>
+       <option value="sobras:${M}">${t("srcWallet", fmtM0(w.disponivel))}</option>`) +
+    `<option value="invest">${t("srcInvest")}</option>`;
   const ativos = [...S.portfolio].sort((a, b) => toWealth(b.value, b.cur) - toWealth(a.value, a.cur));
   const opt = p => `<option value="${p.id}">${esc(p.name)} · ${fmtCur(p.value, p.cur || wealthCur(), 0)}</option>`;
   dest.innerHTML = ativos.map(opt).join("") + `<option value="__new">${t("destNew")}</option>`;
@@ -2261,7 +2375,8 @@ function fillPlaceSelect() {
 /* A moeda do valor é a do lugar — o rótulo do campo diz qual é */
 function updateLancPlace() {
   const tp = document.getElementById("l-type").value;
-  const cur = tp === "gasto" ? placeCur(lancPlace()) : (document.getElementById("l-cur").value || mainCur());
+  const cur = tp === "gasto" ? placeCur(lancPlace())
+    : (tp === "aporte" && srcSplit(document.getElementById("l-src").value)[1]) || document.getElementById("l-cur").value || mainCur();
   const lbl = document.getElementById("l-amount-lbl");
   if (lbl) lbl.textContent = t("lancAmount") + (cur !== mainCur() ? ` (${curSym(cur)})` : "");
   updateLancHint();
@@ -2284,9 +2399,22 @@ function updateLancHint() {
     el.innerHTML = `${t("tripAvail")}: <b class="${ts.left < 0 ? "neg" : "pos"}">${fmtCur(ts.left, viagem.cur, 0)}</b>` +
       (ts.daysLeft > 1 ? ` · ${t("tripPerDay", fmtCur(ts.perDay, viagem.cur, 0), ts.daysLeft)}` : "");
   } else if (tp === "aporte") {
-    const src = document.getElementById("l-src").value;
-    el.innerHTML = src === "sobras" ? t("hintSrcWallet") : src === "invest" ? t("hintSrcInvest")
-      : src === "mes" ? t("hintSrcMonth") : t("hintSrcAsk");
+    /* Mostra o saldo do bolso antes e depois — negativo salta aos olhos antes de salvar */
+    const [k, c] = srcSplit(document.getElementById("l-src").value);
+    const v = Number(document.getElementById("l-amount").value) || 0;
+    const segundo = twoPockets() && c === secondCur();
+    const pais = countryName(segundo ? S.settings.secondCountry : S.settings.homeCountry);
+    let antes = null, rot = "";
+    if (k === "sobras") { const w = walletState(); antes = segundo ? w.saldo2 : w.disponivel; rot = t("hintFromWallet", pais); }
+    else if (k === "mes" && segundo) { antes = Math.max(0, monthStats(thisMonth()).leftSecond); rot = t("hintFromMonth", pais); }
+    if (!k) el.innerHTML = t("hintSrcAsk");
+    else if (k === "invest") el.innerHTML = t("hintSrcInvest");
+    else if (antes === null) el.innerHTML = t("hintSrcMonth");
+    else {
+      const depois = antes - v;
+      el.innerHTML = `${rot}: ${fmtCur(antes, c, 0)} → <b class="${depois < 0 ? "neg" : ""}">${fmtCur(depois, c, 0)}</b>` +
+        (depois < 0 ? ` · <span class="neg">${t("hintShort", fmtCur(-depois, c, 0))}</span>` : "");
+    }
   } else if (tp === "renda") {
     el.textContent = t("hintRenda");
   } else el.textContent = "";
@@ -2316,7 +2444,7 @@ function renderLanc() {
         } else {
           det = esc(x.dest || t("investFallback")) + (x.src ? ` <span style="color:var(--muted)">· ${t("srcShort_" + x.src)}</span>` : "") +
             (x.note ? " · " + esc(x.note) : "");
-          badge = `<span class="badge covered">${x.src === "invest" ? t("bdgMove") : t("bdgInvest")}</span>`;
+          badge = `<span class="badge covered">${x.src === "invest" ? t("bdgMove") : x.recurId ? t("bdgAuto") : t("bdgInvest")}</span>`;
           v = fmtCur(x.amount, x.cur || mainCur());
         }
         return `<tr><td>${fmtD(parseDate(x.date))}</td><td>${badge || t("wordExpense")}</td><td>${det}</td>
@@ -2329,6 +2457,10 @@ function delLanc(tp, id) {
   if (tp === "renda") S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
   if (tp === "aporte") {
     const c = S.contributions.find(x => String(x.id) === String(id));
+    if (c && c.recurId) {
+      const r = recurList().find(x => String(x.id) === String(c.recurId));
+      if (r) { r.skip = r.skip || []; if (!r.skip.includes(monthKey(c.date))) r.skip.push(monthKey(c.date)); }
+    }
     if (c) {
       const r2 = v => Math.round(v * 100) / 100;
       const a = S.portfolio.find(p => String(p.id) === String(c.assetId));
@@ -3458,8 +3590,9 @@ function renderPlan() {
     : { n:steps.length+1, tt:t("planCommitOk"), amt:fmtM0(ms.savedMain), why:t("planCommitOkWhy"), done:true });
   if (faltaSegundo > 1) steps.push({ n:steps.length+1, tt:t("planSecond", countryName(st.secondCountry)), amt:fmtS0(faltaSegundo),
     why:t("planSecondWhy", countryName(st.secondCountry)), done:false });
-  const cart = walletState().disponivel;
+  const wl = walletState(), cart = wl.disponivel;
   if (cart > 1) steps.push({ n:steps.length+1, tt:t("planWallet"), amt:fmtM0(cart), why:t("planWalletWhy"), done:false });
+  if (wl.dois && wl.saldo2 > 1) steps.push({ n:steps.length+1, tt:t("planWallet2", countryName(st.secondCountry)), amt:fmtS0(wl.saldo2), why:t("planWalletWhy"), done:false });
   if (total > 0 && alvoTipo && alvoTipo.gap > 1) steps.push({ n:steps.length+1, tt:t("planRebalance", L(alvoTipo.ty.label)),
     amt:"", why:t("planRebalanceWhy", riskLabel(), Math.round(alvoTipo.gap)), done:false });
 
@@ -3510,6 +3643,7 @@ function renderRelatorio() {
     ${lin(t("repSpentOwn"), ms.spent, "-")}
     ${ms.fix.main > 0 ? lin(ms.fechado ? t("repFixedPresumed") : t("repFixedPending"), ms.fix.main, "-") : ""}
     ${lin(ms.presumido && !ms.confirmado ? t("repSavedPresumed") : t("repSavedUS"), ms.investido, "-")}
+    ${ms.recurMain > 0 ? lin(t("repRecurPending"), ms.recurMain, "-") : ""}
     ${ms.metaPendente > 0 ? lin(t("repGoalPending"), ms.metaPendente, "-") : ""}
     <tr><td><b>${ms.fechado ? t("repLeftClosed") : t("repFree")}</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtM(ms.livre)}</b></td></tr>
   </tbody></table>
@@ -3526,6 +3660,9 @@ function renderRelatorio() {
     ${ms.rendaSecond > 0 && S.settings.freePolicy === "main" ? `<tr><td>${t("repEarnedBR")}</td><td class="num">${fmtS0(ms.rendaSecond)}</td></tr>` : ""}
     ${ms.spentSecond > 0 ? `<tr><td>${t("repSpentSecond")}</td><td class="num">${fmtS0(ms.spentSecond)}</td></tr>` : ""}
     ${ms.savedSecond > 0 ? `<tr><td>${t("repSavedBR")}</td><td class="num">${fmtS0(ms.savedSecond)}</td></tr>` : ""}
+    ${ms.recurSecond > 0 ? `<tr><td>${t("repRecurPending2")}</td><td class="num">${fmtS0(ms.recurSecond)}</td></tr>` : ""}
+    ${twoPockets() && (ms.rendaSecond > 0 || ms.spentSecond > 0) ? `<tr><td><b>${t("repSecondLeft", countryName(S.settings.secondCountry))}</b></td>
+      <td class="num"><b class="${ms.leftSecond >= 0 ? "pos" : "neg"}">${fmtS0(ms.leftSecond)}</b></td></tr>` : ""}
     ${ms.covered > 0 ? `<tr><td>${t("repCovered")}</td><td class="num">${fmtM(ms.covered)}</td></tr>` : ""}
     ${ms.fromWallet > 0 ? `<tr><td>${t("repFromWallet")}</td><td class="num">${fmtM(ms.fromWallet)}</td></tr>` : ""}
     ${ms.tripSpent > 0 ? `<tr><td>${t("repTripHeld")}</td><td class="num">${fmtM(ms.tripSpent)}</td></tr>` : ""}
@@ -3696,6 +3833,7 @@ async function firstSync() {
       const remoteTs = data.data?._ts || new Date(data.updated_at).getTime();
       if (remoteTs > localTs || !localHasData) {
         S = migrate(data.data);
+        postRecurring();
         freezeClosedMonths();
         localStorage.setItem(KEY, JSON.stringify(S));
         _fmtCache.clear();
@@ -4155,10 +4293,27 @@ function renderCountrySheet() {
         <tr><td>${t("thEarnedC")}</td><td class="num">${fmtS0(ms.rendaSecond)}</td></tr>
         <tr><td>${t("thSpentC")}</td><td class="num">${fmtS0(ms.spentSecond)}</td></tr>
         <tr><td>${t("prevSaved")}</td><td class="num">${fmtS0(ms.savedSecond)}</td></tr>
+        ${ms.recurSecond > 0 ? `<tr><td>${t("repRecurPending")}</td><td class="num">${fmtS0(ms.recurSecond)}</td></tr>` : ""}
         <tr><td><b>${t("wordLeft")}</b></td><td class="num"><b class="${ms.leftSecond >= 0 ? "pos" : "neg"}">${fmtS0(ms.leftSecond)}</b></td></tr>
       </tbody></table>
       <div class="hint">${st.freePolicy === "main" ? t("secStripWhy") : ""}</div>
     </div>
+    ${twoPockets() ? (() => {
+      /* O dinheiro de lá num lugar só: o que sobrou acumulado, o que cai todo mês
+         e o atalho para aportar sem ter que escolher moeda nem origem */
+      const w = walletState(), SC = secondCur();
+      const parcelas = recurList().filter(r => pocketOf(r) === "second" && !recurProgress(r).acabou);
+      return `<div class="card">
+        <h2>${t("secMoneyTitle")}</h2>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px">
+          <span>${t("walletTitle")}</span><b class="${w.saldo2 < 0 ? "neg" : ""}">${fmtS0(w.saldo2)}</b></div>
+        ${parcelas.map(r => { const pr = recurProgress(r); return `<div class="why" style="margin-top:6px">🔁 ${esc(r.name)} · ${fmtCur(r.amount, r.cur, 0)}${pr.prox ? " · " + t("rcNext", fmtD(parseDate(pr.prox))) : ""}</div>`; }).join("")}
+        <div class="chiprow" style="margin-top:12px">
+          ${w.saldo2 > 0 ? `<button class="btn" onclick="goAporte('sobras:${SC}', ${Math.round(w.saldo2)})">${t("secInvestWallet")}</button>` : ""}
+          ${ms.leftSecond > 0 ? `<button class="btn ghost" onclick="goAporte('mes:${SC}', ${Math.round(ms.leftSecond)})">${t("secInvestMonth")}</button>` : ""}
+        </div>
+      </div>`;
+    })() : ""}
     <div class="card">
       <h2>${t("whereTitle")}</h2>
       ${rows.length === 0 ? `<div class="empty">${t("noExpMonth")}</div>` : rows.map(c => `
@@ -4180,6 +4335,138 @@ function renderCountrySheet() {
     </div>`;
 }
 
+/* ═════════ Aportes automáticos ═════════
+   Parcela de imóvel na planta, previdência, aporte fixo: o que você investe
+   todo mês no mesmo dia. O app lança sozinho no dia, como débito automático —
+   sai do bolso da moeda dele e cai no ativo certo. Antes do dia, o valor já
+   fica reservado. Apagar um lançamento automático pula só aquele mês. */
+const recurList = () => S.recur || [];
+const recurPosted = (r, mk) => S.contributions.find(c => String(c.recurId) === String(r.id) && monthKey(c.date) === mk);
+const recurActive = (r, mk) => (!r.since || r.since <= mk) && (!r.until || r.until >= mk) && !(r.skip || []).includes(mk);
+function recurPending(mk) {
+  const out = { main: 0, second: 0 };
+  if (mk !== thisMonth()) return out;
+  const hoje = new Date().getDate();
+  recurList().forEach(r => {
+    if (!recurActive(r, mk) || recurPosted(r, mk) || r.day <= hoje) return;
+    const p = pocketOf(r);
+    out[p] += conv(r.amount, r.cur, pocketCur(p));
+  });
+  return out;
+}
+function postRecurring() {
+  const hojeMk = thisMonth(), hoje = new Date().getDate();
+  let mudou = false;
+  recurList().forEach(r => {
+    if (!r.since) return;
+    for (let mk = r.since; mk <= hojeMk; mk = shiftMonth(mk, 1)) {
+      if (r.until && mk > r.until) break;
+      if (mk === hojeMk && r.day > hoje) break;
+      if (!recurActive(r, mk) || recurPosted(r, mk)) continue;
+      const a = S.portfolio.find(p => String(p.id) === String(r.assetId));
+      const c = { id: uid(), date: `${mk}-${String(r.day).padStart(2, "0")}`, amount: r.amount, cur: r.cur,
+        src: "mes", dest: a ? a.name : r.name, note: a && a.name !== r.name ? r.name : "", recurId: r.id };
+      if (a) {
+        const d = conv(r.amount, r.cur, a.cur || wealthCur());
+        a.value = Math.round((a.value + d) * 100) / 100;
+        c.assetId = a.id; c.assetDelta = d;
+      }
+      S.contributions.push(c);
+      mudou = true;
+    }
+  });
+  if (mudou) save();
+  return mudou;
+}
+/* Compra parcelada: quanto já foi pago (o valor do ativo), quanto falta e quando acaba */
+function recurProgress(r) {
+  const a = S.portfolio.find(p => String(p.id) === String(r.assetId));
+  const hojeMk = thisMonth(), hoje = new Date().getDate();
+  const acabou = !!(r.until && r.until < hojeMk);
+  let mk = r.since && r.since > hojeMk ? r.since : hojeMk;
+  if (mk === hojeMk && (recurPosted(r, mk) || r.day <= hoje)) mk = shiftMonth(mk, 1);
+  while ((r.skip || []).includes(mk)) mk = shiftMonth(mk, 1);
+  const prox = !acabou && (!r.until || mk <= r.until) ? `${mk}-${String(r.day).padStart(2, "0")}` : "";
+  const pago = a ? conv(a.value, a.cur || wealthCur(), r.cur) : 0;
+  const falta = Math.max(0, (r.total || 0) - pago);
+  const restantes = !prox ? 0 : r.until ? monthsBetween(mk, r.until) + 1
+    : (r.total > 0 && r.amount > 0 ? Math.ceil(falta / r.amount) : 0);
+  return { a, pago, falta, pct: r.total > 0 ? Math.min(100, pago / r.total * 100) : 0, prox, restantes, acabou };
+}
+function renderRecur() {
+  const el = document.getElementById("rc-list");
+  if (!el) return;
+  const dois = twoPockets();
+  el.innerHTML = !recurList().length ? `<div class="empty">${t("rcNone")}</div>` : recurList().map(r => {
+    const pr = recurProgress(r);
+    const icone = pr.a && pr.a.type === "imoveis" ? "🏗️" : "🔁";
+    const bandeira = dois ? (pocketOf(r) === "second" ? flagOf(S.settings.secondCountry) : flagOf(S.settings.homeCountry)) + " " : "";
+    return `<div class="gitem ${pr.acabou ? "off" : ""}"><div style="flex:1; min-width:0">
+      <b>${icone} ${esc(r.name)}</b> ${pr.acabou ? `<span class="badge covered">${t("rcEnded")}</span>` : ""}
+      <div class="why">${bandeira}${t("rcLine", fmtCur(r.amount, r.cur, 0), r.day)} → ${esc(pr.a ? pr.a.name : r.name)}${pr.prox ? " · " + t("rcNext", fmtD(parseDate(pr.prox))) : ""}</div>
+      ${r.total > 0 ? `<div class="meter"><div style="width:${pr.pct}%"></div></div>
+        <div class="why">${t("rcPaid", fmtCur(pr.pago, r.cur, 0), fmtCur(r.total, r.cur, 0), Math.round(pr.pct))} · ${t("rcLeft", fmtCur(pr.falta, r.cur, 0))}${pr.restantes
+          ? " · " + (r.until ? t("rcLeftN", pr.restantes, monthLabel(r.until)) : t("rcLeftNoEnd", pr.restantes)) : ""}</div>` : ""}
+    </div><button class="mini" title="${t("del")}" onclick="delRecur('${r.id}')">✕</button></div>`;
+  }).join("");
+
+  const f = document.getElementById("rc-form");
+  if (!f || f.dataset.pronto === "1") return;     // não apaga o que a pessoa está digitando
+  const M = mainCur(), SC = secondCur();
+  const ativos = [...S.portfolio].sort((a, b) => toWealth(b.value, b.cur) - toWealth(a.value, a.cur));
+  f.innerHTML = `<form class="inline" style="margin-top:10px" onsubmit="return createRecur(event)">
+      <div class="field" style="flex:1; min-width:150px"><label>${t("rcName")}</label><input type="text" id="rc-name" required placeholder="${t("rcNamePh")}"></div>
+      <div class="field"><label>${t("rcAmount")}</label><input type="number" id="rc-amount" inputmode="decimal" step="any" min="0.01" required style="width:110px"></div>
+      ${dois ? `<div class="field"><label>${t("rcFrom")}</label><select id="rc-cur">
+        <option value="${M}">${flagOf(S.settings.homeCountry)} ${t("rcFromPocket", countryName(S.settings.homeCountry), curSym(M))}</option>
+        <option value="${SC}">${flagOf(S.settings.secondCountry)} ${t("rcFromPocket", countryName(S.settings.secondCountry), curSym(SC))}</option>
+      </select></div>` : ""}
+      <div class="field"><label>${t("rcDay")}</label><input type="number" id="rc-day" inputmode="numeric" min="1" max="28" required style="width:70px" value="10"></div>
+      <div class="field"><label>${t("rcDest")}</label><select id="rc-dest">
+        ${ativos.map(p => `<option value="${p.id}">${esc(p.name)} · ${fmtCur(p.value, p.cur || wealthCur(), 0)}</option>`).join("")}
+        <option value="__new">${t("rcDestNew")}</option></select></div>
+      <div class="field"><label>${t("rcStart")}</label><input type="month" id="rc-since"></div>
+      <div class="field"><label>${t("rcTotal")}</label><input type="number" id="rc-total" inputmode="decimal" step="any" min="0" style="width:130px" placeholder="${t("rcOptional")}"></div>
+      <div class="field"><label>${t("rcUntil")}</label><input type="month" id="rc-until"></div>
+      <button class="btn" type="submit">${t("rcCreate")}</button>
+    </form>
+    <div class="hint neg" id="rc-err" style="min-height:16px"></div>
+    <div class="hint">${t("rcHint")}</div>`;
+  f.dataset.pronto = "1";
+}
+function createRecur(ev) {
+  ev.preventDefault();
+  const nome = val("rc-name").trim(), valor = num("rc-amount"), dia = Math.min(28, Math.max(1, Math.round(num("rc-day"))));
+  if (!nome || !(valor > 0) || !dia) { document.getElementById("rc-err").textContent = t("rcErr"); return false; }
+  const cur = val("rc-cur") || mainCur();
+  let assetId = val("rc-dest");
+  if (assetId === "__new" || !assetId) {
+    const a = { id: uid(), name: nome, value: 0, type: guessType(nome), cur };
+    S.portfolio.push(a); assetId = a.id;
+  }
+  /* Sem mês escolhido, o primeiro lançamento é o próximo vencimento — nunca um
+     que já passou e talvez já tenha sido lançado à mão */
+  const since = val("rc-since") || (dia > new Date().getDate() ? thisMonth() : shiftMonth(thisMonth(), 1));
+  S.recur = S.recur || [];
+  S.recur.push({ id: uid(), name: nome, amount: valor, cur, day: dia, assetId, since,
+    until: val("rc-until"), total: num("rc-total"), skip: [] });
+  postRecurring();
+  save();
+  const f = document.getElementById("rc-form"); f.dataset.pronto = "";
+  document.getElementById("rc-new-d").open = false;
+  renderAll();
+  return false;
+}
+/* Encerrar mantém o que já foi lançado; só para de lançar dali em diante */
+function delRecur(id) {
+  const r = recurList().find(x => String(x.id) === String(id));
+  if (!r || !confirm(t("rcDelAsk", r.name))) return;
+  const feitos = S.contributions.filter(c => String(c.recurId) === String(id)).map(c => monthKey(c.date)).sort();
+  if (feitos.length) r.until = feitos[feitos.length - 1];
+  else S.recur = recurList().filter(x => String(x.id) !== String(id));
+  save(); renderAll();
+}
+
 /* ═════════ Carteira de sobras ═════════
    Saldo = soma do que sobrou em cada mês fechado (o número real: o que entrou,
    menos gastos, contas e o que foi aportado DO mês) + acertos − coberturas −
@@ -4194,20 +4481,28 @@ function walletState() {
   for (let mk = firstDataMonth(); mk < atual; mk = shiftMonth(mk, 1)) {
     if (!monthHasData(mk)) continue;            // mês sem lançamento não inventa sobra
     const ms = monthStats(mk);
-    meses.push({ mk, sobra: ms.livre, naoAportado: Math.max(0, ms.metaMes - ms.investido), presumido: ms.presumido && !ms.confirmado });
+    meses.push({ mk, sobra: ms.livre, sobra2: ms.leftSecond, naoAportado: Math.max(0, ms.metaMes - ms.investido), presumido: ms.presumido && !ms.confirmado });
     somaMeses += ms.livre;
     somaSec += ms.leftSecond;
   }
-  const ajustes = moves.filter(m => m.kind === "adjust").reduce((a, m) => a + m.amount, 0);
+  /* Cada bolso com o seu saldo: o de casa e, se existir, o do segundo país */
+  const doBolso = (m, p) => (m.pocket || "main") === p;
+  const ajustes = moves.filter(m => m.kind === "adjust" && doBolso(m, "main")).reduce((a, m) => a + m.amount, 0);
   const coberturas = moves.filter(m => m.kind === "cover").reduce((a, m) => a + m.amount, 0);
-  const investido = S.contributions.filter(c => c.src === "sobras")
+  const investido = S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "main")
     .reduce((a, c) => a + conv(c.amount, c.cur || mainCur(), mainCur()), 0);
   const saldo = somaMeses + ajustes - coberturas - investido;
+  const dois = twoPockets();
+  const aj2 = dois ? moves.filter(m => m.kind === "adjust" && doBolso(m, "second")).reduce((a, m) => a + m.amount, 0) : 0;
+  const inv2 = dois ? S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "second")
+    .reduce((a, c) => a + conv(c.amount, c.cur || secondCur(), secondCur()), 0) : 0;
+  const saldo2 = dois ? somaSec + aj2 - inv2 : 0;
   const reservas = (S.trips || []).filter(tp => !tp.closed).map(tp => ({ tp,
     v: (tp.topups || []).filter(x => x.fromWallet).reduce((a, x) => a + conv(x.amount, x.cur || tp.budgetCur, mainCur()), 0) }))
     .filter(r => r.v > 0.5);
   const reservado = reservas.reduce((a, r) => a + r.v, 0);
-  return { saldo, reservado, disponivel: saldo - reservado, meses, somaSec, ajustes, coberturas, investido, reservas, moves };
+  return { saldo, reservado, disponivel: saldo - reservado, meses, somaSec, ajustes, coberturas, investido, reservas, moves,
+           dois, saldo2, aj2, inv2 };
 }
 const walletMoves = () => { S.wallet = S.wallet || { moves: [] }; S.wallet.moves = S.wallet.moves || []; return S.wallet.moves; };
 /* Cobrir o mês: a carteira manda para este mês o que faltou */
@@ -4224,12 +4519,15 @@ function walletUndo(id) {
   save(); renderAll(); if (sheetView) renderSheet();
 }
 /* Acertar com o saldo real da conta: o app ajusta a diferença, sem mexer em mês nenhum */
-function walletAdjust(ev) {
+function walletAdjust(ev, pocket) {
   ev.preventDefault();
-  const real = Number(document.getElementById("wl-real").value);
-  if (!(real >= 0) || document.getElementById("wl-real").value === "") return false;
-  const dif = Math.round((real - walletState().saldo) * 100) / 100;
-  if (dif) walletMoves().push({ id: uid(), kind: "adjust", amount: dif, date: todayStr() });
+  const inp = ev.target.querySelector("input");
+  const real = Number(inp.value);
+  if (!(real >= 0) || inp.value === "") return false;
+  const w = walletState();
+  const p = pocket === "second" ? "second" : "main";
+  const dif = Math.round((real - (p === "second" ? w.saldo2 : w.saldo)) * 100) / 100;
+  if (dif) walletMoves().push({ id: uid(), kind: "adjust", amount: dif, date: todayStr(), pocket: p });
   save(); renderAll(); renderSheet();
   return false;
 }
@@ -4267,13 +4565,13 @@ function renderWalletStrip() {
   const el = document.getElementById("wallet-strip");
   if (!el) return;
   const w = walletState();
-  if (!w.meses.length && !w.moves.length) { el.innerHTML = ""; return; }
+  if (!w.meses.length && !w.moves.length && !w.inv2) { el.innerHTML = ""; return; }
   const ms = monthStats(thisMonth());
   const apertado = ms.livre < 0 && w.disponivel > 0;
   el.innerHTML = `<div class="card tappable" style="padding:10px 18px; font-size:13.5px" role="button" tabindex="0"
       onclick="openSheet('wallet')" onkeydown="if(event.key==='Enter'){openSheet('wallet')}">
     <div style="display:flex; align-items:center; gap:10px">
-      <span style="flex:1">💼 ${t("walletLine", fmtM0(w.disponivel))}${w.reservado > 0 ? ` <span style="color:var(--muted)">· ${t("walletReserved", fmtM0(w.reservado))}</span>` : ""}</span>
+      <span style="flex:1">💼 ${t("walletLine", fmtM0(w.disponivel))}${w.dois && Math.abs(w.saldo2) >= 1 ? ` · ${flagOf(S.settings.secondCountry)} <b>${fmtS0(w.saldo2)}</b>` : ""}${w.reservado > 0 ? ` <span style="color:var(--muted)">· ${t("walletReserved", fmtM0(w.reservado))}</span>` : ""}</span>
       <span class="chev">›</span></div>
     ${apertado ? `<div style="margin-top:8px"><button class="btn" style="font-size:13px; padding:6px 12px"
         onclick="event.stopPropagation(); walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button></div>` : ""}
@@ -4285,20 +4583,19 @@ function renderWalletSheet() {
   const abertas = (S.trips || []).filter(tp => !tp.closed);
   document.getElementById("sheet-title").textContent = t("walletTitle");
   const usos = [
-    ...w.moves.map(m => ({ data: m.date || "", txt: m.kind === "adjust" ? t("walletMvAdjust")
+    ...w.moves.filter(m => (m.pocket || "main") === "main").map(m => ({ data: m.date || "", txt: m.kind === "adjust" ? t("walletMvAdjust")
         : m.tripId ? t("walletMvTrip", esc(tripName(tripById(m.tripId)) || "")) : t("walletMvCover", monthLabel(m.month)),
       v: m.kind === "adjust" ? m.amount : -m.amount, id: m.kind === "cover" && m.tripId ? "" : m.id })),
-    ...S.contributions.filter(c => c.src === "sobras").map(c => ({ data: c.date, txt: t("walletMvInvest", esc(c.dest || "")),
+    ...S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "main").map(c => ({ data: c.date, txt: t("walletMvInvest", esc(c.dest || "")),
       v: -conv(c.amount, c.cur || mainCur(), mainCur()), id: "" })),
   ].sort((a, b) => b.data.localeCompare(a.data));
   document.getElementById("sheet-body").innerHTML = `
     <div class="card">
-      <div class="label" style="font-size:12.5px; color:var(--ink-2)">${t("walletAvail")}</div>
+      <div class="label" style="font-size:12.5px; color:var(--ink-2)">${w.dois ? flagOf(S.settings.homeCountry) + " " + countryName(S.settings.homeCountry) + " · " : ""}${t("walletAvail")}</div>
       <div class="tbig ${w.disponivel < 0 ? "neg" : ""}" style="font-size:32px; font-weight:650">${fmtM0(w.disponivel)}</div>
       <div class="tsub" style="font-size:13px; color:var(--ink-2)">
         ${w.reservas.map(r => t("walletResFor", fmtM0(r.v), esc(tripName(r.tp)))).join(" · ")}
-        ${S.settings.hasSecond && S.settings.freePolicy === "main" && Math.abs(w.somaSec) >= 1
-          ? `${w.reservas.length ? " · " : ""}${t("walletSecond", countryName(S.settings.secondCountry), fmtS0(w.somaSec))}` : ""}</div>
+        </div>
       <div class="chiprow" style="margin-top:12px">
         ${w.disponivel > 0 ? `<button class="btn" onclick="goAporte('sobras', ${Math.round(w.disponivel)})">${t("walletInvestBtn")}</button>` : ""}
         ${ms.livre < 0 && w.disponivel > 0 ? `<button class="btn ghost" onclick="walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button>` : ""}
@@ -4312,6 +4609,37 @@ function renderWalletSheet() {
       </form>` : ""}
       <div class="hint">${t("walletHint")}</div>
     </div>
+    ${w.dois ? (() => {
+      const SC = secondCur(), pais = countryName(S.settings.secondCountry);
+      const usos2 = [
+        ...w.moves.filter(m => m.kind === "adjust" && m.pocket === "second").map(m => ({ data: m.date || "", txt: t("walletMvAdjust"), v: m.amount, id: m.id })),
+        ...S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "second").map(c => ({ data: c.date,
+          txt: t("walletMvInvest", esc(c.dest || "")), v: -conv(c.amount, c.cur || SC, SC), id: "" })),
+      ].sort((a, b) => b.data.localeCompare(a.data));
+      return `<div class="card">
+        <div class="label" style="font-size:12.5px; color:var(--ink-2)">${flagOf(S.settings.secondCountry)} ${pais} · ${t("walletAvail")}</div>
+        <div class="tbig ${w.saldo2 < 0 ? "neg" : ""}" style="font-size:30px; font-weight:650">${fmtS0(w.saldo2)}</div>
+        ${w.saldo2 > 0 ? `<div class="chiprow" style="margin-top:10px">
+          <button class="btn" onclick="goAporte('sobras:${SC}', ${Math.round(w.saldo2)})">${t("walletInvestBtn")}</button></div>` : ""}
+        <table style="margin-top:10px"><tbody>
+          ${w.meses.slice().reverse().slice(0, 12).filter(m => Math.abs(m.sobra2) >= 1).map(m => `<tr><td style="text-transform:capitalize">${monthLabel(m.mk)}</td>
+            <td class="num"><b class="${m.sobra2 >= 0 ? "pos" : "neg"}">${m.sobra2 >= 0 ? "+" : ""}${fmtS0(m.sobra2)}</b></td><td></td></tr>`).join("")}
+          ${usos2.map(u => `<tr><td>${u.txt}${u.data ? ` <span class="hint" style="margin:0">${fmtD(parseDate(u.data))}</span>` : ""}</td>
+            <td class="num ${u.v >= 0 ? "pos" : "neg"}">${u.v >= 0 ? "+" : ""}${fmtS0(u.v)}</td>
+            <td style="width:30px">${u.id ? `<button class="mini" title="${t("del")}" onclick="walletUndo('${u.id}')">✕</button>` : ""}</td></tr>`).join("")}
+          <tr><td><b>${t("walletBalance")}</b></td><td class="num"><b>${fmtS0(w.saldo2)}</b></td><td></td></tr>
+        </tbody></table>
+        <details style="margin-top:12px">
+          <summary class="hint" style="cursor:pointer">${t("walletAdjustTitle")}</summary>
+          <form class="inline" style="margin-top:10px" onsubmit="return walletAdjust(event, 'second')">
+            <div class="field"><label>${t("walletReal", curSym(SC))}</label>
+              <input type="number" inputmode="decimal" step="any" min="0" style="width:130px" placeholder="${Math.round(w.saldo2)}"></div>
+            <button class="btn ghost" type="submit">${t("walletAdjustBtn")}</button>
+          </form>
+        </details>
+        <div class="hint">${t("wallet2Hint", pais)}</div>
+      </div>`;
+    })() : ""}
     <div class="card">
       <h2>${t("walletHow")}</h2>
       ${w.meses.length === 0 ? `<div class="empty">${t("walletNoMonths")}</div>` : `<table><tbody>
@@ -4325,7 +4653,7 @@ function renderWalletSheet() {
       </tbody></table>`}
       <details style="margin-top:12px">
         <summary class="hint" style="cursor:pointer">${t("walletAdjustTitle")}</summary>
-        <form class="inline" style="margin-top:10px" onsubmit="return walletAdjust(event)">
+        <form class="inline" style="margin-top:10px" onsubmit="return walletAdjust(event, 'main')">
           <div class="field"><label>${t("walletReal", curSym(mainCur()))}</label>
             <input type="number" id="wl-real" inputmode="decimal" step="any" min="0" style="width:130px" placeholder="${Math.round(w.saldo)}"></div>
           <button class="btn ghost" type="submit">${t("walletAdjustBtn")}</button>
@@ -4340,7 +4668,8 @@ function goAporte(src, valor, tipo, nome) {
   document.querySelector('nav button[data-tab="lanc"]')?.click();
   document.getElementById("l-type").value = "aporte";
   updateLancForm();
-  if (src) document.getElementById("l-src").value = src;
+  if (src) document.getElementById("l-src").value = (src.includes(":") || src === "invest") ? src : `${src}:${mainCur()}`;
+  destTouched = false;
   if (valor > 0) document.getElementById("l-amount").value = Math.round(valor * 100) / 100;
   if (tipo) {
     const a = S.portfolio.find(p => p.type === tipo);
@@ -4719,6 +5048,7 @@ function importData(input) {
       const d = JSON.parse(r.result);
       if (!d.settings || !Array.isArray(d.expenses)) throw new Error("invalid");
       S = migrate(d);
+      postRecurring();
       freezeClosedMonths();
       save(); _fmtCache.clear(); applyLang();
       alert(t("importOk"));
@@ -4729,7 +5059,7 @@ function importData(input) {
 
 /* ───────── Bindings ───────── */
 function renderAll() {
-  renderInicio(); renderTripCard(); renderWalletStrip(); renderMonthClose(); renderLanc(); renderMetas(); renderInvest(); renderPlan();
+  renderInicio(); renderTripCard(); renderWalletStrip(); renderMonthClose(); renderLanc(); renderMetas(); renderInvest(); renderRecur(); renderPlan();
   renderRewards(); renderMarket(); renderAporte();
   renderViagens(); renderRelatorio();
 }
@@ -4766,6 +5096,7 @@ function fillWhereSelect() {
 document.getElementById("l-date").value = todayStr();
 document.getElementById("l-type").onchange = updateLancForm;
 document.getElementById("l-cat").onchange = updateLancHint;
+document.getElementById("l-amount").addEventListener("input", updateLancHint);
 
 document.getElementById("f-lanc").onsubmit = e => {
   e.preventDefault();
@@ -4779,8 +5110,9 @@ document.getElementById("f-lanc").onsubmit = e => {
   }
   if (tp === "renda") S.incomes.push({ ...base, cur, source: desc });
   if (tp === "aporte") {
-    const src = document.getElementById("l-src").value;
+    const [src, srcCur] = srcSplit(document.getElementById("l-src").value);
     if (!src) return;
+    const cur = srcCur || document.getElementById("l-cur").value || mainCur();
     const r2 = v => Math.round(v * 100) / 100;
     let destA = null;
     if (document.getElementById("l-dest").value === "__new") {
@@ -4799,6 +5131,7 @@ document.getElementById("f-lanc").onsubmit = e => {
     if (fromA) { const d = conv(base.amount, cur, fromA.cur || wealthCur()); fromA.value = r2(Math.max(0, fromA.value - d)); c.fromAssetId = fromA.id; c.fromDelta = d; }
     S.contributions.push(c);
     document.getElementById("l-src").value = "";
+    destTouched = false;
   }
   save();
   document.getElementById("l-amount").value = ""; document.getElementById("l-desc").value = "";
@@ -4850,6 +5183,7 @@ document.getElementById("f-fuel").onsubmit = e => {
   save(); e.target.reset(); renderRewards();
 };
 
+postRecurring();
 freezeClosedMonths();
 fillCatSelects();
 fillCurSelect();
