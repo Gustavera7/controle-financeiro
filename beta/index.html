@@ -46,6 +46,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; }
+  [hidden] { display: none !important; }
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--ink); font-size: 15px; line-height: 1.45; }
   header { padding: 16px 20px 0; max-width: 860px; margin: 0 auto; }
   header h1 { font-size: 20px; font-weight: 650; }
@@ -703,6 +704,16 @@ pt: {
   noPrev: m => `Sem lançamentos em ${m}.`,
   prevEarned: "Ganhou", prevSpent: "Gastou", prevSaved: "Guardou", prevLeft: "Sobrou",
   prevFixed: "Contas fixas não lançadas (contei como pagas)",
+  prevPresumed: "sem aporte lançado — contei a meta como investida",
+  tSavedPresumed: "meta contada como investida",
+  repSavedPresumed: "Investiu a meta (sem lançamento, contei como investida)",
+  repConfirmAsk: m => `Investiu outro valor em ${m}? Ajuste aqui`,
+  repConfirmed: v => `Investimento do mês confirmado: ${v} — ajustar`,
+  repInvestedIn: c => `Quanto investiu (${c})`,
+  repConfirmHint: "Vale o que você disser aqui. Se investiu menos que a meta, a diferença vira sobra e vai para a carteira de sobras.",
+  closeAsk: (v, m) => `Você investiu os <b>${v}</b> da meta de ${m}?`,
+  closeYes: "Sim, investi", closeOther: "Investi outro valor", closeConfirm: "Confirmar",
+  closeAskHint: "Sem aporte lançado, o app conta a meta como investida. Se investiu menos, a diferença vai para a carteira de sobras — é dinheiro que ficou na conta.",
   gMathFix: (r, g, f, l) => `Renda ${r} − guardar ${g} − contas fixas ${f} = <b>${l}</b> para viver o mês sem culpa.`,
   goalOk: "meta ✓",
   prevHint: "A sobra do mês fechado foi para a carteira de sobras — de lá você investe, cobre um mês apertado ou manda para uma viagem.",
@@ -1100,6 +1111,16 @@ en: {
   noPrev: m => `No entries in ${m}.`,
   prevEarned: "Earned", prevSpent: "Spent", prevSaved: "Saved", prevLeft: "Left over",
   prevFixed: "Fixed bills not logged (counted as paid)",
+  prevPresumed: "no contribution logged — counted the goal as invested",
+  tSavedPresumed: "goal counted as invested",
+  repSavedPresumed: "Invested the goal (not logged, counted as invested)",
+  repConfirmAsk: m => `Invested a different amount in ${m}? Adjust here`,
+  repConfirmed: v => `This month's investment confirmed: ${v} — adjust`,
+  repInvestedIn: c => `How much you invested (${c})`,
+  repConfirmHint: "What you say here is what counts. If you invested less than the goal, the difference becomes leftover and goes to your leftover wallet.",
+  closeAsk: (v, m) => `Did you invest the <b>${v}</b> goal for ${m}?`,
+  closeYes: "Yes, I did", closeOther: "A different amount", closeConfirm: "Confirm",
+  closeAskHint: "With no contribution logged, the app counts the goal as invested. If you invested less, the difference goes to your leftover wallet — it's money that stayed in your account.",
   gMathFix: (r, g, f, l) => `Income ${r} − save ${g} − fixed bills ${f} = <b>${l}</b> to live the month guilt-free.`,
   goalOk: "goal ✓",
   prevHint: "The closed month's leftover went to your leftover wallet — from there you invest it, cover a tight month or send it to a trip.",
@@ -1553,6 +1574,7 @@ const DEFAULTS = {
   offers: [],     // ofertas de parceiros (hoje manuais; amanhã, feed do Folga)
   fixed: [],      // contas que se repetem todo mês (aluguel, luz, internet…)
   wallet: { moves: [] }, // carteira de sobras: só acertos e coberturas; o resto é calculado
+  closes: {},     // retrato de cada mês fechado: renda, meta e quanto foi investido
   cats: [],       // categorias criadas pelo usuário
   trips: [],      // viagens e temporadas fora (cada uma com moeda e orçamento)
 };
@@ -1623,6 +1645,14 @@ function migrate(d) {
     ...o, amount: Number(o.amount) || 0, ret: Number(o.ret) || 0,
     risk: ["baixo","medio","alto"].includes(o.risk) ? o.risk : "medio",
   }));
+  /* Retrato dos meses fechados: renda e meta do mês e, se você confirmou,
+     quanto investiu de fato. Nada aqui é recalculado depois. */
+  s.closes = (s.closes && typeof s.closes === "object" && !Array.isArray(s.closes)) ? s.closes : {};
+  Object.keys(s.closes).forEach(k => {
+    const c = s.closes[k] || {};
+    s.closes[k] = { renda: Number(c.renda) || 0, renda2: Number(c.renda2) || 0, meta: Number(c.meta) || 0,
+      investido: c.investido == null || c.investido === "" ? null : Number(c.investido) || 0, conf: !!c.conf };
+  });
   /* Carteira de sobras: guarda só o que não dá para calcular (acertos e
      coberturas de mês). O saldo nasce dos meses fechados. */
   s.wallet = { moves: ((s.wallet && s.wallet.moves) || []).filter(m => m && m.id && ["adjust","cover"].includes(m.kind))
@@ -1931,6 +1961,39 @@ function fixedPending(mk) {
   return out;
 }
 
+/* ───────── Meses fechados ficam como eram ─────────
+   Renda e meta são configurações de hoje. Sem retrato, mudar o salário em
+   dezembro reescreveria setembro — e a carteira de sobras junto. Quando um
+   mês fecha, o app guarda renda e meta daquele mês e não mexe mais. */
+function freezeClosedMonths() {
+  S.closes = S.closes || {};
+  const st = S.settings;
+  let mudou = false;
+  for (let mk = firstDataMonth(); mk < thisMonth(); mk = shiftMonth(mk, 1)) {
+    if (!monthHasData(mk) || S.closes[mk]) continue;
+    S.closes[mk] = { renda: st.mainMonthly, renda2: st.hasSecond ? st.secondMonthly : 0,
+      meta: st.saveMonthly, investido: null, conf: false };
+    mudou = true;
+  }
+  if (mudou) save();
+}
+/* Você diz quanto investiu num mês fechado; a diferença para a meta vira sobra */
+function confirmMonth(mk, valor) {
+  freezeClosedMonths();
+  const c = S.closes[mk];
+  if (!c) return;
+  c.investido = Math.max(0, Number(valor) || 0);
+  c.conf = true;
+  save(); renderAll(); if (sheetView) renderSheet();
+}
+function confirmMonthForm(ev, mk) {
+  ev.preventDefault();
+  const inp = ev.target.querySelector("input");
+  if (inp.value === "") return false;
+  confirmMonth(mk, inp.value);
+  return false;
+}
+
 /* ───────── Números do mês ─────────
    Tudo que sai daqui na moeda principal, exceto o que tem sufixo Second. */
 function monthStats(mk) {
@@ -1960,26 +2023,37 @@ function monthStats(mk) {
   const walletIn = ((S.wallet && S.wallet.moves) || []).filter(m => m.kind === "cover" && m.month === mk)
     .reduce((s, m) => s + m.amount, 0);
 
-  const rendaMain = st.mainMonthly + extrasMain;
-  const rendaSecond = (st.hasSecond ? st.secondMonthly : 0) + extrasSecond;
+  /* Mês fechado usa a renda e a meta que valiam nele (retrato); o corrente, as de hoje */
+  const fechado = mk < thisMonth();
+  const snap = fechado ? (S.closes || {})[mk] : null;
+  const metaMes = snap ? snap.meta : st.saveMonthly;
+  const rendaMain = (snap ? snap.renda : st.mainMonthly) + extrasMain;
+  const rendaSecond = (st.hasSecond ? (snap ? snap.renda2 : st.secondMonthly) : 0) + extrasSecond;
   /* Política do livre: por padrão só a renda principal sustenta o mês — a segunda
      fica reservada para investir. Quem quiser soma as duas (config ou wizard). */
   const somaTudo = st.freePolicy === "all" && st.hasSecond;
   const ganho = rendaMain + (somaTudo ? toMain(rendaSecond, SC) : 0);
   const saved = savedMain + toMain(savedSecond, SC);
   const savedNoLivre = savedMain + (somaTudo ? toMain(savedSecond, SC) : 0);
-  /* Mês corrente: a meta inteira já tem dono, mesmo antes do aporte. Mês
-     fechado: só o que foi aportado de verdade — o resto ficou na conta e é sobra. */
-  const fechado = mk < thisMonth();
-  const reservado = fechado ? savedNoLivre : Math.max(st.saveMonthly, savedNoLivre);
-  const metaPendente = reservado - savedNoLivre;
+  /* O que saiu do mês para investir.
+     Mês corrente: o que já foi lançado, e o que falta da meta fica reservado.
+     Mês fechado: o que você confirmou no fechamento; sem confirmação, a meta —
+     quase ninguém lança cada aporte, e presumir que não investiu inventaria
+     sobra (foi o erro que fez setembro mostrar 1.920 em vez de 850). */
+  let investido, presumido = false;
+  if (!fechado) investido = savedNoLivre;
+  else if (snap && snap.investido != null) investido = snap.investido;
+  else { investido = Math.max(metaMes, savedNoLivre); presumido = metaMes > savedNoLivre; }
+  const metaPendente = fechado ? 0 : Math.max(0, metaMes - savedNoLivre);
+  const reservado = investido + metaPendente;
   /* Contas fixas não lançadas: vão sair (mês corrente) ou saíram (mês fechado) */
   const fix = fixedPending(mk);
   const livre = ganho + walletIn - reservado - spent - fix.main;
   /* Sobra do segundo país: o que entrou lá, menos gasto, aporte e contas de lá */
   const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second;
   return { spent, spentSecond, tripSpent, covered, extrasMain, extrasSecond, savedMain, savedSecond, saved,
-           savedNoLivre, metaPendente, fromWallet, walletIn, fechado,
+           savedNoLivre, metaPendente, fromWallet, walletIn, fechado, investido, presumido, metaMes,
+           confirmado: !!(snap && snap.conf), rendaMain,
            ganho, rendaSecond, leftSecond, livre, reservado, fix };
 }
 /* Patrimônio = soma dos ativos, sempre. Aporte entra num ativo; valorização
@@ -2081,9 +2155,10 @@ function renderInicio() {
       (st.savedSecond > 0 ? "" : `<div class="hint" style="margin-top:2px">${t("secStripTodo")}</div>`);
   } else { secStrip.style.display = "none"; secStrip.onclick = null; }
 
-  set("t-guardado", fmtM0(st.saved));
-  document.getElementById("t-guardado-n").textContent = t("tSavedGoal", fmtM0(S.settings.saveMonthly));
-  const pctSave = S.settings.saveMonthly > 0 ? Math.min(100, st.saved / S.settings.saveMonthly * 100) : 0;
+  set("t-guardado", fmtM0(st.investido));
+  document.getElementById("t-guardado-n").textContent = t("tSavedGoal", fmtM0(st.metaMes)) +
+    (st.presumido && !st.confirmado ? " · " + t("tSavedPresumed") : "");
+  const pctSave = st.metaMes > 0 ? Math.min(100, st.investido / st.metaMes * 100) : 0;
   document.getElementById("t-guardado-m").firstElementChild.style.width = (vazio ? 0 : pctSave) + "%";
 
   set("t-gasto", fmtM0(st.spent));
@@ -2115,7 +2190,8 @@ function renderInicio() {
     : `<table><tbody>
       <tr><td>${t("prevEarned")}</td><td class="num">${fmtM(p.ganho)}</td></tr>
       <tr><td>${t("prevSpent")}</td><td class="num">${fmtM(p.spent)}</td></tr>
-      <tr><td>${t("prevSaved")}</td><td class="num">${fmtM(p.savedNoLivre)} ${p.savedNoLivre >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? `<span class="badge covered">${t("goalOk")}</span>` : ""}</td></tr>
+      <tr><td>${t("prevSaved")}${p.presumido && !p.confirmado ? `<div class="hint" style="margin:0">${t("prevPresumed")}</div>` : ""}</td>
+        <td class="num">${fmtM(p.investido)} ${p.investido >= p.metaMes && p.metaMes > 0 ? `<span class="badge covered">${t("goalOk")}</span>` : ""}</td></tr>
       ${p.fix.main > 0 ? `<tr><td>${t("prevFixed")}</td><td class="num">${fmtM(p.fix.main)}</td></tr>` : ""}
       <tr><td><b>${t("prevLeft")}</b></td><td class="num"><b class="${p.livre >= 0 ? "pos" : "neg"}">${fmtM(p.livre)}</b></td></tr>
     </tbody></table>
@@ -2275,7 +2351,7 @@ function renderMetas() {
   const pace = paceNeeded();
   /* Média só sobre meses que existiram — senão quem começou ontem já nasce "abaixo do ritmo" */
   const comDados = [0,1,2,3].map(n => shiftMonth(thisMonth(), -n)).filter(monthHasData);
-  const media = comDados.length ? comDados.reduce((a,k) => a + monthStats(k).saved, 0) / comDados.length : 0;
+  const media = comDados.length ? comDados.reduce((a,k) => a + monthStats(k).investido, 0) / comDados.length : 0;
   const ritmoOk = comDados.length > 0 && conv(media, mainCur(), wealthCur()) >= pace;
 
   document.getElementById("g-patrimonio").innerHTML = `
@@ -3433,10 +3509,19 @@ function renderRelatorio() {
     ${ms.walletIn > 0 ? lin(t("repWalletIn"), ms.walletIn, "+") : ""}
     ${lin(t("repSpentOwn"), ms.spent, "-")}
     ${ms.fix.main > 0 ? lin(ms.fechado ? t("repFixedPresumed") : t("repFixedPending"), ms.fix.main, "-") : ""}
-    ${lin(t("repSavedUS"), ms.savedNoLivre, "-")}
+    ${lin(ms.presumido && !ms.confirmado ? t("repSavedPresumed") : t("repSavedUS"), ms.investido, "-")}
     ${ms.metaPendente > 0 ? lin(t("repGoalPending"), ms.metaPendente, "-") : ""}
     <tr><td><b>${ms.fechado ? t("repLeftClosed") : t("repFree")}</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtM(ms.livre)}</b></td></tr>
   </tbody></table>
+  ${ms.fechado && ms.metaMes > 0 ? `<details style="margin-top:8px"${ms.presumido && !ms.confirmado ? " open" : ""}>
+    <summary class="hint" style="cursor:pointer">${ms.confirmado ? t("repConfirmed", fmtM0(ms.investido)) : t("repConfirmAsk", monthLabel(mk).split(" ")[0])}</summary>
+    <form class="inline" style="margin-top:8px" onsubmit="return confirmMonthForm(event, '${mk}')">
+      <div class="field"><label>${t("repInvestedIn", curSym(mainCur()))}</label>
+        <input type="number" inputmode="decimal" step="any" min="0" value="${Math.round(ms.investido * 100) / 100}" style="width:120px"></div>
+      <button class="btn ghost" type="submit">${t("closeConfirm")}</button>
+    </form>
+    <div class="hint">${t("repConfirmHint")}</div>
+  </details>` : ""}
   <table class="rep" style="margin-top:10px"><tbody>
     ${ms.rendaSecond > 0 && S.settings.freePolicy === "main" ? `<tr><td>${t("repEarnedBR")}</td><td class="num">${fmtS0(ms.rendaSecond)}</td></tr>` : ""}
     ${ms.spentSecond > 0 ? `<tr><td>${t("repSpentSecond")}</td><td class="num">${fmtS0(ms.spentSecond)}</td></tr>` : ""}
@@ -3473,7 +3558,10 @@ function renderRelatorio() {
   const [fy, fm] = fdm.split("-").map(Number);
   const [cy, cm] = thisMonth().split("-").map(Number);
   const span = Math.max(1, Math.min(3, (cy - fy) * 12 + (cm - fm) + 1));
-  const savedInWealth = s => toWealth(s.savedMain, mainCur()) + toWealth(s.savedSecond, secondCur());
+  /* Investido no mês: o bolso principal (confirmado ou presumido) + o segundo
+     país quando ele fica fora do livre */
+  const somaTudoR = S.settings.freePolicy === "all" && S.settings.hasSecond;
+  const savedInWealth = s => toWealth(s.investido, mainCur()) + (somaTudoR ? 0 : toWealth(s.savedSecond, secondCur()));
   const media3 = [...Array(span)].map((_, n) => savedInWealth(monthStats(shiftMonth(thisMonth(), -n))));
   const mediaW = media3.reduce((a, b) => a + b, 0) / span;
   let proj = "";
@@ -3608,6 +3696,7 @@ async function firstSync() {
       const remoteTs = data.data?._ts || new Date(data.updated_at).getTime();
       if (remoteTs > localTs || !localHasData) {
         S = migrate(data.data);
+        freezeClosedMonths();
         localStorage.setItem(KEY, JSON.stringify(S));
         _fmtCache.clear();
         if (S.settings.lang && S.settings.lang !== lang) { lang = S.settings.lang; }
@@ -4105,7 +4194,7 @@ function walletState() {
   for (let mk = firstDataMonth(); mk < atual; mk = shiftMonth(mk, 1)) {
     if (!monthHasData(mk)) continue;            // mês sem lançamento não inventa sobra
     const ms = monthStats(mk);
-    meses.push({ mk, sobra: ms.livre, naoAportado: Math.max(0, S.settings.saveMonthly - ms.savedNoLivre) });
+    meses.push({ mk, sobra: ms.livre, naoAportado: Math.max(0, ms.metaMes - ms.investido), presumido: ms.presumido && !ms.confirmado });
     somaMeses += ms.livre;
     somaSec += ms.leftSecond;
   }
@@ -4273,7 +4362,26 @@ function renderMonthClose() {
   if (new Date().getDate() > 10 || !monthHasData(prev) || S.settings.closeSeen === prev) { el.innerHTML = ""; return; }
   const ms = monthStats(prev);
   const w = walletState();
-  const naoAportado = Math.max(0, S.settings.saveMonthly - ms.savedNoLivre);
+  const naoAportado = Math.max(0, ms.metaMes - ms.investido);
+  /* Sem aporte lançado, o app presume a meta investida — e pergunta uma vez.
+     A resposta é o que separa "sobrou" de "ficou parado na conta". */
+  if (ms.presumido && !ms.confirmado) {
+    el.innerHTML = `<div class="card trip" style="border-left-color:var(--s5)">
+      <div class="thead"><span class="tname">📒 ${t("closeTitle", monthLabel(prev))}</span></div>
+      <div style="font-size:14.5px">${t("closeAsk", fmtM0(ms.metaMes), monthLabel(prev).split(" ")[0])}</div>
+      <div class="tacts">
+        <button class="btn" onclick="confirmMonth('${prev}', ${ms.metaMes})">${t("closeYes")}</button>
+        <button class="btn ghost" onclick="this.parentElement.nextElementSibling.hidden = false">${t("closeOther")}</button>
+      </div>
+      <form class="inline" style="margin-top:10px" hidden onsubmit="return confirmMonthForm(event, '${prev}')">
+        <div class="field"><label>${t("repInvestedIn", curSym(mainCur()))}</label>
+          <input type="number" inputmode="decimal" step="any" min="0" value="${Math.round(ms.savedNoLivre)}" style="width:120px"></div>
+        <button class="btn" type="submit">${t("closeConfirm")}</button>
+      </form>
+      <div class="hint">${t("closeAskHint")}</div>
+    </div>`;
+    return;
+  }
   el.innerHTML = `<div class="card trip" style="border-left-color:var(--s5)">
     <div class="thead"><span class="tname">📒 ${t("closeTitle", monthLabel(prev))}</span></div>
     <div class="tbig ${ms.livre < 0 ? "neg" : "pos"}">${ms.livre >= 0 ? "+" : ""}${fmtM0(ms.livre)}</div>
@@ -4451,7 +4559,7 @@ function compareMonths(mk) {
   const sa = monthStats(mk), sb = monthStats(prev);
   return { prev, aberto, dia, gastoD: soma(a) - soma(b),
     subiu: difs.filter(x => x.d > 0).slice(0, 3), caiu: difs.filter(x => x.d < 0).slice(0, 2),
-    ganhoD: sa.ganho - sb.ganho, aporteD: sa.savedNoLivre - sb.savedNoLivre,
+    ganhoD: sa.ganho - sb.ganho, aporteD: sa.investido - sb.investido,
     fixoD: sa.fix.main - sb.fix.main, sobraD: aberto ? null : sa.livre - sb.livre };
 }
 function renderCompare(mk) {
@@ -4494,7 +4602,7 @@ function renderPanorama() {
   (S.portfolio || []).forEach(p => patrCur[p.cur || wealthCur()] = (patrCur[p.cur || wealthCur()] || 0) + (Number(p.value) || 0));
   const linhas = [
     { flag: flagOf(st.homeCountry), nome: countryName(st.homeCountry), cur: M,
-      ganho: st.mainMonthly + ms.extrasMain, gasto: gastoCur[M] || 0, patr: patrCur[M] || 0 },
+      ganho: ms.rendaMain, gasto: gastoCur[M] || 0, patr: patrCur[M] || 0 },
   ];
   if (st.hasSecond && SC !== M) linhas.push({ flag: flagOf(st.secondCountry), nome: countryName(st.secondCountry), cur: SC,
     ganho: ms.rendaSecond, gasto: gastoCur[SC] || 0, patr: patrCur[SC] || 0 });
@@ -4611,6 +4719,7 @@ function importData(input) {
       const d = JSON.parse(r.result);
       if (!d.settings || !Array.isArray(d.expenses)) throw new Error("invalid");
       S = migrate(d);
+      freezeClosedMonths();
       save(); _fmtCache.clear(); applyLang();
       alert(t("importOk"));
     } catch (e) { alert(t("importFail") + e.message); }
@@ -4741,6 +4850,7 @@ document.getElementById("f-fuel").onsubmit = e => {
   save(); e.target.reset(); renderRewards();
 };
 
+freezeClosedMonths();
 fillCatSelects();
 fillCurSelect();
 fillWhereSelect();

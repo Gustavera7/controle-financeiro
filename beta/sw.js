@@ -1,6 +1,6 @@
 /* Service worker da BETA — escopo /beta/, cache próprio.
    Ao publicar uma versão nova da beta, incremente CACHE. */
-const CACHE = "folga-beta-v4";
+const CACHE = "folga-beta-v5";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "../icon-192.png", "../icon-512.png"];
 
 self.addEventListener("install", e => {

@@ -121,11 +121,23 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
   (`setTripFx`). O bug era a taxa do destino anterior sobrevivendo à troca.
 - **Um só "sobrou".** `monthStats(mk).livre` é o número do mês em toda tela. Mês
   corrente: ganho + carteira − gastos − contas fixas ainda não pagas − **a meta
-  inteira** (ela já tem dono). Mês fechado: o mesmo, mas descontando **só o que foi
-  aportado de verdade** — o resto da meta ficou na conta e é sobra. Conta fixa não
+  inteira** (ela já tem dono). Mês fechado: desconta `investido` — o valor que o
+  usuário confirmou no fechamento ou, **sem confirmação, a meta** (`presumido`).
+  **Não volte a descontar só o aporte lançado:** quase ninguém lança cada aporte, e
+  isso fez o setembro do Gustavo mostrar 1.920 de sobra quando o real era 850 (a meta
+  de 1.070 voltou como sobra). O cartão de fechamento pergunta "investiu a meta?" e
+  só a resposta (`confirmMonth`) muda a conta. Conta fixa não
   marcada como paga num mês fechado **conta como paga** (aluguel não pula mês); antes
   ela sumia na virada e o mês "ganhava" o valor inteiro. Contas fixas têm `since` e
   `until`: apagar uma só encerra a vigência, não reescreve os meses em que existiu.
+- **Mês fechado é retrato** (`S.closes[mk]`): `freezeClosedMonths()` guarda renda, segunda
+  renda e meta de cada mês que fecha, e `monthStats` usa o retrato. Mudar salário ou
+  meta hoje não reescreve o passado nem a carteira de sobras. Roda ao abrir, depois de
+  baixar da nuvem e depois de importar.
+- **Teste de coerência que vale repetir:** para cada mês, o herói do Início, a soma das
+  linhas da cascata do relatório, a linha final dela e o card "Mês passado" têm que dar
+  o mesmo número; e a carteira tem que ser a soma dos meses fechados + acertos −
+  coberturas − aportes feitos com ela.
 - **Patrimônio = soma dos ativos** (`invested()` → `allocation().total`). Antes havia
   dois totais na mesma tela ("base + aportes" e a soma da carteira). A migração
   (`wealthModel`) transforma o antigo "base + aportes" num ativo "Investimentos" quando
