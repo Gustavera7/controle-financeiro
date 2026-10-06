@@ -137,8 +137,8 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
 - **Teste de coerência que vale repetir:** para cada mês, o herói do Início, a soma das
   linhas da cascata do relatório, a linha final dela e o card "Mês passado" têm que dar
   o mesmo número; e a carteira tem que ser a soma dos meses fechados + acertos −
-  coberturas − aportes feitos com ela — e, com dois bolsos, o mesmo vale para `saldo2`
-  com as sobras do segundo país.
+  coberturas − aportes feitos com ela − gastos pagos com ela — e, com dois bolsos, o
+  mesmo vale para `saldo2` com as sobras do segundo país.
 - **Dois bolsos** (`twoPockets()`, só com segundo país e política `main`): **a moeda do
   aporte decide de qual bolso ele sai** (`pocketOf`) — real sai do Brasil, dólar sai de
   casa. Cada bolso tem a própria carteira de sobras (`saldo` e `saldo2`, acertos com
@@ -157,6 +157,19 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
   mão. Com `total`, vira acompanhamento de compra parcelada (pago, falta, parcelas até o
   fim), usando o valor do ativo de destino como "já pago". Roda junto com
   `freezeClosedMonths()` (ao abrir, após nuvem e importação).
+- **Gastar com a carteira de sobras** (`e.paidFrom === "wallet"`, `paidByWallet`): o gasto
+  fica no histórico e sai da carteira (do bolso da moeda dele), mas **não toca no mês** —
+  `counts()` o exclui do livre, do gráfico, do ritmo e das comparações; o relatório mostra
+  numa linha à parte. No formulário, "Pagar com" só aparece quando há saldo e nunca em
+  viagem; se um gasto pago pelo mês passa do livre e a carteira cobre, a dica oferece
+  trocar com um toque.
+- **As duas folgas no mesmo cartão** (`renderWalletStrip` → `#h-wallet`): o herói do
+  Início mostra o livre do mês e, embaixo, a carteira de sobras — a visão do todo.
+- **"Posso comprar?"** (`renderBuySheet` / `buyAnswer` / `goBuy`): digite o preço e o app
+  responde se cabe no livre do mês, na carteira, nos dois juntos, ou em quantos meses de
+  sobra média vai caber. Compra que come mais da metade do livre destaca a carteira.
+  Os botões abrem o lançamento preenchido (só falta a categoria); nada é gravado antes.
+  Investimentos ficam fora da conta, de propósito.
 - **Patrimônio = soma dos ativos** (`invested()` → `allocation().total`). Antes havia
   dois totais na mesma tela ("base + aportes" e a soma da carteira). A migração
   (`wealthModel`) transforma o antigo "base + aportes" num ativo "Investimentos" quando

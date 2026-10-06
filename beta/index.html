@@ -175,6 +175,15 @@
   .wz-lang { text-align: center; margin-bottom: 16px; }
   .wz-lang button, .lang-btn { background: none; border: 1px solid var(--baseline); border-radius: 6px; color: var(--ink-2); font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer; }
 
+  /* ─── As duas folgas no mesmo cartão ─── */
+  .hero .hw { border-top: 1px solid var(--grid); margin-top: 16px; padding-top: 10px; }
+  .hero .hw-line { background: none; border: none; font: inherit; font-size: 14.5px; color: var(--ink-2); cursor: pointer; padding: 6px 8px; min-height: 36px; }
+  .hero .hw-line b { color: var(--ink); }
+  .hero .hw-acts { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  .hero .hw-acts .btn { font-size: 13.5px; padding: 7px 14px; }
+  .buy-ok, .buy-no { font-size: 14.5px; padding: 8px 0; border-bottom: 1px solid var(--grid); }
+  .buy-no { color: var(--ink); }
+
   /* ─── Viagem em andamento ─── */
   .trip { border-left: 3px solid var(--s4); }
   .trip .thead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -259,6 +268,10 @@
     .wz input[type=number], .wz input[type=month] { font-size: 26px; }
     /* histórico é largo por natureza: rola dentro do cartão, nunca a página */
     #l-list, #o-list, .sheet-card .card > table { overflow-x: auto; }
+    /* tabela de 4 colunas (panorama por país) cabe com célula mais justa; se um
+       número grande ainda não couber, rola dentro do cartão, nunca a página */
+    td, th { padding-left: 5px; padding-right: 5px; }
+    #rep-paises, #rep-cats, #rep-meta, #rep-ytd, #rep-resumo { overflow-x: auto; }
   }
 </style>
 </head>
@@ -348,6 +361,7 @@
     <div class="note" id="h-pace" style="margin-top:4px"></div>
     <div class="note" id="h-cut" role="button" tabindex="0" style="margin-top:10px; cursor:pointer"
       onclick="openSheet('fixed')" onkeydown="if(event.key==='Enter'){openSheet('fixed')}"></div>
+    <div id="h-wallet"></div>
   </div>
 
   <div id="trip-card"></div>
@@ -372,7 +386,6 @@
   </div>
 
   <div class="card" id="br-strip" style="padding:10px 18px; font-size:13.5px"></div>
-  <div id="wallet-strip"></div>
 
   <div class="grid cols-2">
     <div class="card">
@@ -402,6 +415,7 @@
       <div class="field"><label data-i18n="lancAmount" id="l-amount-lbl"></label><input type="number" id="l-amount" inputmode="decimal" step="0.01" min="0.01" required style="width:110px"></div>
       <div class="field" id="l-place-f"><label data-i18n="lancWhere"></label><select id="l-place" onchange="placeTouched = true; updateLancPlace()"></select></div>
       <div class="field" id="l-cur-f"><label data-i18n="lancCur"></label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
+      <div class="field" id="l-pay-f"><label data-i18n="lancPay"></label><select id="l-pay" onchange="updateLancForm()"></select></div>
       <div class="field" id="l-cat-f"><label data-i18n="lancCat"></label><select id="l-cat"></select></div>
       <div class="field" id="l-src-f"><label data-i18n="lancSrc"></label><select id="l-src" onchange="updateLancForm()"></select></div>
       <div class="field" id="l-from-f"><label data-i18n="lancFrom"></label><select id="l-from"></select></div>
@@ -974,6 +988,28 @@ pt: {
   betaBackup: "Baixar backup", betaReseed: "Recopiar do app principal", betaOk: "Entendi",
   betaReseedAsk: "Isso apaga os dados desta beta e copia tudo de novo do app principal. Continuar?",
   betaSync: "beta · só neste aparelho",
+  /* ── Gastar com a carteira / Posso comprar? ── */
+  lancPay: "Pagar com", payMonth: "Livre do mês", payWallet: v => `Carteira de sobras (${v})`,
+  payIntact: "o livre do mês não muda",
+  payOver: v => `Isso passa do livre do mês em ${v}.`,
+  payUseWallet: v => `Pagar com a carteira (${v})`,
+  bdgWallet: "carteira", walletMvBuy: n => `Comprou ${n}`,
+  repWalletSpent: "Pago com a carteira de sobras (fora do mês)",
+  buyBtn: "Posso comprar?", buyTitle: "Posso comprar?",
+  buyWhat: "O que é?", buyWhatPh: "ex: piano, celular, um jantar especial", buyPrice: "Quanto custa?",
+  buyMonthFree: "Livre do mês, agora", buyWalletFree: "Carteira de sobras",
+  buyHint: "Digite o preço e o app responde na hora — sem mexer em nada até você decidir.",
+  buyFitsMonth: (s, d) => `Cabe no livre do mês. Depois da compra sobram ${s} — uns ${d}/dia até o fim do mês.`,
+  buyFitsWallet: (a, b) => `Cabe na carteira de sobras: ela vai de ${a} para ${b}, e o livre do mês fica intacto.`,
+  buyAlsoWallet: (a, b) => `Também cabe na carteira de sobras (${a} → ${b}), sem tocar no mês.`,
+  buyTip: "Isso come mais da metade do livre do mês. Pela carteira, seu dia a dia continua do mesmo tamanho.",
+  buyNoFit: v => `Ainda não cabe: faltam ${v} na carteira de sobras.`,
+  buyWhen: (m, n, mes) => `Com a sobra média dos últimos meses (${m}/mês), cabe em ${n} ${n > 1 ? "meses" : "mês"} — por volta de ${mes}.`,
+  buyNoPace: "Com as sobras recentes não há ritmo para juntar — vale olhar a meta e as contas fixas.",
+  buyWithMonth: "Comprar com o livre do mês", buyWithWallet: "Comprar com a carteira",
+  buySplit: (c, m, sob) => `Juntando os dois dá agora: ${c} da carteira e ${m} do livre do mês — que ficaria com ${sob}.`,
+  buySplitBtn: v => `Lançar a parte da carteira (${v})`,
+  buyInvestNote: "Seus investimentos não entram nessa conta — eles seguem a meta, intocados.",
   /* ── Dois bolsos ── */
   srcMonthP: (p, v) => `Dinheiro do mês · ${p}${v ? ` (${v} disponível)` : ""}`,
   secStripRecur: v => `${v} de aporte automático ainda caem este mês — já descontado da sobra`,
@@ -1400,6 +1436,28 @@ en: {
   betaBackup: "Download backup", betaReseed: "Copy from main app again", betaOk: "Got it",
   betaReseedAsk: "This erases the beta data and copies everything again from the main app. Continue?",
   betaSync: "beta · this device only",
+  /* ── Spending from the wallet / Can I buy it? ── */
+  lancPay: "Pay with", payMonth: "This month's free amount", payWallet: v => `Leftover wallet (${v})`,
+  payIntact: "your month's free amount doesn't change",
+  payOver: v => `That goes ${v} past your free amount this month.`,
+  payUseWallet: v => `Pay with the wallet (${v})`,
+  bdgWallet: "wallet", walletMvBuy: n => `Bought ${n}`,
+  repWalletSpent: "Paid with the leftover wallet (outside the month)",
+  buyBtn: "Can I buy it?", buyTitle: "Can I buy it?",
+  buyWhat: "What is it?", buyWhatPh: "e.g. piano, phone, a special dinner", buyPrice: "How much?",
+  buyMonthFree: "Free this month, right now", buyWalletFree: "Leftover wallet",
+  buyHint: "Type the price and the app answers right away — nothing changes until you decide.",
+  buyFitsMonth: (s, d) => `Fits this month's free amount. After it, ${s} is left — about ${d}/day until the month ends.`,
+  buyFitsWallet: (a, b) => `Fits the leftover wallet: it goes from ${a} to ${b}, and your month stays untouched.`,
+  buyAlsoWallet: (a, b) => `Also fits the leftover wallet (${a} → ${b}), without touching the month.`,
+  buyTip: "That eats more than half of this month's free amount. With the wallet, your day-to-day stays the same size.",
+  buyNoFit: v => `Doesn't fit yet: the leftover wallet is ${v} short.`,
+  buyWhen: (m, n, mes) => `At your average monthly leftover (${m}/mo), it fits in ${n} month${n > 1 ? "s" : ""} — around ${mes}.`,
+  buyNoPace: "Recent leftovers leave no pace to save up — worth a look at the goal and the fixed bills.",
+  buyWithMonth: "Buy with this month's money", buyWithWallet: "Buy with the wallet",
+  buySplit: (c, m, sob) => `Together they cover it now: ${c} from the wallet and ${m} from this month — which would be left with ${sob}.`,
+  buySplitBtn: v => `Log the wallet part (${v})`,
+  buyInvestNote: "Your investments stay out of this — they keep following the goal, untouched.",
   /* ── Two pockets ── */
   srcMonthP: (p, v) => `This month's money · ${p}${v ? ` (${v} available)` : ""}`,
   secStripRecur: v => `${v} of automatic contributions still land this month — already taken out of the leftover`,
@@ -1996,7 +2054,9 @@ function inOpenTrip(e) {
   const tp = e.place ? tripById(e.place) : null;
   return !!(tp && !tp.closed && tp.kind !== "long");
 }
-function counts(e) { return !offBudget(e) && !inOpenTrip(e); }
+/* Pago com a carteira de sobras: dinheiro de meses passados, não do livre de agora */
+const paidByWallet = e => e.paidFrom === "wallet";
+function counts(e) { return !offBudget(e) && !inOpenTrip(e) && !paidByWallet(e); }
 /* Em que bolso o gasto entra: o do dia a dia ou o do segundo país (que fica
    fora do livre quando a política é "só a renda principal"). */
 function expBucket(e) {
@@ -2087,10 +2147,14 @@ function monthStats(mk) {
   const M = mainCur(), SC = secondCur();
   const exp = S.expenses.filter(e => monthKey(e.date) === mk);
   /* Cada gasto na moeda em que aconteceu; o bolso decide se ele mexe no livre */
-  let spent = 0, spentSecond = 0, covered = 0, tripSpent = 0;
+  let spent = 0, spentSecond = 0, covered = 0, tripSpent = 0, walletSpent = 0, walletSpent2 = 0;
   exp.forEach(e => {
     const c = expCur(e);
     if (offBudget(e)) { covered += conv(e.amount, c, M); return; }
+    if (paidByWallet(e)) {
+      if (pocketOf(e) === "second") walletSpent2 += conv(e.amount, c, SC); else walletSpent += conv(e.amount, c, M);
+      return;
+    }
     if (inOpenTrip(e)) { tripSpent += conv(e.amount, c, M); return; }
     if (expBucket(e) === "second") spentSecond += e.amount;
     else spent += conv(e.amount, c, M);
@@ -2142,7 +2206,7 @@ function monthStats(mk) {
   const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second - rp.second;
   return { spent, spentSecond, tripSpent, covered, extrasMain, extrasSecond, savedMain, savedSecond, saved,
            savedNoLivre, metaPendente, fromWallet, fromWallet2, walletIn, fechado, investido, presumido, metaMes,
-           recurMain: rp.main, recurSecond: rp.second,
+           recurMain: rp.main, recurSecond: rp.second, walletSpent, walletSpent2,
            confirmado: !!(snap && snap.conf), rendaMain,
            ganho, rendaSecond, leftSecond, livre, reservado, fix };
 }
@@ -2176,7 +2240,7 @@ const alsoMain = v => wealthCur() === mainCur() ? "" : ` (≈ ${fmtM0(conv(v, we
 
 /* ───────── Início ───────── */
 let viewMonth = null;
-function moveMonth(n) { viewMonth = shiftMonth(viewMonth || thisMonth(), n); renderInicio(); }
+function moveMonth(n) { viewMonth = shiftMonth(viewMonth || thisMonth(), n); renderInicio(); renderWalletStrip(); }
 function renderInicio() {
   const mk = viewMonth || thisMonth();
   const cur = thisMonth();
@@ -2319,6 +2383,13 @@ function updateLancForm() {
       : [...S.portfolio].filter(p => (p.cur || wealthCur()) === srcC).sort((a, b) => b.value - a.value)[0];
     if (alvo) document.getElementById("l-dest").value = String(alvo.id);
   }
+  /* "Pagar com" só existe quando há carteira para usar — e nunca em viagem,
+     que tem o próprio dinheiro */
+  fillPaySelect();
+  const pay = document.getElementById("l-pay");
+  const saldoPay = payBalance();
+  document.getElementById("l-pay-f").style.display =
+    tp === "gasto" && !tripById(lancPlace()) && (saldoPay > 0 || pay.value === "wallet") ? "" : "none";
   const novo = ap && document.getElementById("l-dest").value === "__new";
   const desc = document.getElementById("l-desc");
   desc.required = novo;
@@ -2326,6 +2397,21 @@ function updateLancForm() {
   updateLancPlace();
 }
 let destTouched = false;
+/* Saldo da carteira do bolso do lugar escolhido (casa ou segundo país) */
+function payBalance() {
+  const w = walletState();
+  return lancPlace() === "second" && twoPockets() ? w.saldo2 : w.disponivel;
+}
+function fillPaySelect() {
+  const el = document.getElementById("l-pay");
+  if (!el) return;
+  const v = el.value || "mes";
+  const cur = placeCur(lancPlace());
+  el.innerHTML = `<option value="mes">${t("payMonth")}</option>
+    <option value="wallet">${t("payWallet", fmtCur(payBalance(), cur, 0))}</option>`;
+  el.value = v;
+}
+function setPayWallet() { document.getElementById("l-pay").value = "wallet"; updateLancForm(); }
 /* Origem com o saldo à vista; destino e "sai de" são os ativos da carteira */
 function fillAporteSelects() {
   const src = document.getElementById("l-src"), dest = document.getElementById("l-dest"), from = document.getElementById("l-from");
@@ -2392,8 +2478,22 @@ function updateLancHint() {
   const tp = document.getElementById("l-type").value;
   const el = document.getElementById("l-hint");
   const viagem = tp === "gasto" ? tripById(lancPlace()) : null;
+  /* Gasto: pago com a carteira mostra o antes/depois; pago com o mês que passa
+     do livre oferece a carteira na hora — é aí que nasce o "sem culpa" */
+  const valorG = Number(document.getElementById("l-amount").value) || 0;
+  const pagaCart = tp === "gasto" && !viagem && document.getElementById("l-pay").value === "wallet"
+    && document.getElementById("l-pay-f").style.display !== "none";
+  const segundoG = lancPlace() === "second" && twoPockets();
+  const curG = placeCur(lancPlace());
+  const livreG = tp === "gasto" ? (segundoG ? monthStats(thisMonth()).leftSecond : monthStats(thisMonth()).livre) : 0;
   if (tp === "gasto" && catNoCount(document.getElementById("l-cat").value)) {
     el.innerHTML = t("hintOff");
+  } else if (pagaCart) {
+    const antes = payBalance(), depois = antes - valorG;
+    el.innerHTML = `${t("hintFromWallet", countryName(segundoG ? S.settings.secondCountry : S.settings.homeCountry))}: ${fmtCur(antes, curG, 0)} → <b class="${depois < 0 ? "neg" : ""}">${fmtCur(depois, curG, 0)}</b> · ${t("payIntact")}`;
+  } else if (tp === "gasto" && !viagem && valorG > Math.max(0, livreG) && payBalance() >= valorG) {
+    el.innerHTML = `${t("payOver", fmtCur(valorG - Math.max(0, livreG), curG, 0))}
+      <button type="button" class="btn ghost" style="font-size:12.5px; padding:4px 10px; margin-left:6px" onclick="setPayWallet()">${t("payUseWallet", fmtCur(payBalance(), curG, 0))}</button>`;
   } else if (viagem) {
     const ts = tripStats(viagem);
     el.innerHTML = `${t("tripAvail")}: <b class="${ts.left < 0 ? "neg" : "pos"}">${fmtCur(ts.left, viagem.cur, 0)}</b>` +
@@ -2434,7 +2534,8 @@ function renderLanc() {
           const c = catById(x.cat);
           const pl = expPlace(x);
           det = `<span class="dot" style="background:var(${c.color})"></span>${L(c.label)}${x.desc ? " · " + esc(x.desc) : ""}${pl !== "home" ? " · " + placeFlag(pl) : ""}`;
-          badge = offBudget(x) ? `<span class="badge covered">${t("bdgOff")}</span>`
+          badge = paidByWallet(x) ? `<span class="badge counts">💼 ${t("bdgWallet")}</span>`
+            : offBudget(x) ? `<span class="badge covered">${t("bdgOff")}</span>`
             : inOpenTrip(x) ? `<span class="badge warn">${t("tripBadge")}</span>` : "";
           v = "− " + fmtCur(x.amount, expCur(x));
         } else if (x._t === "renda") {
@@ -2713,6 +2814,7 @@ function renderSheet() {
   if (sheetView?.kind === "country") return renderCountrySheet();
   if (sheetView?.kind === "fixed") return renderFixedSheet();
   if (sheetView?.kind === "wallet") return renderWalletSheet();
+  if (sheetView?.kind === "buy") return renderBuySheet();
   renderWealthSheet();
 }
 addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
@@ -3666,6 +3768,8 @@ function renderRelatorio() {
     ${ms.covered > 0 ? `<tr><td>${t("repCovered")}</td><td class="num">${fmtM(ms.covered)}</td></tr>` : ""}
     ${ms.fromWallet > 0 ? `<tr><td>${t("repFromWallet")}</td><td class="num">${fmtM(ms.fromWallet)}</td></tr>` : ""}
     ${ms.tripSpent > 0 ? `<tr><td>${t("repTripHeld")}</td><td class="num">${fmtM(ms.tripSpent)}</td></tr>` : ""}
+    ${ms.walletSpent > 0 ? `<tr><td>${t("repWalletSpent")}</td><td class="num">${fmtM(ms.walletSpent)}</td></tr>` : ""}
+    ${ms.walletSpent2 > 0 ? `<tr><td>${t("repWalletSpent")} · ${countryName(S.settings.secondCountry)}</td><td class="num">${fmtS0(ms.walletSpent2)}</td></tr>` : ""}
     <tr><td>${t("repRate")}</td><td class="num">${taxaPoup.toFixed(0)}%</td></tr>
   </tbody></table>`;
   renderCompare(mk);
@@ -4491,18 +4595,22 @@ function walletState() {
   const coberturas = moves.filter(m => m.kind === "cover").reduce((a, m) => a + m.amount, 0);
   const investido = S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "main")
     .reduce((a, c) => a + conv(c.amount, c.cur || mainCur(), mainCur()), 0);
-  const saldo = somaMeses + ajustes - coberturas - investido;
+  const gastoCart = S.expenses.filter(e => paidByWallet(e) && pocketOf(e) === "main")
+    .reduce((a, e) => a + conv(e.amount, expCur(e), mainCur()), 0);
+  const saldo = somaMeses + ajustes - coberturas - investido - gastoCart;
   const dois = twoPockets();
   const aj2 = dois ? moves.filter(m => m.kind === "adjust" && doBolso(m, "second")).reduce((a, m) => a + m.amount, 0) : 0;
   const inv2 = dois ? S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "second")
     .reduce((a, c) => a + conv(c.amount, c.cur || secondCur(), secondCur()), 0) : 0;
-  const saldo2 = dois ? somaSec + aj2 - inv2 : 0;
+  const gastoCart2 = dois ? S.expenses.filter(e => paidByWallet(e) && pocketOf(e) === "second")
+    .reduce((a, e) => a + conv(e.amount, expCur(e), secondCur()), 0) : 0;
+  const saldo2 = dois ? somaSec + aj2 - inv2 - gastoCart2 : 0;
   const reservas = (S.trips || []).filter(tp => !tp.closed).map(tp => ({ tp,
     v: (tp.topups || []).filter(x => x.fromWallet).reduce((a, x) => a + conv(x.amount, x.cur || tp.budgetCur, mainCur()), 0) }))
     .filter(r => r.v > 0.5);
   const reservado = reservas.reduce((a, r) => a + r.v, 0);
   return { saldo, reservado, disponivel: saldo - reservado, meses, somaSec, ajustes, coberturas, investido, reservas, moves,
-           dois, saldo2, aj2, inv2 };
+           dois, saldo2, aj2, inv2, gastoCart, gastoCart2 };
 }
 const walletMoves = () => { S.wallet = S.wallet || { moves: [] }; S.wallet.moves = S.wallet.moves || []; return S.wallet.moves; };
 /* Cobrir o mês: a carteira manda para este mês o que faltou */
@@ -4561,20 +4669,23 @@ function walletSettleTrip(tp) {
 }
 const walletUnsettleTrip = id => { S.wallet.moves = walletMoves().filter(m => String(m.tripId || "") !== String(id)); };
 
+/* A segunda metade da folga: o que sobrou de meses passados e ainda é seu.
+   Mora no mesmo cartão do livre — a visão do todo num olhar só. */
 function renderWalletStrip() {
-  const el = document.getElementById("wallet-strip");
+  const el = document.getElementById("h-wallet");
   if (!el) return;
+  if ((viewMonth || thisMonth()) !== thisMonth()) { el.innerHTML = ""; return; }
   const w = walletState();
-  if (!w.meses.length && !w.moves.length && !w.inv2) { el.innerHTML = ""; return; }
+  const temCarteira = w.meses.length || w.moves.length || w.inv2 || w.gastoCart;
   const ms = monthStats(thisMonth());
   const apertado = ms.livre < 0 && w.disponivel > 0;
-  el.innerHTML = `<div class="card tappable" style="padding:10px 18px; font-size:13.5px" role="button" tabindex="0"
-      onclick="openSheet('wallet')" onkeydown="if(event.key==='Enter'){openSheet('wallet')}">
-    <div style="display:flex; align-items:center; gap:10px">
-      <span style="flex:1">💼 ${t("walletLine", fmtM0(w.disponivel))}${w.dois && Math.abs(w.saldo2) >= 1 ? ` · ${flagOf(S.settings.secondCountry)} <b>${fmtS0(w.saldo2)}</b>` : ""}${w.reservado > 0 ? ` <span style="color:var(--muted)">· ${t("walletReserved", fmtM0(w.reservado))}</span>` : ""}</span>
-      <span class="chev">›</span></div>
-    ${apertado ? `<div style="margin-top:8px"><button class="btn" style="font-size:13px; padding:6px 12px"
-        onclick="event.stopPropagation(); walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button></div>` : ""}
+  el.innerHTML = `<div class="hw">
+    ${temCarteira ? `<button class="hw-line" onclick="openSheet('wallet')">💼 ${t("walletLine", fmtM0(w.disponivel))}${w.dois && Math.abs(w.saldo2) >= 1 ? ` · ${flagOf(S.settings.secondCountry)} <b>${fmtS0(w.saldo2)}</b>` : ""} <span class="chev">›</span></button>
+      ${w.reservado > 0 ? `<div class="note" style="margin-top:0">${t("walletReserved", fmtM0(w.reservado))}</div>` : ""}` : ""}
+    <div class="hw-acts">
+      <button class="btn ghost" onclick="openSheet('buy')">🛍️ ${t("buyBtn")}</button>
+      ${apertado ? `<button class="btn" onclick="walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button>` : ""}
+    </div>
   </div>`;
 }
 function renderWalletSheet() {
@@ -4588,6 +4699,8 @@ function renderWalletSheet() {
       v: m.kind === "adjust" ? m.amount : -m.amount, id: m.kind === "cover" && m.tripId ? "" : m.id })),
     ...S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "main").map(c => ({ data: c.date, txt: t("walletMvInvest", esc(c.dest || "")),
       v: -conv(c.amount, c.cur || mainCur(), mainCur()), id: "" })),
+    ...S.expenses.filter(e => paidByWallet(e) && pocketOf(e) === "main").map(e => ({ data: e.date,
+      txt: t("walletMvBuy", esc(e.desc || L(catById(e.cat).label))), v: -conv(e.amount, expCur(e), mainCur()), id: "" })),
   ].sort((a, b) => b.data.localeCompare(a.data));
   document.getElementById("sheet-body").innerHTML = `
     <div class="card">
@@ -4615,6 +4728,8 @@ function renderWalletSheet() {
         ...w.moves.filter(m => m.kind === "adjust" && m.pocket === "second").map(m => ({ data: m.date || "", txt: t("walletMvAdjust"), v: m.amount, id: m.id })),
         ...S.contributions.filter(c => c.src === "sobras" && pocketOf(c) === "second").map(c => ({ data: c.date,
           txt: t("walletMvInvest", esc(c.dest || "")), v: -conv(c.amount, c.cur || SC, SC), id: "" })),
+        ...S.expenses.filter(e => paidByWallet(e) && pocketOf(e) === "second").map(e => ({ data: e.date,
+          txt: t("walletMvBuy", esc(e.desc || L(catById(e.cat).label))), v: -conv(e.amount, expCur(e), SC), id: "" })),
       ].sort((a, b) => b.data.localeCompare(a.data));
       return `<div class="card">
         <div class="label" style="font-size:12.5px; color:var(--ink-2)">${flagOf(S.settings.secondCountry)} ${pais} · ${t("walletAvail")}</div>
@@ -4679,6 +4794,100 @@ function goAporte(src, valor, tipo, nome) {
   updateLancForm();
   scrollTo({ top: 0, behavior: "smooth" });
   document.getElementById("l-amount").focus();
+}
+
+/* ═════════ Posso comprar? ═════════
+   A pergunta de quem quer gastar sem culpa, respondida com os dois dinheiros
+   que são livres de verdade: o livre do mês e a carteira de sobras. Os
+   investimentos ficam fora da conta — eles seguem a meta, intocados. */
+function renderBuySheet() {
+  const dois = twoPockets();
+  document.getElementById("sheet-title").textContent = t("buyTitle");
+  document.getElementById("sheet-body").innerHTML = `
+    <div class="card">
+      <div class="field" style="margin-bottom:10px"><label>${t("buyWhat")}</label>
+        <input type="text" id="buy-what" placeholder="${t("buyWhatPh")}"></div>
+      <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+        <div class="field"><label>${t("buyPrice")}</label>
+          <input type="number" id="buy-v" inputmode="decimal" step="any" min="0" style="width:160px; font-size:22px; font-weight:650" oninput="buyAnswer()"></div>
+        ${dois ? `<div class="field"><label>${t("lancCur")}</label><select id="buy-cur" onchange="buyAnswer()">
+          <option value="${mainCur()}">${flagOf(S.settings.homeCountry)} ${curSym(mainCur())}</option>
+          <option value="${secondCur()}">${flagOf(S.settings.secondCountry)} ${curSym(secondCur())}</option></select></div>` : ""}
+      </div>
+      <div id="buy-ans" style="margin-top:14px"></div>
+    </div>`;
+  buyAnswer();
+  setTimeout(() => document.getElementById("buy-v")?.focus(), 60);
+}
+function buyAnswer() {
+  const el = document.getElementById("buy-ans");
+  if (!el) return;
+  const v = num("buy-v");
+  const cur = val("buy-cur") || mainCur();
+  const segundo = twoPockets() && cur === secondCur();
+  const ms = monthStats(thisMonth()), w = walletState();
+  const livre = Math.max(0, segundo ? ms.leftSecond : ms.livre);
+  const cart = Math.max(0, segundo ? w.saldo2 : w.disponivel);
+  const f = x => fmtCur(x, cur, 0);
+  const hoje = new Date();
+  const dias = Math.max(1, new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate() - hoje.getDate() + 1);
+  const conferencia = `<table class="rep"><tbody>
+    <tr><td>${t("buyMonthFree")}</td><td class="num">${f(livre)}</td></tr>
+    <tr><td>${t("buyWalletFree")}</td><td class="num">${f(cart)}</td></tr></tbody></table>`;
+  if (!(v > 0)) { el.innerHTML = conferencia + `<div class="hint">${t("buyHint")}</div>`; return; }
+  const cabeMes = v <= livre, cabeCart = v <= cart;
+  const bt = (pay, rot, forte) => `<button class="btn${forte ? "" : " ghost"}" onclick="goBuy('${pay}')">${rot}</button>`;
+  let msg = "", botoes = "";
+  /* Compra que come mais da metade do livre do mês vai melhor pela carteira:
+     o dia a dia continua do mesmo tamanho */
+  const pesado = v > livre * 0.5;
+  if (cabeMes) {
+    msg += `<div class="buy-ok">✅ ${t("buyFitsMonth", f(livre - v), f((livre - v) / dias))}</div>`;
+    botoes += bt("mes", t("buyWithMonth"), !(cabeCart && pesado));
+  }
+  if (cabeCart) {
+    msg += `<div class="buy-ok">✅ ${t(cabeMes ? "buyAlsoWallet" : "buyFitsWallet", f(cart), f(cart - v))}</div>`;
+    botoes += bt("wallet", t("buyWithWallet"), !cabeMes || pesado);
+  }
+  if (cabeMes && cabeCart && pesado) msg += `<div class="hint">💡 ${t("buyTip")}</div>`;
+  if (!cabeMes && !cabeCart) {
+    /* Não cabe hoje: quanto falta e, no ritmo de sobra dos últimos meses, quando cabe */
+    const falta = v - cart;
+    const ult = w.meses.slice(-3).map(m => segundo ? m.sobra2 : m.sobra);
+    const media = ult.length ? ult.reduce((a, b) => a + b, 0) / ult.length : 0;
+    msg = `<div class="buy-no">⏳ ${t("buyNoFit", f(falta))}</div>`;
+    /* Juntando os dois dá agora: a carteira paga o que tem, o mês paga o resto */
+    if (cart > 0 && livre + cart >= v) {
+      msg += `<div class="buy-ok">🤝 ${t("buySplit", f(cart), f(v - cart), f(livre - (v - cart)))}</div>`;
+      botoes += `<button class="btn" onclick="goBuy('wallet', ${Math.round(cart * 100) / 100})">${t("buySplitBtn", f(cart))}</button>`;
+    }
+    if (media > 0) {
+      const n = Math.ceil(falta / media);
+      msg += `<div class="buy-ok" style="border:none">${t("buyWhen", f(media), n, monthLabel(shiftMonth(thisMonth(), n)))}</div>`;
+    } else msg += `<div class="hint">${t("buyNoPace")}</div>`;
+  }
+  el.innerHTML = conferencia + `<div style="margin-top:8px">${msg}</div>` +
+    (botoes ? `<div class="chiprow" style="margin-top:12px">${botoes}</div>` : "") +
+    `<div class="hint" style="margin-top:10px">${t("buyInvestNote")}</div>`;
+}
+/* Da resposta para o lançamento: tudo preenchido, só falta a categoria */
+function goBuy(pay, parte) {
+  const v = parte > 0 ? parte : num("buy-v"), what = val("buy-what").trim(), cur = val("buy-cur") || mainCur();
+  closeSheet();
+  document.querySelector('nav button[data-tab="lanc"]')?.click();
+  document.getElementById("l-type").value = "gasto";
+  fillPlaceSelect();
+  const place = twoPockets() && cur === secondCur() ? "second" : "home";
+  const el = document.getElementById("l-place");
+  if ([...el.options].some(o => o.value === place)) { el.value = place; placeTouched = true; }
+  document.getElementById("l-date").value = todayStr();
+  document.getElementById("l-amount").value = v;
+  document.getElementById("l-desc").value = what;
+  updateLancForm();
+  document.getElementById("l-pay").value = pay === "wallet" ? "wallet" : "mes";
+  updateLancForm();
+  scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("l-cat").focus();
 }
 
 /* ═════════ Fechamento do mês ═════════
@@ -5106,7 +5315,10 @@ document.getElementById("f-lanc").onsubmit = e => {
   const cur = document.getElementById("l-cur").value;
   if (tp === "gasto") {
     const place = lancPlace();
-    S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, desc, place, cur: placeCur(place) });
+    const pela = document.getElementById("l-pay-f").style.display !== "none" && document.getElementById("l-pay").value === "wallet";
+    S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, desc, place, cur: placeCur(place),
+      ...(pela && !tripById(place) ? { paidFrom: "wallet" } : {}) });
+    document.getElementById("l-pay").value = "mes";
   }
   if (tp === "renda") S.incomes.push({ ...base, cur, source: desc });
   if (tp === "aporte") {
