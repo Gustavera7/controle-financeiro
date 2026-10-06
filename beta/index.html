@@ -332,6 +332,7 @@
       <button class="btn ghost" onclick="betaHide()" data-i18n="betaOk"></button>
     </div>
   </div>
+  <div id="close-card"></div>
   <div class="month-nav">
     <button class="btn ghost" onclick="moveMonth(-1)" aria-label="prev">‹</button>
     <b id="m-title"></b>
@@ -343,6 +344,7 @@
     <div class="label" data-i18n="heroLabel"></div>
     <div class="value" id="h-livre"></div>
     <div class="note" id="h-note"></div>
+    <div class="note" id="h-pace" style="margin-top:4px"></div>
     <div class="note" id="h-cut" role="button" tabindex="0" style="margin-top:10px; cursor:pointer"
       onclick="openSheet('fixed')" onkeydown="if(event.key==='Enter'){openSheet('fixed')}"></div>
   </div>
@@ -369,6 +371,7 @@
   </div>
 
   <div class="card" id="br-strip" style="padding:10px 18px; font-size:13.5px"></div>
+  <div id="wallet-strip"></div>
 
   <div class="grid cols-2">
     <div class="card">
@@ -399,6 +402,9 @@
       <div class="field" id="l-place-f"><label data-i18n="lancWhere"></label><select id="l-place" onchange="placeTouched = true; updateLancPlace()"></select></div>
       <div class="field" id="l-cur-f"><label data-i18n="lancCur"></label><select id="l-cur"><option value="USD">US$</option><option value="BRL">R$</option></select></div>
       <div class="field" id="l-cat-f"><label data-i18n="lancCat"></label><select id="l-cat"></select></div>
+      <div class="field" id="l-src-f"><label data-i18n="lancSrc"></label><select id="l-src" onchange="updateLancForm()"></select></div>
+      <div class="field" id="l-from-f"><label data-i18n="lancFrom"></label><select id="l-from"></select></div>
+      <div class="field" id="l-dest-f"><label data-i18n="lancDest"></label><select id="l-dest" onchange="updateLancForm()"></select></div>
       <div class="field" style="flex:1; min-width:140px"><label data-i18n="lancDesc"></label><input type="text" id="l-desc" data-i18n-ph="lancDescPh"></div>
       <button class="btn" type="submit" data-i18n="btnAdd"></button>
     </form>
@@ -584,6 +590,10 @@
     <div id="rep-resumo"></div>
   </div>
   <div class="card">
+    <h2 data-i18n="repChange"></h2>
+    <div id="rep-change"></div>
+  </div>
+  <div class="card">
     <h2 data-i18n="repCountries"></h2>
     <div id="rep-paises"></div>
   </div>
@@ -692,14 +702,29 @@ pt: {
   noExpMonth: "Nenhum gasto neste mês ainda.",
   noPrev: m => `Sem lançamentos em ${m}.`,
   prevEarned: "Ganhou", prevSpent: "Gastou", prevSaved: "Guardou", prevLeft: "Sobrou",
+  prevFixed: "Contas fixas não lançadas (contei como pagas)",
+  gMathFix: (r, g, f, l) => `Renda ${r} − guardar ${g} − contas fixas ${f} = <b>${l}</b> para viver o mês sem culpa.`,
   goalOk: "meta ✓",
-  prevHint: "Sobra de mês fechado é dinheiro parado — o assistente em Investir mostra onde ele rende.",
+  prevHint: "A sobra do mês fechado foi para a carteira de sobras — de lá você investe, cobre um mês apertado ou manda para uma viagem.",
   lancTitle: "Novo lançamento", lancType: "Tipo", lancDate: "Data", lancAmount: "Valor",
   lancCur: "Moeda", lancCat: "Categoria", lancTrip: "Contexto", lancDesc: "Descrição",
   lancDescPh: "opcional", btnAdd: "Adicionar", lancHist: "Histórico",
   typeExpense: "Gasto", typeIncome: "Renda extra", typeInvest: "Investimento (aporte)",
   hintOff: "✓ Categoria marcada como <b>não desconta</b> — esse gasto fica fora do seu livre.",
-  hintAporte: "Aporte conta como 'guardado' no mês e soma no seu patrimônio investido.",
+  lancSrc: "De onde vem", lancFrom: "Sai de", lancDest: "Vai para", lancNewAsset: "nome do novo ativo",
+  srcAsk: "— escolha —", srcMonth: "Do dinheiro do mês", srcWallet: v => `Da carteira de sobras (${v})`,
+  srcInvest: "De outro investimento", destNew: "+ novo ativo (nome na descrição)",
+  srcShort_mes: "do mês", srcShort_sobras: "da carteira de sobras", srcShort_invest: "realocação",
+  bdgMove: "realocou",
+  hintSrcAsk: "De onde vem esse dinheiro? É isso que decide se ele mexe no seu mês.",
+  hintSrcMonth: "Sai do dinheiro deste mês: conta como guardado e já estava fora do seu livre.",
+  hintSrcWallet: "Sai da carteira de sobras: o livre do mês não muda.",
+  hintSrcInvest: "Só muda de lugar: um ativo perde, o outro ganha, o patrimônio total fica igual.",
+  hintSameAsset: "Escolha de qual ativo o dinheiro sai — e ele precisa ser diferente do destino.",
+  wsLegacy: (agora, antes) => `<b>O patrimônio agora é a soma dos seus ativos: ${agora}.</b> Antes o app somava "investido base + aportes" (${antes}) — eram dois números na mesma tela. Se algum aporte antigo não está nos ativos, atualize o valor deles aqui. Daqui pra frente cada aporte já cai no ativo certo.`,
+  gWealthNow: v => `Patrimônio hoje (soma dos ativos): <b>${v}</b>`,
+  wz3fromAssets: "Esse é o total dos ativos que você já cadastrou — para mudar, edite cada um na aba Investir.",
+  baseAsset: "Investimentos",
   hintRenda: "Renda extra aumenta o livre do mês da data.",
   noLanc: "Nada registrado ainda. Todo gasto, renda extra e aporte entra por aqui.",
   thDate: "Data", thType: "Tipo", thDetail: "Detalhe", thValue: "Valor",
@@ -719,7 +744,6 @@ pt: {
   gMath: (inc, sv, rest) => `Renda ${inc} − guardar ${sv} = <b>${rest}</b> para viver o mês. O que você não gastar disso vira livre de verdade.`,
   gMainLabel: s => `Renda principal (${s}/mês)`,
   gSecondLabel: (c, s) => `Segunda renda — ${c} (${s}/mês)`,
-  gBaseLabel: s => `Investido base (${s})`,
   gPolicyLabel: "O que entra no seu livre",
   gPolicyMain: c => `Só a renda principal — ${c} (a outra fica para investir)`,
   gPolicyAll: "As duas rendas somadas",
@@ -735,7 +759,6 @@ pt: {
   apTitle: "Assistente de aporte — onde o dinheiro rende hoje",
   apCountryTitle: (c, cur) => `${c} — em ${cur}`,
   apCtxSecond: (v, c) => `<b>${v}</b> da segunda renda (${c}) deste mês`,
-  apCtxFree: v => `<b>${v}</b> livres que sobraram do mês passado`,
   apCtx: (parts, cdi, loss) => `Dinheiro procurando destino: ${parts}. Com CDI a ${cdi}% a.a., cada R$ 10.000 parados deixam de render ~${loss}/mês.`,
   apCtxSimple: parts => `Dinheiro procurando destino: ${parts}. Parado, ele perde para a inflação todo mês.`,
   apCtxNone: "Nenhum dinheiro parado detectado agora — quando um mês fechar com sobra, o assistente aponta o destino aqui.",
@@ -752,7 +775,7 @@ pt: {
   portAsset: "Ativo", portAssetPh: "ex: Tesouro Selic", portValue: "Valor",
   portEmpty: "Detalhe sua carteira aqui: reserva, renda fixa, ações, cripto…",
   portHint: "Edite os valores conforme os ativos rendem. Cada ativo tem um tipo — é o que alimenta o gráfico e a comparação com o alvo.",
-  portSync: "Usar soma da carteira como total", portSum: "Soma",
+  portSum: "Soma",
   apListTitle: "Todos os aportes", apListEmpty: "Nenhum aporte ainda.",
   apListHint: "Aportes são lançados na aba Lançamentos (tipo \"Investimento\").",
   oppTitle: "Oportunidades (investimento / negócio)", oppName: "Oportunidade", oppWhere: "Onde",
@@ -777,8 +800,25 @@ pt: {
   repPrint: "🖨 Imprimir / PDF", repSummary: "Resumo do mês", repCats: "Gastos por categoria",
   repWealth: "Patrimônio & meta", repYtd: "Ano até aqui",
   repEarnedUS: "Ganhou (renda principal)", repEarnedBR: "Ganhou (segunda renda, à parte)", repSpentOwn: "Gastou do próprio bolso",
-  repCovered: "Empresa cobriu (viagens a trabalho)", repSavedUS: "Aportou (moeda principal)", repSavedBR: "Aportou (segunda moeda)",
-  repFree: "Livre restante", repRate: "Do que ganhou, não gastou",
+  repCovered: "Empresa cobriu (viagens a trabalho)", repSavedUS: "Aportou do dinheiro do mês", repSavedBR: "Aportou (segunda moeda)",
+  repFree: "Livre para gastar", repRate: "Do que ganhou, não foi consumido",
+  repLeftClosed: "Sobrou de verdade", repWalletIn: "Veio da carteira de sobras",
+  repFixedPending: "Contas fixas ainda a pagar", repFixedPresumed: "Contas fixas não lançadas (contei como pagas)",
+  repGoalPending: "Meta do mês ainda a aportar", repFromWallet: "Aportou da carteira de sobras (fora do mês)",
+  repTripHeld: "Gasto em viagem aberta (entra quando encerrar)",
+  repChange: "O que mudou", chgNone: "Sem mês anterior com lançamentos para comparar.",
+  chgLeftMore: (v, m) => `Sobrou ${v} a mais que em ${m}.`, chgLeftLess: (v, m) => `Sobrou ${v} a menos que em ${m}.`,
+  chgSpentMore: (v, m) => `Gastou ${v} a mais que em ${m}.`, chgSpentLess: (v, m) => `Gastou ${v} a menos que em ${m}.`,
+  chgSpentSame: m => `Gastou praticamente o mesmo que em ${m}.`,
+  chgSpentMoreOpen: (v, m, d) => `Até o dia ${d}, gastou ${v} a mais que no mesmo ponto de ${m}.`,
+  chgSpentLessOpen: (v, m, d) => `Até o dia ${d}, gastou ${v} a menos que no mesmo ponto de ${m}.`,
+  chgSpentSameOpen: (m, d) => `Até o dia ${d}, gastou o mesmo que no mesmo ponto de ${m}.`,
+  chgUp: "Puxou para cima:", chgDown: "Ajudou:",
+  chgEarnMore: (v, m) => `Entrou ${v} a mais que em ${m}.`, chgEarnLess: (v, m) => `Entrou ${v} a menos que em ${m}.`,
+  chgSaveMore: (v, m) => `Aportou ${v} a mais que em ${m}.`, chgSaveLess: (v, m) => `Aportou ${v} a menos que em ${m}.`,
+  chgFixMore: (v, m) => `Contas fixas pesaram ${v} a mais que em ${m}.`, chgFixLess: (v, m) => `Contas fixas pesaram ${v} a menos que em ${m}.`,
+  paceOk: v => `no ritmo de hoje, o mês termina com ~${v} sobrando`,
+  paceBad: v => `no ritmo de hoje, o mês passa ~${v} do livre — vale segurar um pouco`,
   repNoExp: "Sem gastos registrados no período.", repDeltaHint: "▲▼ comparado com o mês anterior.",
   repInvested: "Investido hoje", repGoal: "Meta", repMissing: "Falta", repMonthContrib: "Aportes no mês",
   repProj: (v, m) => `No ritmo real dos últimos 3 meses (${v}/mês), você chega em <b>${m}</b>`,
@@ -862,12 +902,6 @@ pt: {
   wsBalanced: "Carteira perto do alvo — siga com aportes regulares.",
   wsTargetHint: "O alvo é uma referência clássica por perfil de risco, não uma recomendação individual. Ajuste o perfil se ele não parece você.",
   wsAssets: "Seus ativos", wsType: "Tipo",
-  wsReconcile: "Conferência",
-  wsFromEntries: "Total pelos lançamentos (base + aportes)",
-  wsFromAssets: "Soma dos ativos cadastrados",
-  wsDiff: "Diferença",
-  wsMatch: "Os dois bateram — nada a ajustar. 🎉",
-  wsDiffHint: "A diferença costuma ser rendimento que os ativos ganharam sozinhos. O botão abaixo alinha o total do app com a soma real da carteira.",
   /* ── Plano do mês ── */
   planTitle: "Plano do mês — o que fazer com o dinheiro, nesta ordem",
   planDebt: "Zerar a fatura do cartão antes de investir",
@@ -882,8 +916,6 @@ pt: {
   planCommitOkWhy: "o que passar disso é livre, sem culpa",
   planSecond: c => `Destinar a segunda renda — ${c}`,
   planSecondWhy: c => `ela não entra no seu livre — parada, só perde valor`,
-  planIdle: m => `Direcionar a sobra de ${m}`,
-  planIdleWhy: "sobra de mês fechado é dinheiro sem função; vire aporte ou reserve para uma viagem de propósito",
   planRebalance: ty => `Excedente: reforçar ${ty}`,
   planRebalanceWhy: (risk, gap) => `é o tipo mais abaixo do alvo do perfil ${risk} (${gap} pontos)`,
   planHint: "O plano se refaz sozinho a cada lançamento. Valores em moeda principal, exceto onde indicado.",
@@ -921,6 +953,31 @@ pt: {
   betaBackup: "Baixar backup", betaReseed: "Recopiar do app principal", betaOk: "Entendi",
   betaReseedAsk: "Isso apaga os dados desta beta e copia tudo de novo do app principal. Continuar?",
   betaSync: "beta · só neste aparelho",
+  /* ── Carteira de sobras ── */
+  walletTitle: "Carteira de sobras", walletAvail: "Disponível na carteira",
+  walletLine: v => `Carteira de sobras: <b>${v}</b>`, walletReserved: v => `${v} reservado para viagem`,
+  walletResFor: (v, n) => `${v} reservado para ${n}`, walletSecond: (p, v) => `sobra acumulada no ${p}: ${v}`,
+  walletCoverBtn: v => `Cobrir o mês com a carteira (${v})`, walletInvestBtn: "Investir as sobras",
+  walletToTrip: "Mandar para a viagem", walletSend: "Reservar", walletTripWhy: "da carteira de sobras",
+  walletHow: "Como chegou aqui", walletBalance: "Saldo",
+  walletNoMonths: "Ainda não fechou nenhum mês — a primeira sobra aparece no dia 1º.",
+  walletNotSaved: v => `inclui ${v} da meta que não foi aportada`,
+  walletMvAdjust: "Acerto com o saldo real", walletMvCover: m => `Cobriu ${m}`,
+  walletMvTrip: n => `Pagou a viagem ${n}`, walletMvInvest: n => `Investiu em ${n}`,
+  walletAdjustTitle: "O saldo da sua conta é outro? Acerte aqui",
+  walletReal: c => `Saldo real hoje (${c})`, walletAdjustBtn: "Acertar",
+  walletAdjustHint: "O acerto entra como uma linha só — nenhum mês é reescrito.",
+  walletHint: "O que sobra em cada mês fechado fica aqui. Mês apertado desconta sozinho; cobrir só tira o vermelho da tela do mês. Viagem recebe uma reserva, que vira gasto quando ela encerra.",
+  tbSrcNew: "Dinheiro novo", tbFromWallet: "carteira",
+  closeTitle: m => `${m.charAt(0).toUpperCase() + m.slice(1)} fechou`,
+  closeLeft: "sobrou de verdade — já está na carteira de sobras.",
+  closeOver: "passou do que entrou — a carteira de sobras absorveu.",
+  closeNotSaved: v => `Inclui ${v} da meta que não foi aportada.`,
+  closeWallet: v => `Carteira de sobras agora: <b>${v}</b>`,
+  closeInvest: "Investir agora", closeOpen: "Ver carteira",
+  planWallet: "Dar destino às sobras", planWalletWhy: "dinheiro parado na conta — investir, guardar para uma viagem ou deixar de colchão é escolha sua",
+  apCtxWallet: v => `${v} na carteira de sobras`,
+  apPlanGo: "Aportar", apPlanWallet: v => `E tem <b>${v}</b> na carteira de sobras — dá para seguir a mesma ordem.`,
   /* ── Aporte do mês ── */
   apPlanLead: (falta, meta) => `Faltam <b>${falta}</b> para fechar a meta de ${meta} deste mês. Onde colocar:`,
   apPlanDone: meta => `Meta de ${meta} batida este mês ✓ — se sobrar mais, siga esta ordem:`,
@@ -1042,14 +1099,29 @@ en: {
   noExpMonth: "No expenses this month yet.",
   noPrev: m => `No entries in ${m}.`,
   prevEarned: "Earned", prevSpent: "Spent", prevSaved: "Saved", prevLeft: "Left over",
+  prevFixed: "Fixed bills not logged (counted as paid)",
+  gMathFix: (r, g, f, l) => `Income ${r} − save ${g} − fixed bills ${f} = <b>${l}</b> to live the month guilt-free.`,
   goalOk: "goal ✓",
-  prevHint: "Leftover from a closed month is idle money — the assistant in Invest shows where it earns.",
+  prevHint: "The closed month's leftover went to your leftover wallet — from there you invest it, cover a tight month or send it to a trip.",
   lancTitle: "New entry", lancType: "Type", lancDate: "Date", lancAmount: "Amount",
   lancCur: "Currency", lancCat: "Category", lancTrip: "Context", lancDesc: "Description",
   lancDescPh: "optional", btnAdd: "Add", lancHist: "History",
   typeExpense: "Expense", typeIncome: "Extra income", typeInvest: "Investment (contribution)",
   hintOff: "✓ This category is set to <b>not count</b> — the expense stays out of your free amount.",
-  hintAporte: "A contribution counts as 'saved' this month and adds to your invested wealth.",
+  lancSrc: "Comes from", lancFrom: "Out of", lancDest: "Goes to", lancNewAsset: "name of the new asset",
+  srcAsk: "— choose —", srcMonth: "This month's money", srcWallet: v => `Leftover wallet (${v})`,
+  srcInvest: "Another investment", destNew: "+ new asset (name in description)",
+  srcShort_mes: "from the month", srcShort_sobras: "from the leftover wallet", srcShort_invest: "reallocation",
+  bdgMove: "moved",
+  hintSrcAsk: "Where does this money come from? That decides whether it touches your month.",
+  hintSrcMonth: "Comes out of this month's money: counts as saved and was already outside your free amount.",
+  hintSrcWallet: "Comes out of the leftover wallet: your month's free amount doesn't change.",
+  hintSrcInvest: "It just changes place: one asset loses, the other gains, total wealth stays the same.",
+  hintSameAsset: "Pick which asset the money comes out of — it must differ from the destination.",
+  wsLegacy: (agora, antes) => `<b>Your wealth is now the sum of your assets: ${agora}.</b> Before, the app added "base invested + contributions" (${antes}) — two numbers on one screen. If an old contribution isn't in your assets, update their values here. From now on each contribution lands in the right asset.`,
+  gWealthNow: v => `Wealth today (sum of assets): <b>${v}</b>`,
+  wz3fromAssets: "That's the total of the assets you already added — to change it, edit each one in Invest.",
+  baseAsset: "Investments",
   hintRenda: "Extra income increases that month's free amount.",
   noLanc: "Nothing yet. Every expense, extra income and contribution goes here.",
   thDate: "Date", thType: "Type", thDetail: "Detail", thValue: "Amount",
@@ -1069,7 +1141,6 @@ en: {
   gMath: (inc, sv, rest) => `Income ${inc} − save ${sv} = <b>${rest}</b> to live the month. Whatever you don't spend becomes truly free.`,
   gMainLabel: s => `Main income (${s}/mo)`,
   gSecondLabel: (c, s) => `Income in ${c} (${s}/mo)`,
-  gBaseLabel: s => `Starting invested (${s})`,
   gPolicyLabel: "What counts toward your free amount",
   gPolicyMain: c => `Only the ${c} income (the other is for investing)`,
   gPolicyAll: "Both incomes combined",
@@ -1085,7 +1156,6 @@ en: {
   apTitle: "Contribution assistant — where money earns today",
   apCountryTitle: (c, cur) => `${c} — in ${cur}`,
   apCtxSecond: (v, c) => `<b>${v}</b> from this month's ${c} income`,
-  apCtxFree: v => `<b>${v}</b> free left over from last month`,
   apCtx: (parts, cdi, loss) => `Money looking for a destination: ${parts}. With CDI at ${cdi}%/yr, every R$ 10,000 sitting idle misses ~${loss}/mo.`,
   apCtxSimple: parts => `Money looking for a destination: ${parts}. Sitting still, it loses to inflation every month.`,
   apCtxNone: "No idle money detected right now — when a month closes with a surplus, the assistant points the way here.",
@@ -1102,7 +1172,7 @@ en: {
   portAsset: "Asset", portAssetPh: "e.g. Treasury bond", portValue: "Value",
   portEmpty: "Detail your portfolio here: cash, fixed income, stocks, crypto…",
   portHint: "Edit values as assets grow. Every asset has a type — that's what feeds the chart and the comparison against target.",
-  portSync: "Use portfolio sum as total", portSum: "Sum",
+  portSum: "Sum",
   apListTitle: "All contributions", apListEmpty: "No contributions yet.",
   apListHint: "Contributions are logged in the Entries tab (type \"Investment\").",
   oppTitle: "Opportunities (investment / business)", oppName: "Opportunity", oppWhere: "Where",
@@ -1127,8 +1197,25 @@ en: {
   repPrint: "🖨 Print / PDF", repSummary: "Month summary", repCats: "Spending by category",
   repWealth: "Wealth & goal", repYtd: "Year so far",
   repEarnedUS: "Earned (main income)", repEarnedBR: "Earned (second income, separate)", repSpentOwn: "Spent out of pocket",
-  repCovered: "Company covered (work trips)", repSavedUS: "Invested (main currency)", repSavedBR: "Invested (second currency)",
-  repFree: "Free remaining", repRate: "Of earnings, not spent",
+  repCovered: "Company covered (work trips)", repSavedUS: "Invested from this month's money", repSavedBR: "Invested (second currency)",
+  repFree: "Free to spend", repRate: "Of earnings, not consumed",
+  repLeftClosed: "Actually left over", repWalletIn: "Came from the leftover wallet",
+  repFixedPending: "Fixed bills still to pay", repFixedPresumed: "Fixed bills not logged (counted as paid)",
+  repGoalPending: "Goal still to invest this month", repFromWallet: "Invested from the leftover wallet (outside the month)",
+  repTripHeld: "Spent on an open trip (lands when it closes)",
+  repChange: "What changed", chgNone: "No previous month with entries to compare.",
+  chgLeftMore: (v, m) => `${v} more left over than in ${m}.`, chgLeftLess: (v, m) => `${v} less left over than in ${m}.`,
+  chgSpentMore: (v, m) => `Spent ${v} more than in ${m}.`, chgSpentLess: (v, m) => `Spent ${v} less than in ${m}.`,
+  chgSpentSame: m => `Spent about the same as in ${m}.`,
+  chgSpentMoreOpen: (v, m, d) => `By day ${d}, spent ${v} more than at the same point of ${m}.`,
+  chgSpentLessOpen: (v, m, d) => `By day ${d}, spent ${v} less than at the same point of ${m}.`,
+  chgSpentSameOpen: (m, d) => `By day ${d}, spent the same as at the same point of ${m}.`,
+  chgUp: "Pushed it up:", chgDown: "Helped:",
+  chgEarnMore: (v, m) => `${v} more came in than in ${m}.`, chgEarnLess: (v, m) => `${v} less came in than in ${m}.`,
+  chgSaveMore: (v, m) => `Invested ${v} more than in ${m}.`, chgSaveLess: (v, m) => `Invested ${v} less than in ${m}.`,
+  chgFixMore: (v, m) => `Fixed bills weighed ${v} more than in ${m}.`, chgFixLess: (v, m) => `Fixed bills weighed ${v} less than in ${m}.`,
+  paceOk: v => `at today's pace, the month ends with ~${v} left`,
+  paceBad: v => `at today's pace, the month goes ~${v} past your free amount — worth easing off`,
   repNoExp: "No expenses in this period.", repDeltaHint: "▲▼ vs. previous month.",
   repInvested: "Invested today", repGoal: "Goal", repMissing: "To go", repMonthContrib: "Contributions this month",
   repProj: (v, m) => `At your real pace of the last 3 months (${v}/mo), you arrive in <b>${m}</b>`,
@@ -1212,12 +1299,6 @@ en: {
   wsBalanced: "Portfolio close to target — keep the regular contributions coming.",
   wsTargetHint: "The target is a classic reference per risk profile, not individual advice. Change the profile if it doesn't sound like you.",
   wsAssets: "Your assets", wsType: "Type",
-  wsReconcile: "Cross-check",
-  wsFromEntries: "Total from entries (base + contributions)",
-  wsFromAssets: "Sum of listed assets",
-  wsDiff: "Difference",
-  wsMatch: "Both match — nothing to adjust. 🎉",
-  wsDiffHint: "The gap is usually yield the assets earned on their own. The button below aligns the app total with the real portfolio sum.",
   /* ── Monthly plan ── */
   planTitle: "This month's plan — what to do with the money, in order",
   planDebt: "Clear the credit card before investing",
@@ -1232,8 +1313,6 @@ en: {
   planCommitOkWhy: "anything beyond it is free, guilt-free",
   planSecond: c => `Allocate the ${c} income`,
   planSecondWhy: c => `it doesn't feed your free amount — idle, it only loses value`,
-  planIdle: m => `Direct the leftover from ${m}`,
-  planIdleWhy: "leftover from a closed month is money without a job; turn it into a contribution or earmark it for a trip on purpose",
   planRebalance: ty => `Surplus: reinforce ${ty}`,
   planRebalanceWhy: (risk, gap) => `it's the type furthest below the ${risk} profile's target (${gap} points)`,
   planHint: "The plan rebuilds itself with every entry. Amounts in your main currency unless noted.",
@@ -1265,6 +1344,31 @@ en: {
   betaBackup: "Download backup", betaReseed: "Copy from main app again", betaOk: "Got it",
   betaReseedAsk: "This erases the beta data and copies everything again from the main app. Continue?",
   betaSync: "beta · this device only",
+  /* ── Leftover wallet ── */
+  walletTitle: "Leftover wallet", walletAvail: "Available in the wallet",
+  walletLine: v => `Leftover wallet: <b>${v}</b>`, walletReserved: v => `${v} reserved for a trip`,
+  walletResFor: (v, n) => `${v} reserved for ${n}`, walletSecond: (p, v) => `leftover piled up in ${p}: ${v}`,
+  walletCoverBtn: v => `Cover the month with the wallet (${v})`, walletInvestBtn: "Invest the leftovers",
+  walletToTrip: "Send to a trip", walletSend: "Reserve", walletTripWhy: "from the leftover wallet",
+  walletHow: "How it got here", walletBalance: "Balance",
+  walletNoMonths: "No month has closed yet — the first leftover shows up on the 1st.",
+  walletNotSaved: v => `includes ${v} of the goal that wasn't invested`,
+  walletMvAdjust: "Matched to the real balance", walletMvCover: m => `Covered ${m}`,
+  walletMvTrip: n => `Paid for the trip ${n}`, walletMvInvest: n => `Invested in ${n}`,
+  walletAdjustTitle: "Is your account balance different? Match it here",
+  walletReal: c => `Real balance today (${c})`, walletAdjustBtn: "Match",
+  walletAdjustHint: "The adjustment is a single line — no month gets rewritten.",
+  walletHint: "What's left in each closed month lands here. A tight month subtracts on its own; covering just takes the red off that month's screen. A trip gets a reservation, which becomes spending when it closes.",
+  tbSrcNew: "New money", tbFromWallet: "wallet",
+  closeTitle: m => `${m.charAt(0).toUpperCase() + m.slice(1)} closed`,
+  closeLeft: "really left over — already in your leftover wallet.",
+  closeOver: "went past what came in — the leftover wallet absorbed it.",
+  closeNotSaved: v => `Includes ${v} of the goal that wasn't invested.`,
+  closeWallet: v => `Leftover wallet now: <b>${v}</b>`,
+  closeInvest: "Invest now", closeOpen: "Open wallet",
+  planWallet: "Give the leftovers a job", planWalletWhy: "money sitting in your account — invest it, save it for a trip, or keep it as a cushion: your call",
+  apCtxWallet: v => `${v} in the leftover wallet`,
+  apPlanGo: "Invest", apPlanWallet: v => `And there's <b>${v}</b> in the leftover wallet — follow the same order.`,
   /* ── This month's contribution ── */
   apPlanLead: (falta, meta) => `<b>${falta}</b> to go to hit this month's ${meta} goal. Where to put it:`,
   apPlanDone: meta => `${meta} goal hit this month ✓ — if more is left over, follow this order:`,
@@ -1448,6 +1552,7 @@ const DEFAULTS = {
   accounts: [],   // contas/produtos do usuário com taxa conhecida
   offers: [],     // ofertas de parceiros (hoje manuais; amanhã, feed do Folga)
   fixed: [],      // contas que se repetem todo mês (aluguel, luz, internet…)
+  wallet: { moves: [] }, // carteira de sobras: só acertos e coberturas; o resto é calculado
   cats: [],       // categorias criadas pelo usuário
   trips: [],      // viagens e temporadas fora (cada uma com moeda e orçamento)
 };
@@ -1492,16 +1597,51 @@ function migrate(d) {
   }));
   s.accounts = s.accounts || [];
   s.offers = s.offers || [];
+  /* Patrimônio passou a ser só a soma dos ativos. Quem nunca detalhou a
+     carteira ganha um ativo com o que o app somava antes (base + aportes), e o
+     número da tela não muda. Quem já tinha ativos fica com eles — e um aviso
+     único mostra a diferença, se houver. Conversão feita aqui mesmo: os
+     utilitários de moeda ainda não existem quando o app carrega. */
+  if (!st.wealthModel) {
+    const fxM = Number(st.fx) > 0 ? Number(st.fx) : 1;
+    const wc = st.wealthCur || st.homeCur;
+    const emMain = (v, c) => (!c || c === st.homeCur) ? v : (c === st.secondCur ? v / fxM : v);
+    const paraW = (v, c) => { const m = emMain(v, c || st.homeCur);
+      return wc === st.homeCur ? m : (wc === st.secondCur ? m * fxM : m); };
+    const antigo = (Number(st.investedBase) || 0) +
+      (s.contributions || []).reduce((a, c) => a + paraW(Number(c.amount) || 0, c.cur), 0);
+    if (!(s.portfolio || []).length) {
+      if (antigo > 0) s.portfolio = [{ id: "base", name: st.lang === "en" ? "Investments" : "Investimentos",
+        value: Math.round(antigo * 100) / 100, type: "outros", cur: wc }];
+    } else if (antigo > 0) st.legacyInvested = Math.round(antigo * 100) / 100;
+    st.investedBase = 0;
+    st.wealthModel = true;
+  }
   /* Oportunidade agora tem valor, retorno esperado e risco — as antigas
      entram sem números e o usuário completa quando quiser. */
   s.opportunities = (s.opportunities || []).map(o => ({
     ...o, amount: Number(o.amount) || 0, ret: Number(o.ret) || 0,
     risk: ["baixo","medio","alto"].includes(o.risk) ? o.risk : "medio",
   }));
+  /* Carteira de sobras: guarda só o que não dá para calcular (acertos e
+     coberturas de mês). O saldo nasce dos meses fechados. */
+  s.wallet = { moves: ((s.wallet && s.wallet.moves) || []).filter(m => m && m.id && ["adjust","cover"].includes(m.kind))
+    .map(m => ({ ...m, amount: Number(m.amount) || 0 })) };
   /* Contas fixas: nome, valor e a categoria que o gasto recebe quando paga */
-  s.fixed = (s.fixed || []).filter(f => f && f.id).map(f => ({
+  /* Conta fixa vale de `since` até `until`. Contas antigas não tinham início:
+     o id carrega o instante da criação; sem ele, assume o mês anterior
+     (a conta mais antiga possível desta versão). Desativada vira `until`. */
+  const mesDoId = id => { const ms = Number(String(id).slice(0, 13));
+    if (!(ms > 1e12)) return "";
+    const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
+  /* migrate roda no carregamento, antes dos utilitários de data existirem */
+  const agora = new Date();
+  const hojeMk = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
+  s.fixed =(s.fixed || []).filter(f => f && f.id).map(f => ({
     id: f.id, name: String(f.name || ""), amount: Number(f.amount) || 0,
-    cur: f.cur || st.homeCur, cat: f.cat || "outros", active: f.active !== false,
+    cur: f.cur || st.homeCur, cat: f.cat || "outros",
+    since: f.since || mesDoId(f.id) || shiftMonth(hojeMk, -1),
+    until: f.until || (f.active === false ? shiftMonth(hojeMk, -1) : ""),
   }));
   /* Categorias do usuário: rótulo pode ter vindo como texto simples */
   s.cats = (s.cats || []).filter(c => c && c.id).map((c, i) => ({
@@ -1584,7 +1724,16 @@ function load() {
       }
     }
     return migrate(s);
-  } catch { return structuredClone(DEFAULTS); }
+  } catch (err) {
+    /* Se os dados existem mas não carregaram, guarda uma cópia intacta antes de
+       qualquer coisa: o próximo save() gravaria o estado vazio por cima. */
+    try {
+      const bruto = localStorage.getItem(KEY);
+      if (bruto && !localStorage.getItem(KEY + "-resgate")) localStorage.setItem(KEY + "-resgate", bruto);
+    } catch {}
+    console.error("load falhou:", err);
+    return structuredClone(DEFAULTS);
+  }
 }
 function save() { S._ts = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); sbQueuePush(); }
 function uid() { return Date.now() + Math.random().toString(16).slice(2, 6); }
@@ -1758,18 +1907,22 @@ const pctn = n => Number(n || 0).toLocaleString(dloc(), { maximumFractionDigits:
    Uma conta fixa vira gasto no dia em que você marca "paguei" — antes disso
    ela já sai do livre, porque aquele dinheiro tem dono. O total não muda
    quando você paga: sai de "a pagar" e entra em "gasto". */
-const fixedList = () => (S.fixed || []).filter(f => f.active !== false);
+/* Contas valendo num mês; sem mês, as que valem hoje (a lista da tela) */
+const fixedIn = mk => (S.fixed || []).filter(f => (!f.since || f.since <= mk) && (!f.until || f.until >= mk));
+const fixedList = () => fixedIn(thisMonth());
 const fixedPaidIn = (mk, id) => S.expenses.find(e => String(e.fixedId) === String(id) && monthKey(e.date) === mk);
 function fixedPending(mk) {
-  const out = { main: 0, second: 0, aPagar: 0, total: 0, qtd: 0 };
+  const out = { main: 0, second: 0, aPagar: 0, total: 0, qtd: 0, presumidas: mk < thisMonth() };
   const M = mainCur(), SC = secondCur();
   const st = S.settings;
   const somaTudo = st.freePolicy === "all" && st.hasSecond;
-  fixedList().forEach(f => {
+  /* Conta não marcada como paga: no mês corrente, ainda vai sair; num mês
+     fechado, saiu — aluguel não pula mês. Antes, o mês "ganhava" a conta
+     inteira no dia em que virava, e a sobra pulava sem explicação. */
+  fixedIn(mk).forEach(f => {
     out.qtd++;
     out.total += conv(f.amount, f.cur || M, M);
-    /* Mês fechado mostra o que aconteceu, não o que faltava pagar */
-    if (mk < thisMonth() || fixedPaidIn(mk, f.id)) return;
+    if (fixedPaidIn(mk, f.id)) return;
     out.aPagar++;
     const noSegundo = st.hasSecond && SC !== M && (f.cur || M) === SC && !somaTudo;
     if (noSegundo) out.second += f.amount;
@@ -1796,9 +1949,16 @@ function monthStats(mk) {
   const inc = S.incomes.filter(x => monthKey(x.date) === mk);
   const extrasMain = inc.filter(x => (x.cur || M) !== SC || SC === M).reduce((s,x) => s + conv(x.amount, x.cur || M, M), 0);
   const extrasSecond = SC === M ? 0 : inc.filter(x => x.cur === SC).reduce((s,x) => s + x.amount, 0);
-  const con = S.contributions.filter(c => monthKey(c.date) === mk);
+  /* Só o aporte que sai do dinheiro do mês conta como guardado no mês. O que
+     vem da carteira de sobras ou de outro investimento já tinha saído antes. */
+  const conAll = S.contributions.filter(c => monthKey(c.date) === mk);
+  const con = conAll.filter(c => (c.src || "mes") === "mes");
   const savedMain = con.filter(c => (c.cur || M) !== SC || SC === M).reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
   const savedSecond = SC === M ? 0 : con.filter(c => c.cur === SC).reduce((s,c) => s + c.amount, 0);
+  const fromWallet = conAll.filter(c => c.src === "sobras").reduce((s,c) => s + conv(c.amount, c.cur || M, M), 0);
+  /* Dinheiro que a carteira de sobras mandou para este mês (cobrir um aperto) */
+  const walletIn = ((S.wallet && S.wallet.moves) || []).filter(m => m.kind === "cover" && m.month === mk)
+    .reduce((s, m) => s + m.amount, 0);
 
   const rendaMain = st.mainMonthly + extrasMain;
   const rendaSecond = (st.hasSecond ? st.secondMonthly : 0) + extrasSecond;
@@ -1808,18 +1968,23 @@ function monthStats(mk) {
   const ganho = rendaMain + (somaTudo ? toMain(rendaSecond, SC) : 0);
   const saved = savedMain + toMain(savedSecond, SC);
   const savedNoLivre = savedMain + (somaTudo ? toMain(savedSecond, SC) : 0);
-  const reservado = Math.max(st.saveMonthly, savedNoLivre);
-  /* Contas fixas ainda não pagas já saem do livre: elas vão sair de qualquer jeito */
+  /* Mês corrente: a meta inteira já tem dono, mesmo antes do aporte. Mês
+     fechado: só o que foi aportado de verdade — o resto ficou na conta e é sobra. */
+  const fechado = mk < thisMonth();
+  const reservado = fechado ? savedNoLivre : Math.max(st.saveMonthly, savedNoLivre);
+  const metaPendente = reservado - savedNoLivre;
+  /* Contas fixas não lançadas: vão sair (mês corrente) ou saíram (mês fechado) */
   const fix = fixedPending(mk);
-  const livre = ganho - reservado - spent - fix.main;
+  const livre = ganho + walletIn - reservado - spent - fix.main;
   /* Sobra do segundo país: o que entrou lá, menos gasto, aporte e contas de lá */
   const leftSecond = rendaSecond - spentSecond - savedSecond - fix.second;
   return { spent, spentSecond, tripSpent, covered, extrasMain, extrasSecond, savedMain, savedSecond, saved,
+           savedNoLivre, metaPendente, fromWallet, walletIn, fechado,
            ganho, rendaSecond, leftSecond, livre, reservado, fix };
 }
-function invested() {
-  return S.settings.investedBase + S.contributions.reduce((s,c) => s + toWealth(c.amount, c.cur), 0);
-}
+/* Patrimônio = soma dos ativos, sempre. Aporte entra num ativo; valorização
+   é você atualizando o valor dele. Não existe mais um segundo total. */
+function invested() { return allocation().total; }
 function monthHasData(mk) {
   return S.expenses.some(e => monthKey(e.date) === mk) ||
     S.incomes.some(x => monthKey(x.date) === mk) ||
@@ -1868,6 +2033,21 @@ function renderInicio() {
     mk < cur ? t("heroClosedNote") :
     mk > cur ? t("heroFutureNote") :
     st.livre >= 0 ? t("heroPerDay", fmtM0(st.livre / dias)) : t("heroOver", fmtM0(-st.livre));
+
+  /* Ritmo: no passo dos gastos do dia a dia até aqui, como o mês termina.
+     Contas fixas ficam de fora da média — são um tranco, não um ritmo. */
+  const pace = document.getElementById("h-pace");
+  pace.innerHTML = "";
+  if (!vazio && mk === cur && new Date().getDate() >= 5) {
+    const hoje = new Date().getDate();
+    const fimMes = new Date(+mk.split("-")[0], +mk.split("-")[1], 0).getDate();
+    const variavel = S.expenses.filter(e => monthKey(e.date) === mk && counts(e) && expBucket(e) === "main" && !e.fixedId)
+      .reduce((a, e) => a + conv(e.amount, expCur(e), mainCur()), 0);
+    const fim = st.livre - variavel / hoje * (fimMes - hoje);
+    if (variavel > 0) pace.innerHTML = fim >= 0
+      ? `<span class="pos">${t("paceOk", fmtM0(fim))}</span>`
+      : `<span class="neg">${t("paceBad", fmtM0(-fim))}</span>`;
+  }
 
   /* O que já saiu antes do livre — a conta que faz o número ser confiável */
   const corte = document.getElementById("h-cut");
@@ -1935,8 +2115,9 @@ function renderInicio() {
     : `<table><tbody>
       <tr><td>${t("prevEarned")}</td><td class="num">${fmtM(p.ganho)}</td></tr>
       <tr><td>${t("prevSpent")}</td><td class="num">${fmtM(p.spent)}</td></tr>
-      <tr><td>${t("prevSaved")}</td><td class="num">${fmtM(p.saved)} ${p.saved >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? `<span class="badge covered">${t("goalOk")}</span>` : ""}</td></tr>
-      <tr><td><b>${t("prevLeft")}</b></td><td class="num"><b class="${p.ganho - p.spent - p.savedMain >= 0 ? "pos" : "neg"}">${fmtM(p.ganho - p.spent - p.savedMain)}</b></td></tr>
+      <tr><td>${t("prevSaved")}</td><td class="num">${fmtM(p.savedNoLivre)} ${p.savedNoLivre >= S.settings.saveMonthly && S.settings.saveMonthly > 0 ? `<span class="badge covered">${t("goalOk")}</span>` : ""}</td></tr>
+      ${p.fix.main > 0 ? `<tr><td>${t("prevFixed")}</td><td class="num">${fmtM(p.fix.main)}</td></tr>` : ""}
+      <tr><td><b>${t("prevLeft")}</b></td><td class="num"><b class="${p.livre >= 0 ? "pos" : "neg"}">${fmtM(p.livre)}</b></td></tr>
     </tbody></table>
     <div class="hint">${t("prevHint")}</div>`;
 }
@@ -1950,7 +2131,37 @@ function updateLancForm() {
   document.getElementById("l-place-f").style.display = (tp === "gasto" && placeOptions().length > 1) ? "" : "none";
   /* Moeda só aparece para quem declarou um segundo país — sem isso não há escolha a fazer */
   document.getElementById("l-cur-f").style.display = (tp !== "gasto" && S.settings.hasSecond) ? "" : "none";
+  /* Aporte sempre pergunta de onde vem: é isso que decide se mexe no mês */
+  const ap = tp === "aporte";
+  fillAporteSelects();
+  const src = document.getElementById("l-src");
+  src.required = ap;
+  document.getElementById("l-src-f").style.display = ap ? "" : "none";
+  document.getElementById("l-dest-f").style.display = ap ? "" : "none";
+  document.getElementById("l-from-f").style.display = ap && src.value === "invest" ? "" : "none";
+  const novo = ap && document.getElementById("l-dest").value === "__new";
+  const desc = document.getElementById("l-desc");
+  desc.required = novo;
+  desc.placeholder = novo ? t("lancNewAsset") : t("lancDescPh");
   updateLancPlace();
+}
+/* Origem com o saldo à vista; destino e "sai de" são os ativos da carteira */
+function fillAporteSelects() {
+  const src = document.getElementById("l-src"), dest = document.getElementById("l-dest"), from = document.getElementById("l-from");
+  if (!src) return;
+  const vs = src.value, vd = dest.value, vf = from.value;
+  src.innerHTML = `<option value="">${t("srcAsk")}</option>
+    <option value="mes">${t("srcMonth")}</option>
+    <option value="sobras">${t("srcWallet", fmtM0(walletState().disponivel))}</option>
+    <option value="invest">${t("srcInvest")}</option>`;
+  const ativos = [...S.portfolio].sort((a, b) => toWealth(b.value, b.cur) - toWealth(a.value, a.cur));
+  const opt = p => `<option value="${p.id}">${esc(p.name)} · ${fmtCur(p.value, p.cur || wealthCur(), 0)}</option>`;
+  dest.innerHTML = ativos.map(opt).join("") + `<option value="__new">${t("destNew")}</option>`;
+  from.innerHTML = ativos.map(opt).join("");
+  if ([...src.options].some(o => o.value === vs)) src.value = vs;
+  if ([...dest.options].some(o => o.value === vd)) dest.value = vd;
+  else if (!ativos.length) dest.value = "__new";
+  if ([...from.options].some(o => o.value === vf)) from.value = vf;
 }
 /* O lugar escolhido no formulário (ou casa, quando não há escolha) */
 function lancPlace() {
@@ -1997,7 +2208,9 @@ function updateLancHint() {
     el.innerHTML = `${t("tripAvail")}: <b class="${ts.left < 0 ? "neg" : "pos"}">${fmtCur(ts.left, viagem.cur, 0)}</b>` +
       (ts.daysLeft > 1 ? ` · ${t("tripPerDay", fmtCur(ts.perDay, viagem.cur, 0), ts.daysLeft)}` : "");
   } else if (tp === "aporte") {
-    el.textContent = t("hintAporte");
+    const src = document.getElementById("l-src").value;
+    el.innerHTML = src === "sobras" ? t("hintSrcWallet") : src === "invest" ? t("hintSrcInvest")
+      : src === "mes" ? t("hintSrcMonth") : t("hintSrcAsk");
   } else if (tp === "renda") {
     el.textContent = t("hintRenda");
   } else el.textContent = "";
@@ -2025,8 +2238,9 @@ function renderLanc() {
           badge = `<span class="badge counts">${t("bdgIncome")}</span>`;
           v = "+ " + fmtCur(x.amount, x.cur || mainCur());
         } else {
-          det = esc(x.dest || t("investFallback"));
-          badge = `<span class="badge covered">${t("bdgInvest")}</span>`;
+          det = esc(x.dest || t("investFallback")) + (x.src ? ` <span style="color:var(--muted)">· ${t("srcShort_" + x.src)}</span>` : "") +
+            (x.note ? " · " + esc(x.note) : "");
+          badge = `<span class="badge covered">${x.src === "invest" ? t("bdgMove") : t("bdgInvest")}</span>`;
           v = fmtCur(x.amount, x.cur || mainCur());
         }
         return `<tr><td>${fmtD(parseDate(x.date))}</td><td>${badge || t("wordExpense")}</td><td>${det}</td>
@@ -2037,8 +2251,18 @@ function renderLanc() {
 function delLanc(tp, id) {
   if (tp === "gasto") S.expenses = S.expenses.filter(x => String(x.id) !== String(id));
   if (tp === "renda") S.incomes = S.incomes.filter(x => String(x.id) !== String(id));
-  if (tp === "aporte") S.contributions = S.contributions.filter(x => String(x.id) !== String(id));
-  save(); renderAll(); updateLancPlace();
+  if (tp === "aporte") {
+    const c = S.contributions.find(x => String(x.id) === String(id));
+    if (c) {
+      const r2 = v => Math.round(v * 100) / 100;
+      const a = S.portfolio.find(p => String(p.id) === String(c.assetId));
+      if (a && c.assetDelta) a.value = r2(Math.max(0, a.value - c.assetDelta));
+      const f = S.portfolio.find(p => String(p.id) === String(c.fromAssetId));
+      if (f && c.fromDelta) f.value = r2(f.value + c.fromDelta);
+    }
+    S.contributions = S.contributions.filter(x => String(x.id) !== String(id));
+  }
+  save(); renderAll(); updateLancForm();
   if (document.getElementById("sheet").classList.contains("on")) renderSheet();
 }
 
@@ -2074,7 +2298,12 @@ function renderMetas() {
       <div class="field"><label>${t("gSaveLabel", curSym(mainCur()))}</label>
         <input type="number" inputmode="decimal" step="10" value="${st.saveMonthly}" style="width:110px" onchange="setS('saveMonthly', this.value)"></div>
     </form>
-    <div class="hint" style="margin-top:10px">${t("gMath", fmtM0(st.mainMonthly), fmtM0(st.saveMonthly), fmtM0(st.mainMonthly - st.saveMonthly))}</div>`;
+    <div class="hint" style="margin-top:10px">${(() => {
+      const fixo = fixedList().reduce((a, f) => a + conv(f.amount, f.cur || mainCur(), mainCur()), 0);
+      return fixo > 0
+        ? t("gMathFix", fmtM0(st.mainMonthly), fmtM0(st.saveMonthly), fmtM0(fixo), fmtM0(st.mainMonthly - st.saveMonthly - fixo))
+        : t("gMath", fmtM0(st.mainMonthly), fmtM0(st.saveMonthly), fmtM0(st.mainMonthly - st.saveMonthly));
+    })()}</div>`;
 
   const secLabel = `${flagOf(st.secondCountry)} ${t("gSecondLabel", countryName(st.secondCountry), curSym(secondCur()))}`;
   document.getElementById("g-renda").innerHTML = `
@@ -2083,9 +2312,9 @@ function renderMetas() {
         <input type="number" inputmode="decimal" step="10" value="${st.mainMonthly}" style="width:110px" onchange="setS('mainMonthly', this.value)"></div>
       ${st.hasSecond ? `<div class="field"><label>${secLabel}</label>
         <input type="number" inputmode="decimal" step="100" value="${st.secondMonthly}" style="width:110px" onchange="setS('secondMonthly', this.value)"></div>` : ""}
-      <div class="field"><label>${t("gBaseLabel", curSym(wealthCur()))}</label>
-        <input type="number" inputmode="decimal" step="1000" value="${st.investedBase}" style="width:120px" onchange="setS('investedBase', this.value)"></div>
     </form>
+    <div style="margin-top:10px; font-size:13.5px">${t("gWealthNow", fmtW0(invested()))}
+      <button class="btn ghost" style="margin-left:6px; font-size:12.5px; padding:4px 10px" onclick="openWealth()">${t("wsOpen")}</button></div>
     ${st.hasSecond ? `<div class="field" style="margin-top:12px; max-width:340px"><label>${t("gPolicyLabel")}</label>
       <select onchange="setPolicy(this.value)">
         <option value="main" ${st.freePolicy === "main" ? "selected" : ""}>${t("gPolicyMain", countryName(st.homeCountry))}</option>
@@ -2180,7 +2409,7 @@ function renderInvest() {
   document.getElementById("iv-aportes").innerHTML = cs.length === 0
     ? `<div class="empty">${t("apListEmpty")}</div>`
     : `<table><tbody>` + cs.map(c => `
-      <tr><td>${fmtD(parseDate(c.date))}</td><td>${esc(c.dest || "")}</td>
+      <tr><td>${fmtD(parseDate(c.date))}</td><td>${esc(c.dest || "")}${c.src ? `<div class="hint" style="margin:0">${t("srcShort_" + c.src)}</div>` : ""}</td>
         <td class="num">${fmtCur(c.amount, c.cur || mainCur())}</td>
         <td style="width:30px"><button class="mini" title="${t("del")}" onclick="delLanc('aporte','${c.id}')">✕</button></td></tr>`).join("") + `</tbody></table>`;
 
@@ -2254,13 +2483,7 @@ function afterWealthEdit() { renderAll(); if (document.getElementById("sheet").c
 function setRisk(v) { S.settings.riskProfile = v; save(); afterWealthEdit(); }
 /* O total do app (base + aportes) e a soma da carteira podem divergir; este botão
    reconcilia ajustando a base, sem mexer no histórico de aportes. */
-function syncPortfolio() {
-  const { total } = allocation();
-  if (total <= 0) return;
-  const aportes = S.contributions.reduce((s,c) => s + toWealth(c.amount, c.cur), 0);
-  S.settings.investedBase = Math.round((total - aportes) * 100) / 100;
-  save(); afterWealthEdit();
-}
+function legacyOk() { delete S.settings.legacyInvested; save(); afterWealthEdit(); }
 
 /* ═════════ Folha de detalhe do patrimônio ═════════ */
 function closeSheet() {
@@ -2281,6 +2504,7 @@ function renderSheet() {
   if (sheetView?.kind === "trip") return renderTripSheet(sheetView.id);
   if (sheetView?.kind === "country") return renderCountrySheet();
   if (sheetView?.kind === "fixed") return renderFixedSheet();
+  if (sheetView?.kind === "wallet") return renderWalletSheet();
   renderWealthSheet();
 }
 addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
@@ -2289,10 +2513,9 @@ function openWealth() { openSheet("wealth"); }
 function renderWealthSheet() {
   const st = S.settings;
   const { by, total } = allocation();
-  const inv = invested();
+  const inv = total;
   const target = RISK_TARGETS[riskProfile()];
   const parts = ASSET_TYPES.map(ty => ({ ...ty, name: L(ty.label), v: by[ty.id] || 0 }));
-  const diff = inv - total;
 
   /* Onde colocar o próximo aporte: o tipo com maior falta em relação ao alvo */
   const gaps = ASSET_TYPES.map(ty => {
@@ -2375,16 +2598,10 @@ function renderWealthSheet() {
       <div class="hint">${t("portHint")}</div>
     </div>
 
-    <div class="card">
-      <h2>${t("wsReconcile")}</h2>
-      <table><tbody>
-        <tr><td>${t("wsFromEntries")}</td><td class="num">${fmtW0(inv)}</td></tr>
-        <tr><td>${t("wsFromAssets")}</td><td class="num">${fmtW0(total)}</td></tr>
-        <tr><td><b>${t("wsDiff")}</b></td><td class="num"><b class="${Math.abs(diff) < 1 ? "pos" : ""}">${fmtW0(diff)}</b></td></tr>
-      </tbody></table>
-      <div class="hint">${Math.abs(diff) < 1 ? t("wsMatch") : t("wsDiffHint")}</div>
-      ${total > 0 && Math.abs(diff) >= 1 ? `<button class="btn ghost" style="margin-top:10px" onclick="syncPortfolio()">${t("portSync")}</button>` : ""}
-    </div>`;
+    ${st.legacyInvested && Math.abs(st.legacyInvested - total) >= 1 ? `<div class="card warnbox">
+      ${t("wsLegacy", fmtW0(total), fmtW0(st.legacyInvested))}
+      <div style="margin-top:10px"><button class="btn ghost" onclick="legacyOk()">${t("betaOk")}</button></div>
+    </div>` : ""}`;
 
   document.getElementById("sheet-title").textContent = t("wsTitle");
   document.getElementById("sheet-body").innerHTML = body;
@@ -2677,7 +2894,9 @@ const WZ_STEPS = [
         <select id="wz-wcur" style="font-size:16px; max-width:180px" onchange="wzData.wealthCur=this.value; document.getElementById('wz-sym3').textContent=curSym(this.value); wzLive()">
           ${[wzData.homeCur, wzData.secondCur].filter((v,i,a) => a.indexOf(v) === i).map(c => `<option value="${c}" ${c === (wzData.wealthCur || wzData.homeCur) ? "selected" : ""}>${curSym(c)} ${c}</option>`).join("")}
         </select></div>` : ""}
-      <div class="biginput"><span class="cur" id="wz-sym3">${curSym(wzData.wealthCur || wzData.homeCur)}</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.investedBase || ""}" step="1000" min="0" placeholder="0"></div>`,
+      <div class="biginput"><span class="cur" id="wz-sym3">${curSym(wzData.wealthCur || wzData.homeCur)}</span><input type="number" inputmode="decimal" id="wz-in" value="${wzData.investedBase || ""}" step="any" min="0" placeholder="0"
+        ${S.portfolio.some(p => p.id !== "base") ? "readonly" : ""}></div>
+      ${S.portfolio.some(p => p.id !== "base") ? `<div class="hint">${t("wz3fromAssets")}</div>` : ""}`,
     live: () => "",
     saveStep: () => { wzData.investedBase = num("wz-in"); wzData.wealthCur = val("wz-wcur") || wzData.wealthCur || wzData.homeCur; },
   },
@@ -2773,6 +2992,7 @@ function startWizard() {
   const fixoAtual = fixedList().reduce((acc, f) => acc + conv(f.amount, f.cur || st.homeCur, st.homeCur), 0);
   wzData = {
     fixedTotal: Math.round(fixoAtual),
+    investedBase: Math.round(invested()),
     homeCountry: st.homeCountry, homeCur: st.homeCur, mainMonthly: st.mainMonthly,
     hasSecond: st.hasSecond, secondCountry: st.secondCountry, secondCur: st.secondCur,
     secondMonthly: st.secondMonthly, fx: st.fx, freePolicy: st.freePolicy,
@@ -2815,15 +3035,30 @@ function wzNext() {
   }
   WZ_STEPS[wzStep].saveStep();
   if (wzStep < WZ_STEPS.length - 1) { wzStep++; renderWizard(); return; }
+  /* "Quanto já tem investido" só escreve no ativo base — quem detalhou a
+     carteira vê o total dela, sem edição, e mexe nos ativos pela tela própria */
+  const baseV = Number(wzData.investedBase) || 0;
+  delete wzData.investedBase;
+  if (!S.portfolio.some(p => p.id !== "base")) {
+    const b = S.portfolio.find(p => p.id === "base");
+    const wc = wzData.wealthCur || wzData.homeCur;
+    if (baseV > 0) { if (b) { b.value = baseV; b.cur = wc; }
+      else S.portfolio.push({ id: "base", name: t("baseAsset"), value: baseV, type: "outros", cur: wc }); }
+    else if (b) S.portfolio = S.portfolio.filter(p => p.id !== "base");
+  }
   /* O total informado vira uma conta fixa única; detalhar depois é opcional */
   const fixoTotal = Number(wzData.fixedTotal) || 0;
   delete wzData.fixedTotal;
   S.fixed = S.fixed || [];
   const geral = S.fixed.find(f => f.id === "geral");
   if (fixoTotal > 0) {
-    if (geral) { geral.amount = fixoTotal; geral.cur = wzData.homeCur; geral.active = true; }
-    else S.fixed.unshift({ id: "geral", name: t("fixDefaultName"), amount: fixoTotal, cur: wzData.homeCur, cat: "outros", active: true });
-  } else if (geral) geral.active = false;
+    if (geral) { geral.amount = fixoTotal; geral.cur = wzData.homeCur; geral.until = ""; }
+    else S.fixed.unshift({ id: "geral", name: t("fixDefaultName"), amount: fixoTotal, cur: wzData.homeCur, cat: "outros", since: thisMonth(), until: "" });
+  } else if (geral) {
+    const ant = shiftMonth(thisMonth(), -1);
+    if (geral.since && geral.since <= ant) geral.until = ant;
+    else S.fixed = S.fixed.filter(f => f.id !== "geral");
+  }
   Object.assign(S.settings, wzData, { onboarded: true });
   if (!S.settings.hasSecond) { S.settings.secondMonthly = 0; S.settings.freePolicy = "main"; }
   S.settings.wealthCur = S.settings.wealthCur || S.settings.homeCur;
@@ -3018,8 +3253,12 @@ function renderAportePlan() {
             <b>${L(b.ty.label)}</b><span class="amt">${fmtW0(b.valor)}</span></div>
           <div class="why">${prod ? `${esc(prod.nome)} · ${prod.taxa}` : t("apPlanFree")}
             · ${t("apPlanMix", Math.round(b.pctHoje), b.alvoPct)}</div>
+          <button class="btn ghost" style="margin-top:6px; font-size:12.5px; padding:4px 10px"
+            onclick="goAporte('mes', ${Math.round(b.valor)}, '${b.ty.id}', '${prod ? esc(prod.nome).replace(/'/g, "") : ""}')">${t("apPlanGo")}</button>
         </div></div>`;
     }).join("")}</div>
+    ${walletState().disponivel > 1 ? `<div style="font-size:13.5px; margin:4px 0 8px">${t("apPlanWallet", fmtM0(walletState().disponivel))}
+      <button class="btn ghost" style="margin-left:6px; font-size:12.5px; padding:4px 10px" onclick="goAporte('sobras', ${Math.round(walletState().disponivel)})">${t("apPlanGo")}</button></div>` : ""}
     <div class="hint" style="margin-bottom:14px">${p.total > 0 ? t("apPlanWhy", riskLabel()) : t("apPlanFirst")}</div>`;
 }
 
@@ -3036,7 +3275,8 @@ function renderAporte() {
   const partes = [];
   if (st.hasSecond && st.freePolicy === "main" && ms.rendaSecond > 0)
     partes.push(t("apCtxSecond", fmtS0(ms.rendaSecond), countryName(st.secondCountry)));
-  if (lastLivre > 0) partes.push(t("apCtxFree", fmtM0(lastLivre)));
+  const cart = walletState().disponivel;
+  if (cart > 1) partes.push(t("apCtxWallet", fmtM0(cart)));
   /* O custo do dinheiro parado só é calculável onde há taxa conhecida (CDI, no Brasil) */
   const brCur = st.homeCountry === "BR" ? mainCur() : secondCur();
   document.getElementById("ap-context").innerHTML = partes.length
@@ -3142,7 +3382,8 @@ function renderPlan() {
     : { n:steps.length+1, tt:t("planCommitOk"), amt:fmtM0(ms.savedMain), why:t("planCommitOkWhy"), done:true });
   if (faltaSegundo > 1) steps.push({ n:steps.length+1, tt:t("planSecond", countryName(st.secondCountry)), amt:fmtS0(faltaSegundo),
     why:t("planSecondWhy", countryName(st.secondCountry)), done:false });
-  if (lastLivre > 0) steps.push({ n:steps.length+1, tt:t("planIdle", monthLabel(prev)), amt:fmtM0(lastLivre), why:t("planIdleWhy"), done:false });
+  const cart = walletState().disponivel;
+  if (cart > 1) steps.push({ n:steps.length+1, tt:t("planWallet"), amt:fmtM0(cart), why:t("planWalletWhy"), done:false });
   if (total > 0 && alvoTipo && alvoTipo.gap > 1) steps.push({ n:steps.length+1, tt:t("planRebalance", L(alvoTipo.ty.label)),
     amt:"", why:t("planRebalanceWhy", riskLabel(), Math.round(alvoTipo.gap)), done:false });
 
@@ -3183,18 +3424,29 @@ function renderRelatorio() {
   const ms = monthStats(mk);
   document.getElementById("rep-title").textContent = monthLabel(mk);
 
-  const taxaPoup = ms.ganho > 0 ? Math.max(0, (ms.ganho - ms.spent) / ms.ganho * 100) : 0;
+  /* Cascata: cada linha entra ou sai, e a última é a soma exata delas —
+     o mesmo número do Início, do card do mês passado e da carteira. */
+  const taxaPoup = ms.ganho > 0 ? Math.max(0, (ms.ganho - ms.spent - ms.fix.main) / ms.ganho * 100) : 0;
+  const lin = (rot, v, sinal) => `<tr><td>${rot}</td><td class="num">${sinal === "-" ? "− " : sinal === "+" ? "+ " : ""}${fmtM(v)}</td></tr>`;
   el.innerHTML = `<table class="rep"><tbody>
-    <tr><td>${t("repEarnedUS")}</td><td class="num">${fmtM(ms.ganho)}</td></tr>
+    ${lin(t("repEarnedUS"), ms.ganho)}
+    ${ms.walletIn > 0 ? lin(t("repWalletIn"), ms.walletIn, "+") : ""}
+    ${lin(t("repSpentOwn"), ms.spent, "-")}
+    ${ms.fix.main > 0 ? lin(ms.fechado ? t("repFixedPresumed") : t("repFixedPending"), ms.fix.main, "-") : ""}
+    ${lin(t("repSavedUS"), ms.savedNoLivre, "-")}
+    ${ms.metaPendente > 0 ? lin(t("repGoalPending"), ms.metaPendente, "-") : ""}
+    <tr><td><b>${ms.fechado ? t("repLeftClosed") : t("repFree")}</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtM(ms.livre)}</b></td></tr>
+  </tbody></table>
+  <table class="rep" style="margin-top:10px"><tbody>
     ${ms.rendaSecond > 0 && S.settings.freePolicy === "main" ? `<tr><td>${t("repEarnedBR")}</td><td class="num">${fmtS0(ms.rendaSecond)}</td></tr>` : ""}
-    <tr><td>${t("repSpentOwn")}</td><td class="num">${fmtM(ms.spent)}</td></tr>
     ${ms.spentSecond > 0 ? `<tr><td>${t("repSpentSecond")}</td><td class="num">${fmtS0(ms.spentSecond)}</td></tr>` : ""}
-    ${ms.covered > 0 ? `<tr><td>${t("repCovered")}</td><td class="num">${fmtM(ms.covered)}</td></tr>` : ""}
-    <tr><td>${t("repSavedUS")}</td><td class="num">${fmtM(ms.savedMain)}</td></tr>
     ${ms.savedSecond > 0 ? `<tr><td>${t("repSavedBR")}</td><td class="num">${fmtS0(ms.savedSecond)}</td></tr>` : ""}
-    <tr><td><b>${t("repFree")}</b></td><td class="num"><b class="${ms.livre >= 0 ? "pos" : "neg"}">${fmtM(ms.livre)}</b></td></tr>
+    ${ms.covered > 0 ? `<tr><td>${t("repCovered")}</td><td class="num">${fmtM(ms.covered)}</td></tr>` : ""}
+    ${ms.fromWallet > 0 ? `<tr><td>${t("repFromWallet")}</td><td class="num">${fmtM(ms.fromWallet)}</td></tr>` : ""}
+    ${ms.tripSpent > 0 ? `<tr><td>${t("repTripHeld")}</td><td class="num">${fmtM(ms.tripSpent)}</td></tr>` : ""}
     <tr><td>${t("repRate")}</td><td class="num">${taxaPoup.toFixed(0)}%</td></tr>
   </tbody></table>`;
+  renderCompare(mk);
 
   const byCat = {}, byCatPrev = {};
   const soMain = e => counts(e) && expBucket(e) === "main";
@@ -3542,10 +3794,13 @@ function renderTripSheet(id) {
         <div class="field"><label>${t("tripAddBudget")} (${curSym(tp.budgetCur)})</label>
           <input type="number" id="tb-add" inputmode="decimal" step="any" min="0.01" required style="width:120px"></div>
         <div class="field" style="flex:1; min-width:140px"><label>${t("tripAddWhy")}</label><input type="text" id="tb-why"></div>
+        <div class="field"><label>${t("lancSrc")}</label><select id="tb-src">
+          <option value="novo">${t("tbSrcNew")}</option>
+          ${walletState().disponivel > 0 ? `<option value="wallet">${t("srcWallet", fmtM0(walletState().disponivel))}</option>` : ""}</select></div>
         <button class="btn" type="submit">${t("btnAdd")}</button>
       </form>`}
       ${topups.length ? `<div class="hint" style="margin-top:10px">${t("tripTopups")}</div>
-        <table><tbody>${topups.map(x => `<tr><td>${fmtD(parseDate(x.date))} ${esc(x.why || "")}</td>
+        <table><tbody>${topups.map(x => `<tr><td>${fmtD(parseDate(x.date))} ${esc(x.why || "")}${x.fromWallet ? ` <span class="badge counts">${t("tbFromWallet")}</span>` : ""}</td>
           <td class="num">+ ${fmtCur(x.amount, x.cur || tp.budgetCur, 0)}</td>
           <td style="width:30px"><button class="mini" onclick="delTopup('${tp.id}','${x.id}')" title="${t("del")}">✕</button></td></tr>`).join("")}</tbody></table>` : ""}
     </div>
@@ -3580,7 +3835,8 @@ function addTripBudget(ev, id) {
   const v = Number(document.getElementById("tb-add").value) || 0;
   if (!tp || !(v > 0)) return false;
   tp.topups = tp.topups || [];
-  tp.topups.push({ id: uid(), date: todayStr(), amount: v, cur: tp.budgetCur, why: document.getElementById("tb-why").value.trim() });
+  tp.topups.push({ id: uid(), date: todayStr(), amount: v, cur: tp.budgetCur, why: document.getElementById("tb-why").value.trim(),
+    fromWallet: document.getElementById("tb-src")?.value === "wallet" });
   save(); renderAll(); renderConfig(); renderSheet();
   return false;
 }
@@ -3606,6 +3862,7 @@ function closeTrip(id) {
   const st = tripStats(tp);
   tp.closed = true; tp.closedAt = todayStr();
   save();
+  walletSettleTrip(tp);
   const sobra = st.left >= 0 ? t("tripLeftBack", fmtT(tp, st.left)) : t("tripLeftNone", fmtT(tp, -st.left));
   renderAll(); renderConfig();
   if (sheetView) renderSheet();
@@ -3617,6 +3874,7 @@ function reopenTrip(id) {
   const tp = tripById(id);
   if (!tp) return;
   tp.closed = false; tp.closedAt = "";
+  walletUnsettleTrip(tp.id);
   save(); renderAll(); renderConfig(); renderSheet(); fillPlaceSelect(); updateLancForm();
 }
 function delTrip(id) {
@@ -3626,6 +3884,7 @@ function delTrip(id) {
   if (!confirm(t("tripDelAsk", q))) return;
   S.expenses = S.expenses.filter(e => String(e.place) !== String(id));
   S.trips = S.trips.filter(x => String(x.id) !== String(id));
+  walletUnsettleTrip(id);
   save(); closeSheet(); renderAll(); renderConfig(); fillPlaceSelect(); updateLancForm();
 }
 function goLanc(place) {
@@ -3832,6 +4091,202 @@ function renderCountrySheet() {
     </div>`;
 }
 
+/* ═════════ Carteira de sobras ═════════
+   Saldo = soma do que sobrou em cada mês fechado (o número real: o que entrou,
+   menos gastos, contas e o que foi aportado DO mês) + acertos − coberturas −
+   aportes feitos com ela. Mês apertado reduz o saldo sozinho; "cobrir" só tira
+   o vermelho da tela do mês. Viagem recebe uma reserva, que só vira gasto
+   quando a viagem encerra — sem contar o mesmo dinheiro duas vezes. */
+function walletState() {
+  const moves = (S.wallet && S.wallet.moves) || [];
+  const atual = thisMonth();
+  const meses = [];
+  let somaMeses = 0, somaSec = 0;
+  for (let mk = firstDataMonth(); mk < atual; mk = shiftMonth(mk, 1)) {
+    if (!monthHasData(mk)) continue;            // mês sem lançamento não inventa sobra
+    const ms = monthStats(mk);
+    meses.push({ mk, sobra: ms.livre, naoAportado: Math.max(0, S.settings.saveMonthly - ms.savedNoLivre) });
+    somaMeses += ms.livre;
+    somaSec += ms.leftSecond;
+  }
+  const ajustes = moves.filter(m => m.kind === "adjust").reduce((a, m) => a + m.amount, 0);
+  const coberturas = moves.filter(m => m.kind === "cover").reduce((a, m) => a + m.amount, 0);
+  const investido = S.contributions.filter(c => c.src === "sobras")
+    .reduce((a, c) => a + conv(c.amount, c.cur || mainCur(), mainCur()), 0);
+  const saldo = somaMeses + ajustes - coberturas - investido;
+  const reservas = (S.trips || []).filter(tp => !tp.closed).map(tp => ({ tp,
+    v: (tp.topups || []).filter(x => x.fromWallet).reduce((a, x) => a + conv(x.amount, x.cur || tp.budgetCur, mainCur()), 0) }))
+    .filter(r => r.v > 0.5);
+  const reservado = reservas.reduce((a, r) => a + r.v, 0);
+  return { saldo, reservado, disponivel: saldo - reservado, meses, somaSec, ajustes, coberturas, investido, reservas, moves };
+}
+const walletMoves = () => { S.wallet = S.wallet || { moves: [] }; S.wallet.moves = S.wallet.moves || []; return S.wallet.moves; };
+/* Cobrir o mês: a carteira manda para este mês o que faltou */
+function walletCover() {
+  const ms = monthStats(thisMonth());
+  const w = walletState();
+  const v = Math.round(Math.min(-ms.livre, w.disponivel) * 100) / 100;
+  if (!(v > 0)) return;
+  walletMoves().push({ id: uid(), kind: "cover", month: thisMonth(), amount: v, date: todayStr() });
+  save(); renderAll(); if (sheetView) renderSheet();
+}
+function walletUndo(id) {
+  S.wallet.moves = walletMoves().filter(m => String(m.id) !== String(id));
+  save(); renderAll(); if (sheetView) renderSheet();
+}
+/* Acertar com o saldo real da conta: o app ajusta a diferença, sem mexer em mês nenhum */
+function walletAdjust(ev) {
+  ev.preventDefault();
+  const real = Number(document.getElementById("wl-real").value);
+  if (!(real >= 0) || document.getElementById("wl-real").value === "") return false;
+  const dif = Math.round((real - walletState().saldo) * 100) / 100;
+  if (dif) walletMoves().push({ id: uid(), kind: "adjust", amount: dif, date: todayStr() });
+  save(); renderAll(); renderSheet();
+  return false;
+}
+/* Mandar para viagem: vira reforço do orçamento dela, marcado como da carteira */
+function walletToTrip(ev) {
+  ev.preventDefault();
+  const tp = tripById(document.getElementById("wl-trip").value);
+  const v = Number(document.getElementById("wl-trip-v").value) || 0;
+  if (!tp || !(v > 0)) return false;
+  tp.topups = tp.topups || [];
+  tp.topups.push({ id: uid(), date: todayStr(), amount: v, cur: mainCur(), why: t("walletTripWhy"), fromWallet: true });
+  save(); renderAll(); renderConfig(); renderSheet();
+  return false;
+}
+/* Viagem encerrada: a reserva vira cobertura nos meses em que o gasto caiu,
+   até o tamanho da reserva. O que a viagem não usou volta a ficar disponível. */
+function walletSettleTrip(tp) {
+  const reserva = (tp.topups || []).filter(x => x.fromWallet)
+    .reduce((a, x) => a + conv(x.amount, x.cur || tp.budgetCur, mainCur()), 0);
+  if (!(reserva > 0)) return;
+  const porMes = {};
+  tripStats(tp).conta.filter(e => !offBudget(e)).forEach(e => {
+    const mk = monthKey(e.date);
+    porMes[mk] = (porMes[mk] || 0) + conv(e.amount, expCur(e), mainCur());
+  });
+  let resta = reserva;
+  Object.keys(porMes).sort().forEach(mk => {
+    const v = Math.round(Math.min(resta, porMes[mk]) * 100) / 100;
+    if (v > 0) { walletMoves().push({ id: uid(), kind: "cover", month: mk, amount: v, tripId: tp.id, date: todayStr() }); resta -= v; }
+  });
+}
+const walletUnsettleTrip = id => { S.wallet.moves = walletMoves().filter(m => String(m.tripId || "") !== String(id)); };
+
+function renderWalletStrip() {
+  const el = document.getElementById("wallet-strip");
+  if (!el) return;
+  const w = walletState();
+  if (!w.meses.length && !w.moves.length) { el.innerHTML = ""; return; }
+  const ms = monthStats(thisMonth());
+  const apertado = ms.livre < 0 && w.disponivel > 0;
+  el.innerHTML = `<div class="card tappable" style="padding:10px 18px; font-size:13.5px" role="button" tabindex="0"
+      onclick="openSheet('wallet')" onkeydown="if(event.key==='Enter'){openSheet('wallet')}">
+    <div style="display:flex; align-items:center; gap:10px">
+      <span style="flex:1">💼 ${t("walletLine", fmtM0(w.disponivel))}${w.reservado > 0 ? ` <span style="color:var(--muted)">· ${t("walletReserved", fmtM0(w.reservado))}</span>` : ""}</span>
+      <span class="chev">›</span></div>
+    ${apertado ? `<div style="margin-top:8px"><button class="btn" style="font-size:13px; padding:6px 12px"
+        onclick="event.stopPropagation(); walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button></div>` : ""}
+  </div>`;
+}
+function renderWalletSheet() {
+  const w = walletState();
+  const ms = monthStats(thisMonth());
+  const abertas = (S.trips || []).filter(tp => !tp.closed);
+  document.getElementById("sheet-title").textContent = t("walletTitle");
+  const usos = [
+    ...w.moves.map(m => ({ data: m.date || "", txt: m.kind === "adjust" ? t("walletMvAdjust")
+        : m.tripId ? t("walletMvTrip", esc(tripName(tripById(m.tripId)) || "")) : t("walletMvCover", monthLabel(m.month)),
+      v: m.kind === "adjust" ? m.amount : -m.amount, id: m.kind === "cover" && m.tripId ? "" : m.id })),
+    ...S.contributions.filter(c => c.src === "sobras").map(c => ({ data: c.date, txt: t("walletMvInvest", esc(c.dest || "")),
+      v: -conv(c.amount, c.cur || mainCur(), mainCur()), id: "" })),
+  ].sort((a, b) => b.data.localeCompare(a.data));
+  document.getElementById("sheet-body").innerHTML = `
+    <div class="card">
+      <div class="label" style="font-size:12.5px; color:var(--ink-2)">${t("walletAvail")}</div>
+      <div class="tbig ${w.disponivel < 0 ? "neg" : ""}" style="font-size:32px; font-weight:650">${fmtM0(w.disponivel)}</div>
+      <div class="tsub" style="font-size:13px; color:var(--ink-2)">
+        ${w.reservas.map(r => t("walletResFor", fmtM0(r.v), esc(tripName(r.tp)))).join(" · ")}
+        ${S.settings.hasSecond && S.settings.freePolicy === "main" && Math.abs(w.somaSec) >= 1
+          ? `${w.reservas.length ? " · " : ""}${t("walletSecond", countryName(S.settings.secondCountry), fmtS0(w.somaSec))}` : ""}</div>
+      <div class="chiprow" style="margin-top:12px">
+        ${w.disponivel > 0 ? `<button class="btn" onclick="goAporte('sobras', ${Math.round(w.disponivel)})">${t("walletInvestBtn")}</button>` : ""}
+        ${ms.livre < 0 && w.disponivel > 0 ? `<button class="btn ghost" onclick="walletCover()">${t("walletCoverBtn", fmtM0(Math.min(-ms.livre, w.disponivel)))}</button>` : ""}
+      </div>
+      ${abertas.length && w.disponivel > 0 ? `<form class="inline" style="margin-top:12px" onsubmit="return walletToTrip(event)">
+        <div class="field"><label>${t("walletToTrip")}</label>
+          <select id="wl-trip">${abertas.map(tp => `<option value="${tp.id}">${tripIcon(tp)} ${esc(tripName(tp))}</option>`).join("")}</select></div>
+        <div class="field"><label>${t("lancAmount")} (${curSym(mainCur())})</label>
+          <input type="number" id="wl-trip-v" inputmode="decimal" step="any" min="0.01" required style="width:110px"></div>
+        <button class="btn ghost" type="submit">${t("walletSend")}</button>
+      </form>` : ""}
+      <div class="hint">${t("walletHint")}</div>
+    </div>
+    <div class="card">
+      <h2>${t("walletHow")}</h2>
+      ${w.meses.length === 0 ? `<div class="empty">${t("walletNoMonths")}</div>` : `<table><tbody>
+        ${w.meses.slice().reverse().slice(0, 12).map(m => `<tr><td style="text-transform:capitalize">${monthLabel(m.mk)}
+            ${m.naoAportado > 0.5 && m.sobra > 0 ? `<div class="hint" style="margin:0">${t("walletNotSaved", fmtM0(Math.min(m.naoAportado, m.sobra)))}</div>` : ""}</td>
+          <td class="num"><b class="${m.sobra >= 0 ? "pos" : "neg"}">${m.sobra >= 0 ? "+" : ""}${fmtM0(m.sobra)}</b></td><td></td></tr>`).join("")}
+        ${usos.map(u => `<tr><td>${u.txt}${u.data ? ` <span class="hint" style="margin:0">${fmtD(parseDate(u.data))}</span>` : ""}</td>
+          <td class="num ${u.v >= 0 ? "pos" : "neg"}">${u.v >= 0 ? "+" : ""}${fmtM0(u.v)}</td>
+          <td style="width:30px">${u.id ? `<button class="mini" title="${t("del")}" onclick="walletUndo('${u.id}')">✕</button>` : ""}</td></tr>`).join("")}
+        <tr><td><b>${t("walletBalance")}</b></td><td class="num"><b>${fmtM0(w.saldo)}</b></td><td></td></tr>
+      </tbody></table>`}
+      <details style="margin-top:12px">
+        <summary class="hint" style="cursor:pointer">${t("walletAdjustTitle")}</summary>
+        <form class="inline" style="margin-top:10px" onsubmit="return walletAdjust(event)">
+          <div class="field"><label>${t("walletReal", curSym(mainCur()))}</label>
+            <input type="number" id="wl-real" inputmode="decimal" step="any" min="0" style="width:130px" placeholder="${Math.round(w.saldo)}"></div>
+          <button class="btn ghost" type="submit">${t("walletAdjustBtn")}</button>
+        </form>
+        <div class="hint">${t("walletAdjustHint")}</div>
+      </details>
+    </div>`;
+}
+/* Ir do conselho à ação: abre o lançamento de aporte já preenchido */
+function goAporte(src, valor, tipo, nome) {
+  closeSheet();
+  document.querySelector('nav button[data-tab="lanc"]')?.click();
+  document.getElementById("l-type").value = "aporte";
+  updateLancForm();
+  if (src) document.getElementById("l-src").value = src;
+  if (valor > 0) document.getElementById("l-amount").value = Math.round(valor * 100) / 100;
+  if (tipo) {
+    const a = S.portfolio.find(p => p.type === tipo);
+    if (a) document.getElementById("l-dest").value = String(a.id);
+    else { document.getElementById("l-dest").value = "__new"; document.getElementById("l-desc").value = nome || ""; }
+  }
+  updateLancForm();
+  scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("l-amount").focus();
+}
+
+/* ═════════ Fechamento do mês ═════════
+   Nos primeiros dias de um mês novo, o mês que acabou ganha um cartão: quanto
+   sobrou de verdade, para onde foi (carteira) e o próximo passo. Some ao ok. */
+function renderMonthClose() {
+  const el = document.getElementById("close-card");
+  if (!el) return;
+  const prev = shiftMonth(thisMonth(), -1);
+  if (new Date().getDate() > 10 || !monthHasData(prev) || S.settings.closeSeen === prev) { el.innerHTML = ""; return; }
+  const ms = monthStats(prev);
+  const w = walletState();
+  const naoAportado = Math.max(0, S.settings.saveMonthly - ms.savedNoLivre);
+  el.innerHTML = `<div class="card trip" style="border-left-color:var(--s5)">
+    <div class="thead"><span class="tname">📒 ${t("closeTitle", monthLabel(prev))}</span></div>
+    <div class="tbig ${ms.livre < 0 ? "neg" : "pos"}">${ms.livre >= 0 ? "+" : ""}${fmtM0(ms.livre)}</div>
+    <div class="tsub">${ms.livre >= 0 ? t("closeLeft") : t("closeOver")}${naoAportado > 0.5 && ms.livre > 0 ? " " + t("closeNotSaved", fmtM0(Math.min(naoAportado, ms.livre))) : ""}</div>
+    <div class="tsub" style="margin-top:4px">${t("closeWallet", fmtM0(w.disponivel))}</div>
+    <div class="tacts">
+      ${w.disponivel > 0 ? `<button class="btn" onclick="closeSeen('${prev}'); goAporte('sobras', ${Math.round(w.disponivel)})">${t("closeInvest")}</button>` : ""}
+      <button class="btn ghost" onclick="openSheet('wallet')">${t("closeOpen")}</button>
+      <button class="btn ghost" onclick="closeSeen('${prev}')">${t("betaOk")}</button>
+    </div></div>`;
+}
+function closeSeen(mk) { S.settings.closeSeen = mk; save(); renderMonthClose(); }
+
 /* ───────── Contas do mês (folha) ─────────
    A lista curta do que se repete. Marcar "paguei" lança o gasto na categoria
    que você escolheu — o livre não se mexe, porque a conta já estava descontada. */
@@ -3884,7 +4339,7 @@ function addFixed(ev) {
   S.fixed = S.fixed || [];
   S.fixed.push({ id: uid(), name: nome, amount: valor,
     cur: document.getElementById("fx-cur")?.value || mainCur(),
-    cat: document.getElementById("fx-cat").value, active: true });
+    cat: document.getElementById("fx-cat").value, since: thisMonth(), until: "" });
   save(); renderAll(); renderSheet();
   return false;
 }
@@ -3903,7 +4358,10 @@ function payFixed(id) {
 function delFixed(id) {
   const f = (S.fixed || []).find(x => String(x.id) === String(id));
   if (!f || !confirm(t("fixDelAsk", f.name))) return;
-  S.fixed = S.fixed.filter(x => String(x.id) !== String(id));
+  /* Os meses em que ela existiu continuam contando com ela: só para de valer */
+  const ant = shiftMonth(thisMonth(), -1);
+  if (f.since && f.since <= ant) f.until = ant;
+  else S.fixed = S.fixed.filter(x => String(x.id) !== String(id));
   save(); renderAll(); renderSheet();
 }
 
@@ -3969,6 +4427,54 @@ function delCat(id) {
   S.cats = (S.cats || []).filter(x => x.id !== id);
   save();
   renderConfig(); fillCatSelects(); renderAll();
+}
+
+/* ───────── O que mudou (Relatório) ─────────
+   Compara com o mês anterior e diz o que puxou. Mês em andamento compara até
+   o mesmo dia do mês passado — dia 5 contra o mês inteiro seria injusto. */
+function compareMonths(mk) {
+  const prev = shiftMonth(mk, -1);
+  if (!monthHasData(prev) || !monthHasData(mk)) return null;
+  const aberto = mk === thisMonth();
+  const dia = aberto ? new Date().getDate() : 31;
+  const porCat = m => {
+    const by = {};
+    S.expenses.filter(e => monthKey(e.date) === m && Number(e.date.slice(8)) <= dia && counts(e) && expBucket(e) === "main")
+      .forEach(e => by[e.cat] = (by[e.cat] || 0) + conv(e.amount, expCur(e), mainCur()));
+    return by;
+  };
+  const a = porCat(mk), b = porCat(prev);
+  const difs = [...new Set([...Object.keys(a), ...Object.keys(b)])]
+    .map(c => ({ c: catById(c), d: (a[c] || 0) - (b[c] || 0) }))
+    .filter(x => Math.abs(x.d) >= 1).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  const soma = o => Object.values(o).reduce((x, y) => x + y, 0);
+  const sa = monthStats(mk), sb = monthStats(prev);
+  return { prev, aberto, dia, gastoD: soma(a) - soma(b),
+    subiu: difs.filter(x => x.d > 0).slice(0, 3), caiu: difs.filter(x => x.d < 0).slice(0, 2),
+    ganhoD: sa.ganho - sb.ganho, aporteD: sa.savedNoLivre - sb.savedNoLivre,
+    fixoD: sa.fix.main - sb.fix.main, sobraD: aberto ? null : sa.livre - sb.livre };
+}
+function renderCompare(mk) {
+  const el = document.getElementById("rep-change");
+  if (!el) return;
+  const c = compareMonths(mk);
+  if (!c) { el.innerHTML = `<div class="empty">${t("chgNone")}</div>`; return; }
+  const pm = monthLabel(c.prev).split(" ")[0];
+  const quanto = (v, mais, menos) => t(v >= 0 ? mais : menos, fmtM0(Math.abs(v)), pm);
+  const linhas = [];
+  if (c.sobraD !== null && Math.abs(c.sobraD) >= 1)
+    linhas.push(`<div style="font-size:15px; margin-bottom:6px"><b class="${c.sobraD >= 0 ? "pos" : "neg"}">${quanto(c.sobraD, "chgLeftMore", "chgLeftLess")}</b></div>`);
+  if (Math.abs(c.gastoD) >= 1)
+    linhas.push(c.aberto ? t(c.gastoD >= 0 ? "chgSpentMoreOpen" : "chgSpentLessOpen", fmtM0(Math.abs(c.gastoD)), pm, c.dia)
+      : quanto(c.gastoD, "chgSpentMore", "chgSpentLess"));
+  else linhas.push(c.aberto ? t("chgSpentSameOpen", pm, c.dia) : t("chgSpentSame", pm));
+  const item = x => `<span class="dot" style="background:var(${x.c.color})"></span>${esc(L(x.c.label))} <b class="${x.d > 0 ? "neg" : "pos"}">${x.d > 0 ? "+" : "−"}${fmtM0(Math.abs(x.d))}</b>`;
+  if (c.subiu.length) linhas.push(`${t("chgUp")} ${c.subiu.map(item).join(" · ")}`);
+  if (c.caiu.length) linhas.push(`${t("chgDown")} ${c.caiu.map(item).join(" · ")}`);
+  if (Math.abs(c.ganhoD) >= 1) linhas.push(quanto(c.ganhoD, "chgEarnMore", "chgEarnLess"));
+  if (!c.aberto && Math.abs(c.aporteD) >= 1) linhas.push(quanto(c.aporteD, "chgSaveMore", "chgSaveLess"));
+  if (!c.aberto && Math.abs(c.fixoD) >= 1) linhas.push(quanto(c.fixoD, "chgFixMore", "chgFixLess"));
+  el.innerHTML = linhas.map((l, i) => i === 0 && l.startsWith("<div") ? l : `<div style="font-size:13.5px; padding:3px 0">${l}</div>`).join("");
 }
 
 /* ───────── Panorama por país (Relatório) ───────── */
@@ -4114,7 +4620,7 @@ function importData(input) {
 
 /* ───────── Bindings ───────── */
 function renderAll() {
-  renderInicio(); renderTripCard(); renderLanc(); renderMetas(); renderInvest(); renderPlan();
+  renderInicio(); renderTripCard(); renderWalletStrip(); renderMonthClose(); renderLanc(); renderMetas(); renderInvest(); renderPlan();
   renderRewards(); renderMarket(); renderAporte();
   renderViagens(); renderRelatorio();
 }
@@ -4163,7 +4669,28 @@ document.getElementById("f-lanc").onsubmit = e => {
     S.expenses.push({ ...base, cat: document.getElementById("l-cat").value, desc, place, cur: placeCur(place) });
   }
   if (tp === "renda") S.incomes.push({ ...base, cur, source: desc });
-  if (tp === "aporte") S.contributions.push({ ...base, cur, dest: desc });
+  if (tp === "aporte") {
+    const src = document.getElementById("l-src").value;
+    if (!src) return;
+    const r2 = v => Math.round(v * 100) / 100;
+    let destA = null;
+    if (document.getElementById("l-dest").value === "__new") {
+      if (!desc) return;
+      destA = { id: uid(), name: desc, value: 0, type: guessType(desc), cur };
+      S.portfolio.push(destA);
+    } else destA = S.portfolio.find(p => String(p.id) === document.getElementById("l-dest").value) || null;
+    const fromA = src === "invest" ? S.portfolio.find(p => String(p.id) === document.getElementById("l-from").value) : null;
+    if (src === "invest" && (!fromA || fromA === destA)) {
+      document.getElementById("l-hint").innerHTML = `<span class="neg">${t("hintSameAsset")}</span>`;
+      return;
+    }
+    const c = { ...base, cur, src, dest: destA ? destA.name : desc, note: destA && destA.name !== desc ? desc : "" };
+    /* O ativo recebe o aporte na moeda dele; o delta fica guardado para desfazer exato */
+    if (destA) { const d = conv(base.amount, cur, destA.cur || wealthCur()); destA.value = r2(destA.value + d); c.assetId = destA.id; c.assetDelta = d; }
+    if (fromA) { const d = conv(base.amount, cur, fromA.cur || wealthCur()); fromA.value = r2(Math.max(0, fromA.value - d)); c.fromAssetId = fromA.id; c.fromDelta = d; }
+    S.contributions.push(c);
+    document.getElementById("l-src").value = "";
+  }
   save();
   document.getElementById("l-amount").value = ""; document.getElementById("l-desc").value = "";
   renderAll();

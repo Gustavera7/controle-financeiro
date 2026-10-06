@@ -47,6 +47,11 @@ o que mantém o custo zero e o deploy instantâneo.
    antes de exibir números de um mês vazio. Vale também para médias: só conte meses com dados.
 9. **Todo estado que entra no app passa por `migrate()`** — localStorage, nuvem e backup
    importado. Ela é idempotente e é o único lugar que conhece formatos antigos.
+   **Ela roda no carregamento, antes dos utilitários existirem:** dentro dela, nada de
+   `thisMonth()`, `todayStr()`, `conv()`, `mainCur()` ou `S` (são `const` ainda não
+   inicializados — erro ali faz o `load()` cair no estado vazio). Calcule data e câmbio
+   localmente, como as migrações de contas fixas e de patrimônio fazem. Na beta, se o
+   `load()` falhar com dados presentes, ele guarda uma cópia em `<chave>-resgate`.
 
 ## A beta (`beta/`)
 
@@ -114,6 +119,36 @@ tocar nele. É uma **cópia inteira** do `index.html` com as novidades aplicadas
   (`tripFxAuto(mudouMoeda)`), o formulário mostra "US$ 100 = € 85,55" para a direção ficar
   óbvia, criar viagem em outra moeda exige câmbio, e dá para corrigir depois na folha
   (`setTripFx`). O bug era a taxa do destino anterior sobrevivendo à troca.
+- **Um só "sobrou".** `monthStats(mk).livre` é o número do mês em toda tela. Mês
+  corrente: ganho + carteira − gastos − contas fixas ainda não pagas − **a meta
+  inteira** (ela já tem dono). Mês fechado: o mesmo, mas descontando **só o que foi
+  aportado de verdade** — o resto da meta ficou na conta e é sobra. Conta fixa não
+  marcada como paga num mês fechado **conta como paga** (aluguel não pula mês); antes
+  ela sumia na virada e o mês "ganhava" o valor inteiro. Contas fixas têm `since` e
+  `until`: apagar uma só encerra a vigência, não reescreve os meses em que existiu.
+- **Patrimônio = soma dos ativos** (`invested()` → `allocation().total`). Antes havia
+  dois totais na mesma tela ("base + aportes" e a soma da carteira). A migração
+  (`wealthModel`) transforma o antigo "base + aportes" num ativo "Investimentos" quando
+  a carteira estava vazia; quem tinha ativos vê um aviso único com a diferença.
+- **Aporte pergunta de onde vem** (`c.src`): `mes` (sai do livre e conta como guardado),
+  `sobras` (sai da carteira de sobras, não mexe no mês) ou `invest` (realocação: um
+  ativo perde, outro ganha, total igual). Todo aporte cai num ativo (`assetId`) e guarda
+  o delta na moeda do ativo (`assetDelta`/`fromDelta`) para desfazer exato.
+- **Carteira de sobras** (`walletState()`): saldo = soma do `livre` dos meses fechados
+  com dados + acertos − coberturas − aportes feitos com ela. `S.wallet.moves` só guarda
+  o que não dá para calcular: `adjust` (acertar com o saldo real) e `cover` (dinheiro
+  mandado para um mês). Viagem recebe **reserva** (reforço com `fromWallet`), que só
+  vira cobertura quando a viagem encerra, nos meses em que o gasto caiu
+  (`walletSettleTrip`) — sem contar o mesmo dinheiro duas vezes. Reabrir desfaz.
+- **Fechamento do mês** (`renderMonthClose`): nos dias 1–10, o mês que acabou ganha
+  um cartão no Início com o que sobrou de verdade e o atalho para investir.
+- **Relatório que se explica:** o resumo é uma cascata que soma exatamente o livre, e
+  "O que mudou" (`compareMonths`) diz quais categorias puxaram em relação ao mês
+  anterior — mês em andamento compara até o mesmo dia.
+- **Ritmo do mês** (Início, a partir do dia 5): no passo dos gastos variáveis até aqui,
+  como o mês termina. Contas fixas ficam fora da média.
+- **Do conselho à ação:** cada linha do plano de aporte tem "Aportar", que abre o
+  lançamento já preenchido (`goAporte(src, valor, tipo, nome)`).
 - **Rewards direcionado ao gasto:** o guia longo de benefícios foi removido. Cada linha de
   `renderRewardInsights()` é acionável — registra ou troca o cartão daquela categoria ali
   mesmo (`rxEdit` / `rxSave`), sem voltar para um formulário no fim da tela.
